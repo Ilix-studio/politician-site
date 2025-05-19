@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import BJP_LOGO from "./../assets/bjp.jpg";
 
 const Header = () => {
   return (
@@ -7,11 +8,7 @@ const Header = () => {
       <div className='container flex h-16 items-center justify-between'>
         <div className='flex items-center gap-2'>
           <div className='relative h-8 w-8'>
-            <img
-              src='/placeholder.svg?height=32&width=32'
-              alt='Logo'
-              className='object-contain'
-            />
+            <img src={BJP_LOGO} alt='Logo' className='object-contain' />
           </div>
           <span className='text-lg font-bold'>Biswajit Phukan</span>
         </div>
