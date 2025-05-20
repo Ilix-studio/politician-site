@@ -18,7 +18,7 @@ const Marquee = () => {
             <span
               className='text-7xl sm:text-8xl md:text-9xl font-bold text-transparent px-4'
               style={{
-                WebkitTextStroke: "1px rgb(0 0 0)", // Changed to black
+                WebkitTextStroke: "1px rgb(204 85 0)", // Changed to dark orange
               }}
             >
               Bharatiya Janata Party

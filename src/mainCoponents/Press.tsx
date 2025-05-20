@@ -1,5 +1,5 @@
 import { Share2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 // Press articles data
 const pressArticles = [
@@ -57,116 +57,65 @@ const pressArticles = [
   },
 ];
 
-// Popular press articles for the sidebar
-const popularPressArticles = [
-  {
-    id: 101,
-    title: "BJP's roots in Assam strengthened through education initiatives",
-    date: "May 10, 2023",
-    image: "/placeholder.svg?height=80&width=120",
-    link: "#",
-  },
-  {
-    id: 102,
-    title: "Democracy reached to grassroots level in Sarupathar",
-    date: "Mar 02, 2023",
-    image: "/placeholder.svg?height=80&width=120",
-    link: "#",
-  },
-  {
-    id: 103,
-    title: "Use tech to maintain maximum reach, says Biswajit Phukan",
-    date: "Mar 04, 2023",
-    image: "/placeholder.svg?height=80&width=120",
-    link: "#",
-  },
-  {
-    id: 104,
-    title: "गृहमंत्री के साथ बिस्वजित फुकन ने की बैठक",
-    date: "May 09, 2023",
-    image: "/placeholder.svg?height=80&width=120",
-    link: "#",
-  },
-];
-
 const Press = () => {
   return (
     <section id='press' className='py-16 md:py-24 bg-slate-50'>
       <div className='container mx-auto'>
-        <div className='flex justify-between items-center mb-12'>
-          <div className='inline-block'>
-            <div className='inline-block px-3 py-1 rounded-full bg-[#FF9933]/10 text-[#FF9933] font-medium text-sm mb-4'>
-              Press
-            </div>
+        <div className='text-center max-w-3xl mx-auto mb-12'>
+          <div className='inline-block px-3 py-1 rounded-full bg-[#FF9933]/10 text-[#FF9933] font-medium text-sm mb-4'>
+            Press Coverage
           </div>
-          <Link to='/press' className='text-[#FF9933] font-medium'>
-            MORE
-          </Link>
+          <h2 className='text-3xl md:text-4xl font-bold tracking-tight'>
+            Media Highlights
+          </h2>
+          <p className='text-muted-foreground mt-4'>
+            Recent news articles and press coverage of our initiatives and
+            accomplishments.
+          </p>
         </div>
 
-        <div className='grid grid-cols-1 lg:grid-cols-4 gap-6'>
-          {/* Main press articles - 3/4 width on desktop */}
-          <div className='lg:col-span-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'>
-            {pressArticles.map((article) => (
-              <div
-                key={article.id}
-                className='bg-white rounded-lg shadow-md overflow-hidden'
-              >
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+          {pressArticles.map((article) => (
+            <div
+              key={article.id}
+              className='bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300'
+            >
+              <a href={article.link} className='block'>
                 <div className='relative'>
                   <img
                     src={article.image}
                     alt={article.title}
                     className='w-full h-48 object-cover'
                   />
-                  <div className='absolute top-2 left-2 bg-white py-1 px-2 text-xs rounded'>
+                  <div className='absolute top-2 left-2 bg-white py-1 px-2 text-xs rounded font-medium'>
                     {article.source}
                   </div>
                 </div>
-                <div className='p-4'>
+              </a>
+              <div className='p-4'>
+                <a href={article.link} className='block hover:text-[#FF9933]'>
                   <h3 className='font-semibold text-lg mb-2 line-clamp-2'>
                     {article.title}
                   </h3>
-                  <div className='flex justify-between items-center mt-4'>
-                    <span className='text-gray-500 text-sm'>
-                      {article.date}
-                    </span>
-                    <button
-                      className='text-gray-500 hover:text-[#FF9933]'
-                      aria-label='Share article'
-                    >
-                      <Share2 size={18} />
-                    </button>
-                  </div>
+                </a>
+                <div className='flex justify-between items-center mt-4'>
+                  <span className='text-gray-500 text-sm'>{article.date}</span>
+                  <button
+                    className='text-gray-500 hover:text-[#FF9933] transition-colors'
+                    aria-label='Share article'
+                  >
+                    <Share2 size={18} />
+                  </button>
                 </div>
               </div>
-            ))}
-          </div>
-
-          {/* Popular press sidebar - 1/4 width on desktop */}
-          <div className='lg:col-span-1'>
-            <div className='bg-white rounded-lg shadow-md p-6'>
-              <h2 className='text-xl font-bold mb-6'>Popular Press</h2>
-              <div className='space-y-6'>
-                {popularPressArticles.map((article) => (
-                  <div key={article.id} className='flex gap-4'>
-                    <img
-                      src={article.image}
-                      alt=''
-                      className='w-20 h-20 object-cover rounded-md'
-                    />
-                    <div className='flex flex-col justify-between'>
-                      <h3 className='font-medium line-clamp-2'>
-                        {article.title}
-                      </h3>
-                      <span className='text-gray-500 text-sm'>
-                        {article.date}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
-          </div>
+          ))}
+        </div>
+
+        <div className='text-center mt-10'>
+          <Button variant='outline' size='lg'>
+            View All Press
+          </Button>
         </div>
       </div>
     </section>

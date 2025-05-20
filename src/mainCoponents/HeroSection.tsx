@@ -47,19 +47,27 @@ const HeroSection = () => {
             2021.
           </p>
           <div className='flex flex-wrap justify-center gap-4 pt-4'>
-            <Button
-              size='lg'
-              className='bg-[#FF9933] hover:bg-[#FF9933]/90 text-white'
+            <a
+              href='https://membership.bjp.org/en/home/login'
+              target='_blank'
+              rel='noopener noreferrer'
             >
-              Join the Movement
-            </Button>
-            <Button
-              size='lg'
-              variant='outline'
-              className='border-white text-black hover:bg-white hover:text-black'
-            >
-              Learn More
-            </Button>
+              <Button
+                size='lg'
+                className='bg-[#FF9933] hover:bg-[#FF9933]/90 text-white'
+              >
+                Join the Movement
+              </Button>
+            </a>
+            <a href='#about'>
+              <Button
+                size='lg'
+                variant='outline'
+                className='border-white text-black hover:bg-white hover:text-black'
+              >
+                Learn More
+              </Button>
+            </a>
           </div>
         </div>
       </div>

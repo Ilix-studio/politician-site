@@ -1,4 +1,9 @@
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  IconHealthRecognition,
+  IconMatrix,
+  IconSchool,
+} from "@tabler/icons-react";
 
 const Achievement = () => {
   return (
@@ -21,12 +26,7 @@ const Achievement = () => {
           <Card>
             <CardContent className='p-6 space-y-4'>
               <div className='h-12 w-12 rounded-full bg-[#FF9933]/10 flex items-center justify-center'>
-                <img
-                  src='/placeholder.svg?height=24&width=24'
-                  alt='Infrastructure Icon'
-                  width={24}
-                  height={24}
-                />
+                <IconMatrix stroke={2} />
               </div>
               <h3 className='text-xl font-bold'>Infrastructure Development</h3>
               <p className='text-muted-foreground'>
@@ -39,12 +39,7 @@ const Achievement = () => {
           <Card>
             <CardContent className='p-6 space-y-4'>
               <div className='h-12 w-12 rounded-full bg-white border border-[#000080] flex items-center justify-center'>
-                <img
-                  src='/placeholder.svg?height=24&width=24'
-                  alt='Education Icon'
-                  width={24}
-                  height={24}
-                />
+                <IconSchool stroke={2} />
               </div>
               <h3 className='text-xl font-bold'>Education Reform</h3>
               <p className='text-muted-foreground'>
@@ -57,12 +52,7 @@ const Achievement = () => {
           <Card>
             <CardContent className='p-6 space-y-4'>
               <div className='h-12 w-12 rounded-full bg-[#138808]/10 flex items-center justify-center'>
-                <img
-                  src='/placeholder.svg?height=24&width=24'
-                  alt='Healthcare Icon'
-                  width={24}
-                  height={24}
-                />
+                <IconHealthRecognition stroke={2} />
               </div>
               <h3 className='text-xl font-bold'>Healthcare Access</h3>
               <p className='text-muted-foreground'>

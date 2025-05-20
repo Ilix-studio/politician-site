@@ -1,4 +1,9 @@
-import { Button } from "@/components/ui/button";
+import A from "./../assets/Galleries/A.jpg";
+import B from "./../assets/Galleries/B.jpg";
+import C from "./../assets/Galleries/C.jpg";
+import D from "./../assets/Galleries/D.jpg";
+import E from "./../assets/Galleries/E.jpg";
+import F from "./../assets/Galleries/F.jpg";
 
 const Gallery = () => {
   return (
@@ -16,69 +21,49 @@ const Gallery = () => {
           </p>
         </div>
 
-        <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
+        <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
           <div className='relative aspect-square'>
             <img
-              src='/placeholder.svg?height=300&width=300'
+              src={A}
               alt='Community Meeting'
               className='object-cover rounded-lg'
             />
           </div>
           <div className='relative aspect-square'>
             <img
-              src='/placeholder.svg?height=300&width=300'
+              src={B}
               alt='Inauguration Ceremony'
               className='object-cover rounded-lg'
             />
           </div>
           <div className='relative aspect-square'>
             <img
-              src='/placeholder.svg?height=300&width=300'
+              src={E}
               alt='Rural Visit'
               className='object-cover rounded-lg'
             />
           </div>
           <div className='relative aspect-square'>
             <img
-              src='/placeholder.svg?height=300&width=300'
+              src={D}
               alt='Parliament Session'
               className='object-cover rounded-lg'
             />
           </div>
           <div className='relative aspect-square'>
             <img
-              src='/placeholder.svg?height=300&width=300'
+              src={C}
               alt='Public Rally'
               className='object-cover rounded-lg'
             />
           </div>
           <div className='relative aspect-square'>
             <img
-              src='/placeholder.svg?height=300&width=300'
+              src={F}
               alt='School Visit'
               className='object-cover rounded-lg'
             />
           </div>
-          <div className='relative aspect-square'>
-            <img
-              src='/placeholder.svg?height=300&width=300'
-              alt='Independence Day Celebration'
-              className='object-cover rounded-lg'
-            />
-          </div>
-          <div className='relative aspect-square'>
-            <img
-              src='/placeholder.svg?height=300&width=300'
-              alt='Press Conference'
-              className='object-cover rounded-lg'
-            />
-          </div>
-        </div>
-
-        <div className='text-center mt-8'>
-          <Button variant='outline' size='lg'>
-            View All Photos
-          </Button>
         </div>
       </div>
     </section>

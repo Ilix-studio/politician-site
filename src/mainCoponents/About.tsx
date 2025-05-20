@@ -1,3 +1,6 @@
+import BiswajitPhukan from "./../assets/user.jpg";
+import BJP from "./../assets/bjp.png";
+
 const About = () => {
   return (
     <section id='about' className='py-16 md:py-24 bg-white'>
@@ -5,16 +8,12 @@ const About = () => {
         <div className='grid gap-12 md:grid-cols-2 items-center'>
           <div className='relative aspect-square max-w-md mx-auto'>
             <img
-              src='/placeholder.svg?height=400&width=400'
+              src={BiswajitPhukan}
               alt='Biswajit Phukan'
               className='object-cover rounded-lg'
             />
             <div className='absolute -bottom-4 -right-4 w-32 h-32'>
-              <img
-                src='/indian-flag.png'
-                alt='Indian Flag'
-                className='object-contain'
-              />
+              <img src={BJP} alt='Indian Flag' className='object-contain' />
             </div>
           </div>
           <div className='space-y-6'>
