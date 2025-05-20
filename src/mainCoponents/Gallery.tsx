@@ -24,7 +24,7 @@ const Gallery = () => {
         <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
           <div className='relative aspect-square'>
             <img
-              src={A}
+              src={E}
               alt='Community Meeting'
               className='object-cover rounded-lg'
             />
@@ -36,17 +36,18 @@ const Gallery = () => {
               className='object-cover rounded-lg'
             />
           </div>
+
           <div className='relative aspect-square'>
             <img
-              src={E}
-              alt='Rural Visit'
+              src={D}
+              alt='Parliament Session'
               className='object-cover rounded-lg'
             />
           </div>
           <div className='relative aspect-square'>
             <img
-              src={D}
-              alt='Parliament Session'
+              src={A}
+              alt='Rural Visit'
               className='object-cover rounded-lg'
             />
           </div>

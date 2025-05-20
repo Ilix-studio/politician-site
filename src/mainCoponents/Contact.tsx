@@ -59,7 +59,7 @@ const Contact = () => {
                 <div>
                   <div className='text-sm font-medium'>Office Address</div>
                   <div className='text-sm text-muted-foreground'>
-                    123 Parliament Street, New Delhi, India
+                    Dispur, Guwahati, Assam 781005, India.
                   </div>
                 </div>
               </div>
