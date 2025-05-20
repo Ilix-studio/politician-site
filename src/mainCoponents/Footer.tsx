@@ -5,11 +5,11 @@ import BJP_LOGO from "./../assets/bjp.png";
 const Footer = () => {
   return (
     <footer className='border-t bg-slate-50'>
-      <div className='container py-12'>
+      <div className='container py-8 md:py-12 px-4 sm:px-6'>
         <div className='grid gap-8 md:grid-cols-2 lg:grid-cols-4'>
-          <div className='space-y-4'>
-            <div className='flex items-center gap-2'>
-              <div className='relative h-8 w-8'>
+          <div className='space-y-4 px-2'>
+            <div className='flex items-center gap-3'>
+              <div className='relative h-10 w-10'>
                 <img src={BJP_LOGO} alt='Logo' className='object-contain' />
               </div>
               <span className='text-lg font-bold'>Biswajit Phukan</span>
@@ -20,9 +20,9 @@ const Footer = () => {
             </p>
           </div>
 
-          <div className='space-y-4'>
+          <div className='space-y-4 px-2'>
             <h3 className='text-lg font-semibold'>Quick Links</h3>
-            <nav className='flex flex-col space-y-2'>
+            <nav className='flex flex-col space-y-3'>
               <Link
                 to='#home'
                 className='text-sm text-muted-foreground hover:text-primary'
@@ -56,9 +56,9 @@ const Footer = () => {
             </nav>
           </div>
 
-          <div className='space-y-4'>
+          <div className='space-y-4 px-2'>
             <h3 className='text-lg font-semibold'>Resources</h3>
-            <nav className='flex flex-col space-y-2'>
+            <nav className='flex flex-col space-y-3'>
               <Link
                 to='#'
                 className='text-sm text-muted-foreground hover:text-primary'
@@ -92,30 +92,30 @@ const Footer = () => {
             </nav>
           </div>
 
-          <div className='space-y-4'>
+          <div className='space-y-4 px-2'>
             <h3 className='text-lg font-semibold'>Subscribe</h3>
             <p className='text-sm text-muted-foreground'>
               Stay updated with our newsletter
             </p>
-            <form className='flex gap-2'>
+            <form className='flex flex-col sm:flex-row gap-3'>
               <input
                 type='email'
-                className='flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
+                className='flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
                 placeholder='Your email'
               />
-              <Button type='submit' variant='outline'>
+              <Button type='submit' variant='outline' className='h-11 shrink-0'>
                 Subscribe
               </Button>
             </form>
           </div>
         </div>
 
-        <div className='mt-8 pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-4'>
-          <p className='text-sm text-muted-foreground'>
+        <div className='mt-8 pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-6 px-2'>
+          <p className='text-sm text-muted-foreground text-center md:text-left'>
             &copy; {new Date().getFullYear()} Biswajit Phukan. All rights
             reserved.
           </p>
-          <div className='flex gap-4'>
+          <div className='flex flex-wrap justify-center gap-4 md:gap-6'>
             <Link
               to='#'
               className='text-sm text-muted-foreground hover:text-primary'

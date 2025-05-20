@@ -13,19 +13,21 @@ import Timeline from "./mainCoponents/Timeline";
 const Home = () => {
   return (
     <>
-      <Header />
-      <main className='flex-1'>
-        <HeroSection />
-        <About />
-        <Timeline />
-        <Achievement />
-        <Initiatives />
-        <Marquee />
-        <Gallery />
-        {/* <Press /> */}
-        <Contact />
-      </main>
-      <Footer />
+      <div className='flex min-h-screen flex-col'>
+        <Header />
+        <main className='flex-1'>
+          <HeroSection />
+          <About />
+          <Timeline />
+          <Achievement />
+          <Initiatives />
+          <Marquee />
+          <Gallery />
+          {/* <Press /> */}
+          <Contact />
+        </main>
+        <Footer />
+      </div>
     </>
   );
 };
