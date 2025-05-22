@@ -1,8 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import BJP_LOGO from "./../assets/bjp.png";
+import { Badge } from "@/components/ui/badge";
 
 const Footer = () => {
+  const legalLinks = [
+    "Privacy Policy",
+    "Terms of Service",
+    "Cookie Policy",
+    "Accessibility",
+    "Sitemap",
+  ];
+
   return (
     <footer className='border-t bg-slate-50'>
       <div className='container py-8 md:py-12 px-4 sm:px-6'>
@@ -110,30 +119,31 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className='mt-8 pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-6 px-2'>
-          <p className='text-sm text-muted-foreground text-center md:text-left'>
-            &copy; {new Date().getFullYear()} Biswajit Phukan. All rights
-            reserved.
-          </p>
+        {/* Bottom Section */}
+        <div className='border-t pt-8 flex flex-col md:flex-row justify-between items-center gap-6'>
+          <div className='flex flex-col md:flex-row items-center gap-4'>
+            <p className='text-sm text-muted-foreground text-center md:text-left'>
+              &copy; {new Date().getFullYear()} Biswajit Phukan. All rights
+              reserved.
+            </p>
+            <Badge
+              variant='outline'
+              className='bg-green-50 text-green-700 border-green-200'
+            >
+              Made in India 🇮🇳
+            </Badge>
+          </div>
+
           <div className='flex flex-wrap justify-center gap-4 md:gap-6'>
-            <Link
-              to='#'
-              className='text-sm text-muted-foreground hover:text-primary'
-            >
-              Privacy Policy
-            </Link>
-            <Link
-              to='#'
-              className='text-sm text-muted-foreground hover:text-primary'
-            >
-              Terms of Service
-            </Link>
-            <Link
-              to='#'
-              className='text-sm text-muted-foreground hover:text-primary'
-            >
-              Cookie Policy
-            </Link>
+            {legalLinks.map((item, index) => (
+              <a
+                key={index}
+                href='#'
+                className='text-sm text-muted-foreground hover:text-primary transition-colors duration-200'
+              >
+                {item}
+              </a>
+            ))}
           </div>
         </div>
       </div>

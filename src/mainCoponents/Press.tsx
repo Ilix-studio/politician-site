@@ -1,5 +1,6 @@
 import { Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import pressFirst from "./../assets/press/F.jpg";
 
 // Press articles data
 const pressArticles = [
@@ -9,7 +10,7 @@ const pressArticles = [
       "Biswajit Phukan inaugurates new rural development project in Sarupathar",
     source: "Assam Tribune",
     date: "May 18, 2023",
-    image: "/placeholder.svg?height=200&width=300",
+    image: pressFirst,
     link: "#",
   },
   {

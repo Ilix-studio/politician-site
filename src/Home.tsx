@@ -1,13 +1,15 @@
-import About from "./mainCoponents/About";
+import About from "./mainCoponents/AboutMe/About";
 import Achievement from "./mainCoponents/Achievement";
 import Contact from "./mainCoponents/Contact";
 import Footer from "./mainCoponents/Footer";
 import Gallery from "./mainCoponents/Gallery";
 import Header from "./mainCoponents/Header";
 import HeroSection from "./mainCoponents/HeroSection";
+
 import Initiatives from "./mainCoponents/Initiatives";
 import Marquee from "./mainCoponents/Marquee";
-// import Press from "./mainCoponents/Press";
+
+import Press from "./mainCoponents/Press";
 import Timeline from "./mainCoponents/Timeline";
 
 const Home = () => {
@@ -23,7 +25,7 @@ const Home = () => {
           <Initiatives />
           <Marquee />
           <Gallery />
-          {/* <Press /> */}
+          <Press />
           <Contact />
         </main>
         <Footer />

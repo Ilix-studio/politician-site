@@ -4,11 +4,13 @@ import {
   IconMatrix,
   IconSchool,
 } from "@tabler/icons-react";
+import Chakra from "./../assets/AshokaChakra.png";
+import { motion } from "framer-motion";
 
 const Achievement = () => {
   return (
-    <section id='achievements' className='py-16 md:py-24 bg-slate-50'>
-      <div className='container'>
+    <section id='achievements' className='py-16 md:py-24 bg-slate-50 relative'>
+      <div className='container relative'>
         <div className='text-center max-w-3xl mx-auto mb-12'>
           <div className='inline-block px-3 py-1 rounded-full bg-[#138808]/10 text-[#138808] font-medium text-sm mb-4'>
             Achievements
@@ -22,8 +24,26 @@ const Achievement = () => {
           </p>
         </div>
 
-        <div className='grid gap-6 md:grid-cols-3'>
-          <Card>
+        <div className='grid gap-6 md:grid-cols-3 relative'>
+          {/* Chakra Decoration - Behind First Card */}
+          <motion.div
+            className='absolute -left-13 -top-13 z-0 hidden md:block'
+            animate={{ rotate: 360 }}
+            transition={{
+              duration: 5,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+          >
+            <img
+              src={Chakra}
+              alt='Ashoka Chakra'
+              className='w-32 h-32 opacity-90'
+            />
+          </motion.div>
+
+          {/* First Card */}
+          <Card className='relative z-10'>
             <CardContent className='p-6 space-y-4'>
               <div className='h-12 w-12 rounded-full bg-[#FF9933]/10 flex items-center justify-center'>
                 <IconMatrix stroke={2} />
@@ -36,6 +56,7 @@ const Achievement = () => {
             </CardContent>
           </Card>
 
+          {/* Second Card */}
           <Card>
             <CardContent className='p-6 space-y-4'>
               <div className='h-12 w-12 rounded-full bg-white border border-[#000080] flex items-center justify-center'>
@@ -49,6 +70,7 @@ const Achievement = () => {
             </CardContent>
           </Card>
 
+          {/* Third Card */}
           <Card>
             <CardContent className='p-6 space-y-4'>
               <div className='h-12 w-12 rounded-full bg-[#138808]/10 flex items-center justify-center'>
