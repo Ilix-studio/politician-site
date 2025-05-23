@@ -2,7 +2,8 @@ import About from "./mainCoponents/AboutMe/About";
 import Achievement from "./mainCoponents/Achievement";
 import Contact from "./mainCoponents/Contact";
 import Footer from "./mainCoponents/Footer";
-import Gallery from "./mainCoponents/Gallery";
+import Gallery from "./mainCoponents/Gallery/Gallery";
+
 import Header from "./mainCoponents/Header";
 import HeroSection from "./mainCoponents/HeroSection";
 

@@ -22,8 +22,9 @@ import {
 } from "lucide-react";
 import BiswajitPhukan from "./../../assets/user.jpg";
 import BJP from "./../../assets/bjp.png";
-import Header from "../Header";
+
 import Footer from "../Footer";
+import { BackNavigation } from "./BackNavigation";
 
 const ExtendAbout = () => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
@@ -92,11 +93,7 @@ const ExtendAbout = () => {
       icon: <Star className='w-4 h-4' />,
     },
     { label: "Elected", value: "2021", icon: <Calendar className='w-4 h-4' /> },
-    {
-      label: "Votes Received",
-      value: "1,07,090",
-      icon: <Vote className='w-4 h-4' />,
-    },
+
     {
       label: "Education",
       value: "MA, Gauhati University",
@@ -111,7 +108,7 @@ const ExtendAbout = () => {
 
   return (
     <>
-      <Header />
+      <BackNavigation />
 
       {/* Hero Section with Enhanced Design */}
       <section className='relative py-20 bg-gradient-to-br from-[#FF9933]/10 via-white to-[#138808]/10'>
@@ -149,11 +146,6 @@ const ExtendAbout = () => {
                 <div className='text-2xl font-bold text-[#FF9933]'>2021</div>
                 <div className='text-xs text-muted-foreground'>Elected</div>
               </div>
-
-              <div className='absolute bottom-4 -right-4 bg-white rounded-lg shadow-lg p-3 hidden md:block'>
-                <div className='text-2xl font-bold text-[#138808]'>1.07L</div>
-                <div className='text-xs text-muted-foreground'>Votes</div>
-              </div>
             </div>
 
             {/* Content Section */}
@@ -187,20 +179,6 @@ const ExtendAbout = () => {
                     </CardContent>
                   </Card>
                 ))}
-              </div>
-
-              <div className='flex flex-wrap gap-4'>
-                <Button
-                  size='lg'
-                  className='bg-[#FF9933] hover:bg-[#FF9933]/90'
-                >
-                  <Users className='w-4 h-4 mr-2' />
-                  Connect With Me
-                </Button>
-                <Button size='lg' variant='outline'>
-                  <BookOpen className='w-4 h-4 mr-2' />
-                  View Achievements
-                </Button>
               </div>
             </div>
           </div>

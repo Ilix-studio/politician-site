@@ -19,7 +19,7 @@ const pressArticles = [
       "BJP MLA Biswajit Phukan announces new healthcare initiative for rural areas",
     source: "The Times of India",
     date: "Apr 12, 2023",
-    image: "/placeholder.svg?height=200&width=300",
+    image: pressFirst,
     link: "#",
   },
   {
@@ -27,7 +27,7 @@ const pressArticles = [
     title: "Education reform policy launched by Assam MLA Biswajit Phukan",
     source: "Northeast Today",
     date: "Mar 05, 2023",
-    image: "/placeholder.svg?height=200&width=300",
+    image: pressFirst,
     link: "#",
   },
   {
@@ -36,7 +36,7 @@ const pressArticles = [
       "Biswajit Phukan addresses infrastructure challenges in Golaghat district",
     source: "Pratidin Time",
     date: "Feb 22, 2023",
-    image: "/placeholder.svg?height=200&width=300",
+    image: pressFirst,
     link: "#",
   },
   {
@@ -44,7 +44,7 @@ const pressArticles = [
     title: "MLA Biswajit Phukan's efforts recognized in state assembly",
     source: "Assam Tribune",
     date: "Jan 15, 2023",
-    image: "/placeholder.svg?height=200&width=300",
+    image: pressFirst,
     link: "#",
   },
   {
@@ -53,7 +53,7 @@ const pressArticles = [
       "Biswajit Phukan leads initiative to promote local culture and heritage",
     source: "The Sentinel",
     date: "Dec 10, 2022",
-    image: "/placeholder.svg?height=200&width=300",
+    image: pressFirst,
     link: "#",
   },
 ];

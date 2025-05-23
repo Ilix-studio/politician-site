@@ -1,9 +1,9 @@
-import A from "./../assets/Galleries/A.jpg";
-import B from "./../assets/Galleries/B.jpg";
-import C from "./../assets/Galleries/C.jpg";
-import D from "./../assets/Galleries/D.jpg";
-import E from "./../assets/Galleries/E.jpg";
-import F from "./../assets/Galleries/F.jpg";
+import A from "./../../assets/Galleries/A.jpg";
+import B from "./../../assets/Galleries/B.jpg";
+import C from "./../../assets/Galleries/C.jpg";
+import D from "./../../assets/Galleries/D.jpg";
+import E from "./../../assets/Galleries/E.jpg";
+import F from "./../../assets/Galleries/F.jpg";
 
 const Gallery = () => {
   return (
