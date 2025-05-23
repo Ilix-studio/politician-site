@@ -115,13 +115,23 @@ const Header = () => {
             >
               Initiatives
             </a>
-            <a
-              href='#gallery'
-              className='text-sm font-medium hover:text-primary py-2 w-full'
-              onClick={toggleMenu}
-            >
-              Gallery
-            </a>
+            <DropdownMenu>
+              <DropdownMenuTrigger className='flex items-center text-sm font-medium hover:text-primary'>
+                Gallery <ChevronDown className='ml-1 w-4 h-4' />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem>
+                  <a href='/photo-gallery' className='w-full'>
+                    Photo Gallery
+                  </a>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <a href='/video-gallery' className='w-full'>
+                    Video Gallery
+                  </a>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <a
               href='#press'
               className='text-sm font-medium hover:text-primary py-2 w-full'
