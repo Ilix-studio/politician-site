@@ -53,14 +53,14 @@ const Header = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem>
-                <a href='/photo-gallery' className='w-full'>
+                <Link to='/photo-gallery' className='w-full'>
                   Photo Gallery
-                </a>
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <a href='/video-gallery' className='w-full'>
+                <Link to='/video-gallery' className='w-full'>
                   Video Gallery
-                </a>
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

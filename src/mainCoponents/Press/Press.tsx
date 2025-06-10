@@ -1,6 +1,12 @@
 import { Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import pressFirst from "./../assets/press/F.jpg";
+import pressFirst from "../../assets/press/F.jpg";
+import pressSecond from "../../assets/press/G.png";
+import pressThird from "../../assets/press/I.png";
+import pressForth from "../../assets/press/J.png";
+import pressFivth from "../../assets/press/K.png";
+import pressSixth from "../../assets/press/L.png";
+import { Link } from "react-router-dom";
 
 // Press articles data
 const pressArticles = [
@@ -19,7 +25,7 @@ const pressArticles = [
       "BJP MLA Biswajit Phukan announces new healthcare initiative for rural areas",
     source: "The Times of India",
     date: "Apr 12, 2023",
-    image: pressFirst,
+    image: pressSecond,
     link: "#",
   },
   {
@@ -27,7 +33,7 @@ const pressArticles = [
     title: "Education reform policy launched by Assam MLA Biswajit Phukan",
     source: "Northeast Today",
     date: "Mar 05, 2023",
-    image: pressFirst,
+    image: pressThird,
     link: "#",
   },
   {
@@ -36,7 +42,7 @@ const pressArticles = [
       "Biswajit Phukan addresses infrastructure challenges in Golaghat district",
     source: "Pratidin Time",
     date: "Feb 22, 2023",
-    image: pressFirst,
+    image: pressForth,
     link: "#",
   },
   {
@@ -44,7 +50,7 @@ const pressArticles = [
     title: "MLA Biswajit Phukan's efforts recognized in state assembly",
     source: "Assam Tribune",
     date: "Jan 15, 2023",
-    image: pressFirst,
+    image: pressFivth,
     link: "#",
   },
   {
@@ -53,7 +59,7 @@ const pressArticles = [
       "Biswajit Phukan leads initiative to promote local culture and heritage",
     source: "The Sentinel",
     date: "Dec 10, 2022",
-    image: pressFirst,
+    image: pressSixth,
     link: "#",
   },
 ];
@@ -81,7 +87,7 @@ const Press = () => {
               key={article.id}
               className='bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300'
             >
-              <a href={article.link} className='block'>
+              <Link to={`/press/${article.id}`} className='block'>
                 <div className='relative'>
                   <img
                     src={article.image}
@@ -92,18 +98,39 @@ const Press = () => {
                     {article.source}
                   </div>
                 </div>
-              </a>
+              </Link>
               <div className='p-4'>
-                <a href={article.link} className='block hover:text-[#FF9933]'>
+                <Link
+                  to={`/press/${article.id}`}
+                  className='block hover:text-[#FF9933]'
+                >
                   <h3 className='font-semibold text-lg mb-2 line-clamp-2'>
                     {article.title}
                   </h3>
-                </a>
+                </Link>
                 <div className='flex justify-between items-center mt-4'>
                   <span className='text-gray-500 text-sm'>{article.date}</span>
+
                   <button
                     className='text-gray-500 hover:text-[#FF9933] transition-colors'
                     aria-label='Share article'
+                    onClick={(e) => {
+                      e.preventDefault();
+                      // Add share functionality here
+                      if (navigator.share) {
+                        navigator.share({
+                          title: article.title,
+                          text: article.title,
+                          url: `${window.location.origin}/press/${article.id}`,
+                        });
+                      } else {
+                        // Fallback - copy to clipboard
+                        navigator.clipboard?.writeText(
+                          `${window.location.origin}/press/${article.id}`
+                        );
+                        alert("Link copied to clipboard!");
+                      }
+                    }}
                   >
                     <Share2 size={18} />
                   </button>

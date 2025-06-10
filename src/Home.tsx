@@ -10,7 +10,7 @@ import HeroSection from "./mainCoponents/HeroSection";
 import Initiatives from "./mainCoponents/Initiatives";
 import Marquee from "./mainCoponents/Marquee";
 
-import Press from "./mainCoponents/Press";
+import Press from "./mainCoponents/Press/Press";
 import Timeline from "./mainCoponents/Timeline";
 
 const Home = () => {
