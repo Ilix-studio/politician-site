@@ -4,93 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { BackNavigation } from "../AboutMe/BackNavigation";
-
-// Video data structure
-interface Video {
-  id: string;
-  title: string;
-  description: string;
-  thumbnail: string;
-  videoUrl: string;
-  date: string;
-  views: string;
-  category: "speech" | "event" | "interview" | "initiative";
-  duration: string;
-}
-
-// Sample video data - replace with actual video URLs and thumbnails
-const videoData: Video[] = [
-  {
-    id: "1",
-    title: "Assembly Speech on Rural Development",
-    description:
-      "Addressing key issues in rural infrastructure and development initiatives for Sarupathar constituency.",
-    thumbnail: "/placeholder.svg?height=200&width=350",
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ", // Replace with actual video URL
-    date: "May 15, 2024",
-    views: "12.5K",
-    category: "speech",
-    duration: "8:42",
-  },
-  {
-    id: "2",
-    title: "Healthcare Initiative Launch",
-    description: "Launching mobile health clinics for remote areas in Assam.",
-    thumbnail: "/placeholder.svg?height=200&width=350",
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-    date: "April 28, 2024",
-    views: "8.7K",
-    category: "initiative",
-    duration: "6:15",
-  },
-  {
-    id: "3",
-    title: "Community Meeting - Education Reform",
-    description:
-      "Interactive session with parents and teachers on education policy changes.",
-    thumbnail: "/placeholder.svg?height=200&width=350",
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-    date: "April 10, 2024",
-    views: "15.2K",
-    category: "event",
-    duration: "12:30",
-  },
-  {
-    id: "4",
-    title: "Interview on Economic Development",
-    description:
-      "Discussion on economic policies and development strategies for Assam.",
-    thumbnail: "/placeholder.svg?height=200&width=350",
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-    date: "March 22, 2024",
-    views: "9.4K",
-    category: "interview",
-    duration: "15:45",
-  },
-  {
-    id: "5",
-    title: "Infrastructure Project Inauguration",
-    description:
-      "Opening ceremony of the new bridge connecting rural communities.",
-    thumbnail: "/placeholder.svg?height=200&width=350",
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-    date: "March 8, 2024",
-    views: "18.9K",
-    category: "event",
-    duration: "7:20",
-  },
-  {
-    id: "6",
-    title: "Legislative Assembly Address",
-    description: "Key speech on women empowerment and social welfare programs.",
-    thumbnail: "/placeholder.svg?height=200&width=350",
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-    date: "February 14, 2024",
-    views: "11.3K",
-    category: "speech",
-    duration: "9:55",
-  },
-];
+import { Video, videoData } from "@/MockData/videoGalleryData";
+import { convertToEmbedUrl } from "@/lib/youtubeUtils";
 
 const VideoGallery = () => {
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
@@ -271,7 +186,7 @@ const VideoGallery = () => {
                 {/* Video Player */}
                 <div className='aspect-video'>
                   <iframe
-                    src={selectedVideo.videoUrl}
+                    src={convertToEmbedUrl(selectedVideo.videoUrl)} // Convert URL here
                     title={selectedVideo.title}
                     className='w-full h-full'
                     frameBorder='0'

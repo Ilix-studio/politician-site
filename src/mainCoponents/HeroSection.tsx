@@ -92,7 +92,7 @@ const HeroSection = () => {
   };
 
   return (
-    <section id='home' className='relative overflow-hidden'>
+    <section id='home' className='relative overflow-hidden '>
       {/* Carousel Background */}
       <div className='absolute inset-0 z-0'>
         <AnimatePresence mode='wait'>

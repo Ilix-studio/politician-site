@@ -14,191 +14,15 @@ import {
   List,
   Heart,
   Eye,
+  Filter,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { BackNavigation } from "../AboutMe/BackNavigation";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-
-// Type definitions
-interface Photo {
-  id: number;
-  src: string;
-  alt: string;
-  title: string;
-  category: string;
-  date: string;
-  location: string;
-  description: string;
-  tags: string[];
-  likes: number;
-  views: number;
-}
-
-interface Category {
-  id: string;
-  name: string;
-  count: number;
-}
-
-// Sample photo data - replace with your actual images
-const samplePhotos: Photo[] = [
-  {
-    id: 1,
-    src: "/api/placeholder/400/300",
-    alt: "Community Meeting",
-    title: "Community Development Meeting",
-    category: "meetings",
-    date: "2024-03-15",
-    location: "Sarupathar Community Hall",
-    description:
-      "Engaging with local leaders to discuss infrastructure improvements and community needs.",
-    tags: ["community", "development", "meeting"],
-    likes: 156,
-    views: 892,
-  },
-  {
-    id: 2,
-    src: "/api/placeholder/400/300",
-    alt: "School Inauguration",
-    title: "New School Inauguration Ceremony",
-    category: "education",
-    date: "2024-02-28",
-    location: "Village Primary School",
-    description:
-      "Inaugurating a new primary school building to enhance educational facilities in rural areas.",
-    tags: ["education", "inauguration", "development"],
-    likes: 203,
-    views: 1247,
-  },
-  {
-    id: 3,
-    src: "/api/placeholder/400/300",
-    alt: "Healthcare Initiative",
-    title: "Mobile Health Clinic Launch",
-    category: "healthcare",
-    date: "2024-01-20",
-    location: "Rural Health Center",
-    description:
-      "Launching mobile health clinics to provide medical services to remote villages.",
-    tags: ["healthcare", "rural", "service"],
-    likes: 178,
-    views: 934,
-  },
-  {
-    id: 4,
-    src: "/api/placeholder/400/300",
-    alt: "Cultural Festival",
-    title: "Assamese Cultural Festival",
-    category: "culture",
-    date: "2024-04-10",
-    location: "Cultural Center",
-    description:
-      "Celebrating Assamese heritage and promoting local arts and traditions.",
-    tags: ["culture", "festival", "heritage"],
-    likes: 312,
-    views: 1856,
-  },
-  {
-    id: 5,
-    src: "/api/placeholder/400/300",
-    alt: "Infrastructure Project",
-    title: "Road Development Project",
-    category: "infrastructure",
-    date: "2024-01-05",
-    location: "Highway Construction Site",
-    description:
-      "Overseeing the construction of new roads to improve connectivity in rural areas.",
-    tags: ["infrastructure", "roads", "development"],
-    likes: 145,
-    views: 723,
-  },
-  {
-    id: 6,
-    src: "/api/placeholder/400/300",
-    alt: "Youth Program",
-    title: "Youth Skill Development Program",
-    category: "youth",
-    date: "2024-03-22",
-    location: "Training Center",
-    description:
-      "Launching skill development programs for youth to enhance employment opportunities.",
-    tags: ["youth", "skills", "employment"],
-    likes: 267,
-    views: 1134,
-  },
-  {
-    id: 7,
-    src: "/api/placeholder/400/300",
-    alt: "Agricultural Meet",
-    title: "Farmers' Advisory Meeting",
-    category: "agriculture",
-    date: "2024-02-14",
-    location: "Agricultural Extension Office",
-    description:
-      "Discussing modern farming techniques and government support for farmers.",
-    tags: ["agriculture", "farmers", "advisory"],
-    likes: 189,
-    views: 876,
-  },
-  {
-    id: 8,
-    src: "/api/placeholder/400/300",
-    alt: "Women Empowerment",
-    title: "Women Entrepreneurship Workshop",
-    category: "social",
-    date: "2024-03-08",
-    location: "Women's Development Center",
-    description:
-      "Empowering women through entrepreneurship and skill development programs.",
-    tags: ["women", "empowerment", "workshop"],
-    likes: 234,
-    views: 1345,
-  },
-];
-
-const categories: Category[] = [
-  { id: "all", name: "All Photos", count: samplePhotos.length },
-  {
-    id: "meetings",
-    name: "Meetings",
-    count: samplePhotos.filter((p) => p.category === "meetings").length,
-  },
-  {
-    id: "education",
-    name: "Education",
-    count: samplePhotos.filter((p) => p.category === "education").length,
-  },
-  {
-    id: "healthcare",
-    name: "Healthcare",
-    count: samplePhotos.filter((p) => p.category === "healthcare").length,
-  },
-  {
-    id: "culture",
-    name: "Culture",
-    count: samplePhotos.filter((p) => p.category === "culture").length,
-  },
-  {
-    id: "infrastructure",
-    name: "Infrastructure",
-    count: samplePhotos.filter((p) => p.category === "infrastructure").length,
-  },
-  {
-    id: "youth",
-    name: "Youth",
-    count: samplePhotos.filter((p) => p.category === "youth").length,
-  },
-  {
-    id: "agriculture",
-    name: "Agriculture",
-    count: samplePhotos.filter((p) => p.category === "agriculture").length,
-  },
-  {
-    id: "social",
-    name: "Social",
-    count: samplePhotos.filter((p) => p.category === "social").length,
-  },
-];
+import { Photo } from "@/types/photo.types";
+import { categories, samplePhotos } from "@/MockData/photoGalleryData";
 
 const PhotoGallery = () => {
   const [photos, setPhotos] = useState<Photo[]>(samplePhotos);
@@ -210,6 +34,7 @@ const PhotoGallery = () => {
   const [sortBy, setSortBy] = useState<string>("date");
   const [likedPhotos, setLikedPhotos] = useState<Set<number>>(new Set());
   const [currentLightboxIndex, setCurrentLightboxIndex] = useState<number>(0);
+  const [showMobileControls, setShowMobileControls] = useState<boolean>(false);
 
   // Filter and search logic
   useEffect(() => {
@@ -331,7 +156,6 @@ const PhotoGallery = () => {
       <BackNavigation />
       <section className='py-16 bg-gradient-to-br from-slate-50 to-white'>
         <div className='container mx-auto px-4'>
-          {/* Header */}
           <motion.div
             className='text-center mb-12'
             initial={{ opacity: 0, y: -20 }}
@@ -350,9 +174,27 @@ const PhotoGallery = () => {
             </p>
           </motion.div>
 
+          {/* Mobile Filter Toggle Button */}
+          <div className='lg:hidden mb-4'>
+            <button
+              onClick={() => setShowMobileControls(!showMobileControls)}
+              className='w-full flex items-center justify-center gap-2 px-4 py-3 bg-white rounded-xl shadow-lg border border-slate-100 text-slate-700 font-medium hover:bg-slate-50 transition-colors'
+            >
+              <Filter className='w-5 h-5' />
+              Search & Filters
+              {showMobileControls ? (
+                <ChevronUp className='w-5 h-5' />
+              ) : (
+                <ChevronDown className='w-5 h-5' />
+              )}
+            </button>
+          </div>
+
           {/* Controls */}
           <motion.div
-            className='flex flex-col lg:flex-row gap-4 mb-8 p-6 bg-white rounded-2xl shadow-lg border border-slate-100'
+            className={`flex-col lg:flex-row gap-4 mb-8 p-6 bg-white rounded-2xl shadow-lg border border-slate-100 ${
+              showMobileControls ? "flex" : "hidden lg:flex"
+            }`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
