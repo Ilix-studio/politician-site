@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import BJP_LOGO from "./../assets/bjp.png";
+
 import { Badge } from "@/components/ui/badge";
 
 const Footer = () => {
@@ -19,7 +19,11 @@ const Footer = () => {
           <div className='space-y-4 px-2'>
             <div className='flex items-center gap-3'>
               <div className='relative h-10 w-10'>
-                <img src={BJP_LOGO} alt='Logo' className='object-contain' />
+                <img
+                  src='https://i.postimg.cc/0Qrhpj56/BJPico.png'
+                  alt='Logo'
+                  className='object-contain'
+                />
               </div>
               <span className='text-lg font-bold'>Biswajit Phukan</span>
             </div>

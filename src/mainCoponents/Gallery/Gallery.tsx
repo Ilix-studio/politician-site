@@ -2,8 +2,6 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ZoomIn, ChevronLeft, ChevronRight } from "lucide-react";
 
-import A from "./../../assets/Galleries/A.jpg";
-import B from "./../../assets/Galleries/B.jpg";
 import C from "./../../assets/Galleries/C.jpg";
 import D from "./../../assets/Galleries/D.jpg";
 import E from "./../../assets/Galleries/E.jpg";
@@ -17,9 +15,17 @@ interface GalleryImage {
 
 const galleryImages: GalleryImage[] = [
   { src: E, alt: "Community Meeting", title: "Community Meeting" },
-  { src: B, alt: "Inauguration Ceremony", title: "Inauguration Ceremony" },
+  {
+    src: "https://i.postimg.cc/FFMwLhMR/B.jpg",
+    alt: "Inauguration Ceremony",
+    title: "Inauguration Ceremony",
+  },
   { src: D, alt: "Parliament Session", title: "Parliament Session" },
-  { src: A, alt: "Rural Visit", title: "Rural Visit" },
+  {
+    src: "https://i.postimg.cc/2yZJKtZr/A.jpg",
+    alt: "Rural Visit",
+    title: "Rural Visit",
+  },
   { src: C, alt: "Public Rally", title: "Public Rally" },
   { src: F, alt: "School Visit", title: "School Visit" },
 ];
