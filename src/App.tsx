@@ -6,6 +6,10 @@ import PhotoGallery from "./mainCoponents/Gallery/PhotoGallery";
 import VideoGallery from "./mainCoponents/Gallery/VideoGallery";
 import ShowPressById from "./mainCoponents/Press/ShowPressById";
 import { useEffect } from "react";
+import LoginUser from "./mainCoponents/Admin/LoginUser";
+import AdminDash from "./mainCoponents/Admin/AdminDash";
+import ViewMessage from "./mainCoponents/Admin/ViewMessage";
+import NotFound from "./mainCoponents/NotFound";
 
 const App = () => {
   const location = useLocation();
@@ -21,6 +25,15 @@ const App = () => {
       <Route path='/photo-gallery' element={<PhotoGallery />} />
       <Route path='/video-gallery' element={<VideoGallery />} />
       <Route path='/press/:id' element={<ShowPressById />} />
+      {/* Admin Routes */}
+      <Route path='/admin/login' element={<LoginUser />} />
+      <Route path='/admin/dashboard' element={<AdminDash />} />
+
+      {/*  Contact  Routes */}
+      <Route path='/admin/message/:id' element={<ViewMessage />} />
+
+      {/*  Not Found  Routes */}
+      <Route path='*' element={<NotFound />} />
     </Routes>
   );
 };
