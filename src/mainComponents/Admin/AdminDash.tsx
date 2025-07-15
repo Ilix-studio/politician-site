@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 
 const AdminDash = () => {
-  const [activeTab, setActiveTab] = useState("overview");
+  // const [activeTab, setActiveTab] = useState("overview");
 
   const stats = [
     {
