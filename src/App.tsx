@@ -1,15 +1,15 @@
 import "./App.css";
 import { Routes, Route, useLocation } from "react-router-dom";
 import Home from "./Home";
-import ExtendAbout from "./mainCoponents/AboutMe/ExtendAbout";
-import PhotoGallery from "./mainCoponents/Gallery/PhotoGallery";
-import VideoGallery from "./mainCoponents/Gallery/VideoGallery";
-import ShowPressById from "./mainCoponents/Press/ShowPressById";
+import ExtendAbout from "./mainComponents/AboutMe/ExtendAbout";
+import PhotoGallery from "./mainComponents/Gallery/PhotoGallery";
+import VideoGallery from "./mainComponents/Gallery/VideoGallery";
+import ShowPressById from "./mainComponents/Press/ShowPressById";
 import { useEffect } from "react";
-import LoginUser from "./mainCoponents/Admin/LoginUser";
-import AdminDash from "./mainCoponents/Admin/AdminDash";
-import ViewMessage from "./mainCoponents/Admin/ViewMessage";
-import NotFound from "./mainCoponents/NotFound";
+import LoginUser from "./mainComponents/Admin/LoginUser";
+import AdminDash from "./mainComponents/Admin/AdminDash";
+import ViewMessage from "./mainComponents/Admin/ViewMessage";
+import NotFound from "./mainComponents/NotFound";
 
 const App = () => {
   const location = useLocation();

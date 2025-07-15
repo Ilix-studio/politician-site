@@ -1,17 +1,17 @@
-import About from "./mainCoponents/AboutMe/About";
-import Achievement from "./mainCoponents/Achievement";
-import Contact from "./mainCoponents/Contact";
-import Footer from "./mainCoponents/Footer";
-import Gallery from "./mainCoponents/Gallery/Gallery";
+import About from "./mainComponents/AboutMe/About";
+import Achievement from "./mainComponents/Achievement";
+import Contact from "./mainComponents/Contact";
+import Footer from "./mainComponents/Footer";
+import Gallery from "./mainComponents/Gallery/Gallery";
 
-import Header from "./mainCoponents/Header";
-import HeroSection from "./mainCoponents/HeroSection";
+import Header from "./mainComponents/Header";
+import HeroSection from "./mainComponents/HeroSection";
 
-import Initiatives from "./mainCoponents/Initiatives";
-import Marquee from "./mainCoponents/Marquee";
+import Initiatives from "./mainComponents/Initiatives";
+import Marquee from "./mainComponents/Marquee";
 
-import Press from "./mainCoponents/Press/Press";
-import Timeline from "./mainCoponents/Timeline";
+import Press from "./mainComponents/Press/Press";
+import Timeline from "./mainComponents/Timeline";
 
 const Home = () => {
   return (
