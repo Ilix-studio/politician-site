@@ -1,4 +1,3 @@
-// import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,11 +17,73 @@ import {
   MessageCircle,
   Upload,
   Edit,
+  Loader2,
+  Delete,
 } from "lucide-react";
 
-const AdminDash = () => {
-  // const [activeTab, setActiveTab] = useState("overview");
+import { useSelector } from "react-redux";
+import {
+  selectAuth,
+  selectIsAdmin,
+  logout,
+} from "@/redux-store/slices/authSlice";
+import { Navigate, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 
+// Import API hooks
+import {
+  useGetContactMessagesQuery,
+  useMarkMessageAsReadMutation,
+} from "@/redux-store/services/contactApi";
+
+const AdminDash = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useSelector(selectAuth);
+  const isAdmin = useSelector(selectIsAdmin);
+
+  // API hooks
+  const {
+    data: messagesData,
+    isLoading: messagesLoading,
+    error: messagesError,
+    refetch: refetchMessages,
+  } = useGetContactMessagesQuery({
+    page: 1,
+    limit: 4, // Show 4 recent messages in dashboard
+  });
+
+  const [markMessageAsRead, { isLoading: markingAsRead }] =
+    useMarkMessageAsReadMutation();
+
+  if (!isAuthenticated || !isAdmin) {
+    return <Navigate to='/admin/login' />;
+  }
+
+  const handleLogout = () => {
+    dispatch(logout());
+  };
+
+  const handleMarkAsRead = async (
+    messageId: string,
+    currentReadStatus: boolean
+  ) => {
+    try {
+      await markMessageAsRead({
+        id: messageId,
+        isRead: !currentReadStatus,
+      }).unwrap();
+    } catch (error) {
+      console.error("Failed to update message status:", error);
+    }
+  };
+
+  const handleViewMessage = (id: string) => {
+    navigate(`/admin/messages/${id}`);
+    console.log("View message:", id);
+  };
+
+  // Static stats - you can replace with real data from other API calls
   const stats = [
     {
       title: "Total Visitors",
@@ -33,8 +94,8 @@ const AdminDash = () => {
     },
     {
       title: "Contact Messages",
-      value: "24",
-      change: "+3",
+      value: messagesData?.pagination?.total?.toString() || "0",
+      change: messagesData?.unreadCount ? `+${messagesData.unreadCount}` : "0",
       icon: Mail,
       color: "text-green-600",
     },
@@ -51,37 +112,6 @@ const AdminDash = () => {
       change: "+2",
       icon: Video,
       color: "text-orange-600",
-    },
-  ];
-
-  const recentMessages = [
-    {
-      id: 1,
-      name: "Rajesh Kumar",
-      subject: "Infrastructure Query",
-      time: "2 hours ago",
-      status: "unread",
-    },
-    {
-      id: 2,
-      name: "Priya Sharma",
-      subject: "Education Support",
-      time: "4 hours ago",
-      status: "read",
-    },
-    {
-      id: 3,
-      name: "Amit Das",
-      subject: "Healthcare Access",
-      time: "6 hours ago",
-      status: "unread",
-    },
-    {
-      id: 4,
-      name: "Meera Patil",
-      subject: "Job Opportunity",
-      time: "1 day ago",
-      status: "read",
     },
   ];
 
@@ -112,9 +142,22 @@ const AdminDash = () => {
     },
   ];
 
-  const logout = () => {
-    window.location.href = "/";
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInHours / 24);
+
+    if (diffInDays > 0) {
+      return `${diffInDays} day${diffInDays > 1 ? "s" : ""} ago`;
+    } else if (diffInHours > 0) {
+      return `${diffInHours} hour${diffInHours > 1 ? "s" : ""} ago`;
+    } else {
+      return "Just now";
+    }
   };
+
   return (
     <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white'>
       {/* Header */}
@@ -131,7 +174,7 @@ const AdminDash = () => {
           </div>
 
           <Button
-            onClick={logout}
+            onClick={handleLogout}
             variant='ghost'
             className='flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50'
           >
@@ -199,43 +242,87 @@ const AdminDash = () => {
                 <CardTitle className='flex items-center gap-2'>
                   <MessageCircle className='w-5 h-5 text-[#FF9933]' />
                   Recent Messages
+                  {messagesData?.unreadCount &&
+                    messagesData.unreadCount > 0 && (
+                      <Badge variant='destructive' className='ml-2'>
+                        {messagesData.unreadCount} new
+                      </Badge>
+                    )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className='space-y-4'>
-                  {recentMessages.map((message) => (
-                    <div
-                      key={message.id}
-                      className='flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors'
-                    >
-                      <div className='flex-1'>
-                        <div className='flex items-center gap-2'>
-                          <p className='font-medium'>{message.name}</p>
-                          {message.status === "unread" && (
-                            <Badge variant='destructive' className='text-xs'>
-                              New
-                            </Badge>
-                          )}
+                {messagesLoading ? (
+                  <div className='flex items-center justify-center py-8'>
+                    <Loader2 className='w-6 h-6 animate-spin' />
+                    <span className='ml-2'>Loading messages...</span>
+                  </div>
+                ) : messagesError ? (
+                  <div className='text-center py-8'>
+                    <p className='text-red-600 mb-4'>Failed to load messages</p>
+                    <Button onClick={refetchMessages} variant='outline'>
+                      Retry
+                    </Button>
+                  </div>
+                ) : messagesData?.data && messagesData.data.length > 0 ? (
+                  <div className='space-y-4'>
+                    {messagesData.data.map((message) => (
+                      <div
+                        key={message._id}
+                        className='flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors'
+                      >
+                        <div className='flex-1'>
+                          <div className='flex items-center gap-2'>
+                            <p className='font-medium'>{message.name}</p>
+                            {!message.isRead && (
+                              <Badge variant='destructive' className='text-xs'>
+                                New
+                              </Badge>
+                            )}
+                          </div>
+                          <p className='text-sm text-muted-foreground'>
+                            {message.subject}
+                          </p>
+                          <p className='text-xs text-muted-foreground'>
+                            {formatTimeAgo(message.createdAt)}
+                          </p>
                         </div>
-                        <p className='text-sm text-muted-foreground'>
-                          {message.subject}
-                        </p>
-                        <p className='text-xs text-muted-foreground'>
-                          {message.time}
-                        </p>
+                        <div className='flex gap-2'>
+                          <Button
+                            size='sm'
+                            variant='outline'
+                            onClick={() => handleViewMessage(message._id)}
+                          >
+                            <Eye className='w-4 h-4' />
+                          </Button>
+                          <Button
+                            size='sm'
+                            variant='outline'
+                            onClick={() =>
+                              handleMarkAsRead(message._id, message.isRead)
+                            }
+                            disabled={markingAsRead}
+                          >
+                            {markingAsRead ? (
+                              <Loader2 className='w-4 h-4 animate-spin' />
+                            ) : (
+                              <Delete className='w-4 h-4' />
+                            )}
+                          </Button>
+                        </div>
                       </div>
-                      <div className='flex gap-2'>
-                        <Button size='sm' variant='outline'>
-                          <Eye className='w-4 h-4' />
-                        </Button>
-                        <Button size='sm' variant='outline'>
-                          <Edit className='w-4 h-4' />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <Button className='w-full mt-4 bg-[#FF9933] hover:bg-[#FF9933]/90'>
+                    ))}
+                  </div>
+                ) : (
+                  <div className='text-center py-8'>
+                    <MessageCircle className='w-12 h-12 text-gray-400 mx-auto mb-4' />
+                    <p className='text-gray-600'>No messages found</p>
+                  </div>
+                )}
+
+                <Button
+                  className='w-full mt-4 bg-[#FF9933] hover:bg-[#FF9933]/90'
+                  onClick={() => navigate("/admin/messages")}
+                >
                   View All Messages
                 </Button>
               </CardContent>
@@ -296,6 +383,19 @@ const AdminDash = () => {
                   <div className='flex items-center justify-between'>
                     <span className='text-sm'>Server Health</span>
                     <Badge className='bg-green-100 text-green-800'>Good</Badge>
+                  </div>
+                  <div className='flex items-center justify-between'>
+                    <span className='text-sm'>Unread Messages</span>
+                    <Badge
+                      variant={
+                        messagesData?.unreadCount &&
+                        messagesData.unreadCount > 0
+                          ? "destructive"
+                          : "secondary"
+                      }
+                    >
+                      {messagesData?.unreadCount || 0}
+                    </Badge>
                   </div>
                 </div>
               </CardContent>
@@ -380,4 +480,5 @@ const AdminDash = () => {
     </div>
   );
 };
+
 export default AdminDash;

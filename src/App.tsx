@@ -30,7 +30,7 @@ const App = () => {
       <Route path='/admin/dashboard' element={<AdminDash />} />
 
       {/*  Contact  Routes */}
-      <Route path='/admin/message/:id' element={<ViewMessage />} />
+      <Route path='/admin/messages/:id' element={<ViewMessage />} />
 
       {/*  Not Found  Routes */}
       <Route path='*' element={<NotFound />} />

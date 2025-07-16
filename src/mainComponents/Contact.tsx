@@ -1,16 +1,82 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  AlertCircle,
+  CheckCircle,
   Facebook,
   Instagram,
+  Loader2,
   Mail,
   MapPin,
   Phone,
   Twitter,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useSendContactMessageMutation } from "@/redux-store/services/contactApi";
+
+interface FormData {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
 
 const Contact = () => {
+  const [formData, setFormData] = useState<FormData>({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
+  const [sendContactMessage, { isLoading, isSuccess, error }] =
+    useSendContactMessageMutation();
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (
+      !formData.name ||
+      !formData.email ||
+      !formData.subject ||
+      !formData.message
+    ) {
+      return;
+    }
+
+    try {
+      await sendContactMessage(formData).unwrap();
+      // Reset form on success
+      setFormData({ name: "", email: "", subject: "", message: "" });
+    } catch (err) {
+      // Error is handled by RTK Query
+      console.error("Failed to send message:", err);
+    }
+  };
+
+  const getErrorMessage = () => {
+    if (error) {
+      if ("data" in error) {
+        return (error.data as any)?.message || "Failed to send message";
+      }
+      return "Network error. Please try again.";
+    }
+    return "";
+  };
+
   return (
     <section id='contact' className='py-12 md:py-16 lg:py-24 bg-slate-50'>
       <div className='container px-4 sm:px-6'>
@@ -90,53 +156,112 @@ const Contact = () => {
           <Card className='shadow-md'>
             <CardContent className='p-4 md:p-6 space-y-5'>
               <h3 className='text-xl font-bold mb-2'>Send a Message</h3>
-              <form className='space-y-5'>
+              <form onSubmit={handleSubmit} className='space-y-5'>
                 <div className='grid gap-5 sm:grid-cols-2'>
                   <div className='space-y-2'>
-                    <label htmlFor='name' className='text-sm font-medium'>
+                    <Label htmlFor='name' className='text-sm font-medium'>
                       Name
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                       id='name'
+                      name='name'
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      required
+                      disabled={isLoading}
                       className='flex h-11 w-full rounded-md border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
                       placeholder='Your name'
                     />
                   </div>
                   <div className='space-y-2'>
-                    <label htmlFor='email' className='text-sm font-medium'>
+                    <Label htmlFor='email' className='text-sm font-medium'>
                       Email
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                       id='email'
+                      name='email'
                       type='email'
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                      disabled={isLoading}
                       className='flex h-11 w-full rounded-md border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
                       placeholder='Your email'
                     />
                   </div>
                 </div>
                 <div className='space-y-2'>
-                  <label htmlFor='subject' className='text-sm font-medium'>
+                  <Label htmlFor='subject' className='text-sm font-medium'>
                     Subject
-                  </label>
-                  <input
+                  </Label>
+                  <Input
                     id='subject'
+                    name='subject'
+                    value={formData.subject}
+                    onChange={handleInputChange}
+                    required
+                    disabled={isLoading}
                     className='flex h-11 w-full rounded-md border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
                     placeholder='Message subject'
                   />
                 </div>
                 <div className='space-y-2'>
-                  <label htmlFor='message' className='text-sm font-medium'>
+                  <Label htmlFor='message' className='text-sm font-medium'>
                     Message
-                  </label>
-                  <textarea
+                  </Label>
+                  <Textarea
                     id='message'
-                    className='flex min-h-[140px] w-full rounded-md border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
+                    name='message'
                     placeholder='Your message'
+                    value={formData.message}
+                    onChange={handleInputChange}
+                    required
+                    rows={5}
+                    disabled={isLoading}
+                    className='flex min-h-[140px] w-full rounded-md border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
                   />
                 </div>
-                <Button className='w-full h-12 bg-[#FF9933] hover:bg-[#FF9933]/90 text-white font-medium'>
-                  Send Message
+                <Button
+                  type='submit'
+                  disabled={isLoading}
+                  className='w-full h-12 bg-[#FF9933] hover:bg-[#FF9933]/90 text-white font-medium'
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                      Sending Message...
+                    </>
+                  ) : (
+                    "Send Message"
+                  )}
                 </Button>
+                {/* Success Message */}
+                {isSuccess && (
+                  <div className='text-center py-4'>
+                    <CheckCircle className='h-12 w-12 text-green-500 mx-auto mb-3' />
+                    <h4 className='text-lg font-semibold text-gray-900 mb-2'>
+                      Message Sent Successfully!
+                    </h4>
+                    <p className='text-gray-600'>
+                      Thank you for contacting us. We'll get back to you soon.
+                    </p>
+                  </div>
+                )}
+
+                {/* Error Message */}
+                {error && (
+                  <div className='p-4 rounded-lg bg-red-50 border border-red-200 flex items-start gap-3'>
+                    <AlertCircle className='h-5 w-5 text-red-500 mt-0.5' />
+                    <div>
+                      <p className='text-red-600 font-medium'>
+                        Failed to send message
+                      </p>
+                      <p className='text-red-600/70 text-sm'>
+                        {getErrorMessage()}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </form>
             </CardContent>
           </Card>

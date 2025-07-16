@@ -18,6 +18,7 @@ import BJP_LOGO from "../../assets/bjp.png";
 import { useLoginAdminMutation } from "@/redux-store/services/adminApi";
 import { useSelector } from "react-redux";
 import { selectAuth } from "@/redux-store/slices/authSlice";
+import { Label } from "@/components/ui/label";
 
 const LoginUser = () => {
   const [email, setEmail] = useState("");
@@ -125,14 +126,14 @@ const LoginUser = () => {
               <form onSubmit={handleSubmit} className='space-y-5'>
                 {/* Email Field */}
                 <div className='space-y-2'>
-                  <label
+                  <Label
                     htmlFor='email'
                     className='text-sm font-medium text-slate-700'
                   >
                     Email Address
-                  </label>
+                  </Label>
                   <div className='relative'>
-                    <Mail className='absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5' />
+                    <Mail className='absolute left-3 top-1/2 transform -translate-y-1/2 text-black w-5 h-5 ' />
                     <Input
                       id='email'
                       name='email'
@@ -148,14 +149,14 @@ const LoginUser = () => {
 
                 {/* Password Field */}
                 <div className='space-y-2'>
-                  <label
+                  <Label
                     htmlFor='password'
                     className='text-sm font-medium text-slate-700'
                   >
                     Password
-                  </label>
+                  </Label>
                   <div className='relative'>
-                    <Lock className='absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5' />
+                    <Lock className='absolute left-3 top-1/2 transform -translate-y-1/2 text-black w-5 h-5' />
                     <Input
                       id='password'
                       name='password'
