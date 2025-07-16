@@ -1,7 +1,7 @@
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const API_CONFIG = {
-  BASE_URL: "https://politician-site-be.onrender.com/api",
+  BASE_URL: "https://politician-site-be-792050347891.europe-west1.run.app/api",
 };
 
 export const baseQuery = fetchBaseQuery({
