@@ -10,6 +10,7 @@ import LoginUser from "./mainComponents/Admin/LoginUser";
 import AdminDash from "./mainComponents/Admin/AdminDash";
 import ViewMessage from "./mainComponents/Admin/ViewMessage";
 import NotFound from "./mainComponents/NotFound";
+import ContactUs from "./mainComponents/Contact";
 
 const App = () => {
   const location = useLocation();
@@ -30,6 +31,7 @@ const App = () => {
       <Route path='/admin/dashboard' element={<AdminDash />} />
 
       {/*  Contact  Routes */}
+      <Route path='/contact' element={<ContactUs />} />
       <Route path='/admin/messages/:id' element={<ViewMessage />} />
 
       {/*  Not Found  Routes */}

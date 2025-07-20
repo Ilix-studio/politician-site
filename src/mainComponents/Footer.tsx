@@ -1,16 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-
 import { Badge } from "@/components/ui/badge";
+import { Mail, Code, PhoneCall, Globe2 } from "lucide-react";
+import { CardSpotlight } from "@/components/ui/card-spotlight";
 
 const Footer = () => {
   const legalLinks = [
     "Privacy Policy",
     "Terms of Service",
     "Cookie Policy",
-    "Accessibility",
+
     "Sitemap",
   ];
+
+  const cardClick = () => {
+    console.log("Its Click");
+  };
 
   return (
     <footer className='border-t bg-slate-50'>
@@ -43,7 +48,7 @@ const Footer = () => {
                 Home
               </Link>
               <Link
-                to='#about'
+                to='/about'
                 className='text-sm text-muted-foreground hover:text-primary'
               >
                 About
@@ -59,12 +64,6 @@ const Footer = () => {
                 className='text-sm text-muted-foreground hover:text-primary'
               >
                 Initiatives
-              </Link>
-              <Link
-                to='#gallery'
-                className='text-sm text-muted-foreground hover:text-primary'
-              >
-                Gallery
               </Link>
             </nav>
           </div>
@@ -96,30 +95,55 @@ const Footer = () => {
               >
                 Constituency Map
               </Link>
-              <Link
-                to='#'
-                className='text-sm text-muted-foreground hover:text-primary'
-              >
-                Parliament Records
-              </Link>
             </nav>
           </div>
 
+          {/* Developer Card */}
           <div className='space-y-4 px-2'>
-            <h3 className='text-lg font-semibold'>Subscribe</h3>
-            <p className='text-sm text-muted-foreground'>
-              Stay updated with our newsletter
-            </p>
-            <form className='flex flex-col sm:flex-row gap-3'>
-              <input
-                type='email'
-                className='flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
-                placeholder='Your email'
-              />
-              <Button type='submit' variant='outline' className='h-11 shrink-0'>
-                Subscribe
-              </Button>
-            </form>
+            <CardSpotlight
+              className='bg-white/200 backdrop-blur-sm border shadow-lg p-4 h-auto'
+              radius={300}
+              color='rgba(255, 153, 51, 0.3)'
+            >
+              <div className='relative z-10' onClick={cardClick}>
+                <div className='flex items-center gap-3 mb-3'>
+                  <Code className='h-5 w-5 text-[#FF9933]' />
+                  <div>
+                    <h5 className='font-semibold text-sm text-gray-800'>
+                      Developer Card
+                    </h5>
+                  </div>
+                </div>
+
+                <p className='text-xs text-muted-foreground mb-4 leading-relaxed'>
+                  Crafted with precision and passion for political excellence.
+                </p>
+
+                <div className='flex gap-2 mb-3'>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    className='h-6 w-6 p-0 hover:bg-[#FF9933]/10 hover:border-[#FF9933] transition-all duration-200'
+                  >
+                    <PhoneCall className='h-4 w-4' />
+                  </Button>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    className='h-6 w-6 p-0 hover:bg-blue-50 hover:border-blue-400 transition-all duration-200'
+                  >
+                    <Globe2 className='h-4 w-4' />
+                  </Button>
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    className='h-6 w-6 p-0 hover:bg-green-50 hover:border-green-400 transition-all duration-200'
+                  >
+                    <Mail className='h-4 w-4' />
+                  </Button>
+                </div>
+              </div>
+            </CardSpotlight>
           </div>
         </div>
 
@@ -132,21 +156,21 @@ const Footer = () => {
             </p>
             <Badge
               variant='outline'
-              className='bg-green-50 text-green-700 border-green-200'
+              className='bg-white text-green-600 border-green-200'
             >
               Made in India 🇮🇳
             </Badge>
           </div>
 
-          <div className='flex flex-wrap justify-center gap-4 md:gap-6'>
-            {legalLinks.map((item, index) => (
-              <a
-                key={index}
-                href='#'
-                className='text-sm text-muted-foreground hover:text-primary transition-colors duration-200'
+          <div className='flex flex-wrap justify-center gap-4'>
+            {legalLinks.map((link) => (
+              <Link
+                key={link}
+                to='#'
+                className='text-sm text-muted-foreground hover:text-primary'
               >
-                {item}
-              </a>
+                {link}
+              </Link>
             ))}
           </div>
         </div>
