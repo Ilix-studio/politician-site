@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ZoomIn, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, Calendar, MapPin, Users } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 import C from "./../../assets/Galleries/C.jpg";
 import D from "./../../assets/Galleries/D.jpg";
@@ -8,66 +9,91 @@ import E from "./../../assets/Galleries/E.jpg";
 import F from "./../../assets/Galleries/F.jpg";
 
 interface GalleryImage {
+  id: string;
   src: string;
   alt: string;
   title: string;
+  description: string;
+  date: string;
+  location: string;
+  attendees?: string;
 }
 
 const galleryImages: GalleryImage[] = [
-  { src: E, alt: "Community Meeting", title: "Community Meeting" },
   {
+    id: "1",
+    src: E,
+    alt: "Community Meeting",
+    title: "Community Meeting",
+    description:
+      "Engaging with local community leaders and residents to discuss infrastructure development plans and address their concerns.",
+    date: "March 15, 2024",
+    location: "Sarupathar Community Hall",
+    attendees: "150+ residents",
+  },
+  {
+    id: "2",
     src: "https://i.postimg.cc/FFMwLhMR/B.jpg",
     alt: "Inauguration Ceremony",
     title: "Inauguration Ceremony",
+    description:
+      "Opening ceremony of the new healthcare center, bringing modern medical facilities closer to our rural communities.",
+    date: "February 20, 2024",
+    location: "Golaghat District",
+    attendees: "300+ people",
   },
-  { src: D, alt: "Parliament Session", title: "Parliament Session" },
   {
+    id: "3",
+    src: D,
+    alt: "Parliament Session",
+    title: "Parliament Session",
+    description:
+      "Participating in crucial legislative discussions and representing the voice of Sarupathar constituency in the state assembly.",
+    date: "January 10, 2024",
+    location: "Assam Legislative Assembly",
+    attendees: "All MLAs",
+  },
+  {
+    id: "4",
     src: "https://i.postimg.cc/2yZJKtZr/A.jpg",
     alt: "Rural Visit",
     title: "Rural Visit",
+    description:
+      "Field visit to remote villages to assess development needs and ensure government schemes reach every household.",
+    date: "December 5, 2023",
+    location: "Remote Villages",
+    attendees: "Village heads",
   },
-  { src: C, alt: "Public Rally", title: "Public Rally" },
-  { src: F, alt: "School Visit", title: "School Visit" },
+  {
+    id: "5",
+    src: C,
+    alt: "Public Rally",
+    title: "Public Rally",
+    description:
+      "Massive public gathering to discuss development agenda and connect directly with the people of our constituency.",
+    date: "November 18, 2023",
+    location: "Central Ground",
+    attendees: "5000+ supporters",
+  },
+  {
+    id: "6",
+    src: F,
+    alt: "School Visit",
+    title: "School Visit",
+    description:
+      "Inspecting educational facilities and interacting with students and teachers to improve the quality of education in our region.",
+    date: "October 22, 2023",
+    location: "Government High School",
+    attendees: "200+ students",
+  },
 ];
 
 const Gallery = () => {
-  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(
-    null
-  );
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const openModal = (index: number) => {
-    setSelectedImageIndex(index);
-    setIsModalOpen(true);
-  };
+  const [active, setActive] = useState<GalleryImage | null>(null);
+  const [hovered, setHovered] = useState<number | null>(null);
 
   const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedImageIndex(null);
-  };
-
-  const navigateImage = (direction: "prev" | "next") => {
-    if (selectedImageIndex === null) return;
-
-    if (direction === "prev") {
-      setSelectedImageIndex(
-        selectedImageIndex === 0
-          ? galleryImages.length - 1
-          : selectedImageIndex - 1
-      );
-    } else {
-      setSelectedImageIndex(
-        selectedImageIndex === galleryImages.length - 1
-          ? 0
-          : selectedImageIndex + 1
-      );
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") closeModal();
-    if (e.key === "ArrowLeft") navigateImage("prev");
-    if (e.key === "ArrowRight") navigateImage("next");
+    setActive(null);
   };
 
   return (
@@ -86,143 +112,174 @@ const Gallery = () => {
             </p>
           </div>
 
-          <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 p-1'>
-            {galleryImages.map((image, index) => (
-              <motion.div
-                key={index}
-                className='relative aspect-square group overflow-hidden rounded-lg shadow-md cursor-pointer'
-                whileHover={{ scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-                // onClick={() => openModal(index)}
-                onHoverStart={() => openModal(index)}
-              >
-                <img
-                  src={image.src}
-                  alt={image.alt}
-                  className='object-cover w-full h-full transition-transform duration-300 group-hover:scale-105'
-                />
-
-                {/* Desktop hover overlay */}
-                <div className='absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:flex items-center justify-center'>
+          {/* Expandable Grid Layout */}
+          <div className='w-full'>
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-7xl mx-auto'>
+              {galleryImages.map((image, index) => (
+                <motion.div
+                  key={image.id}
+                  layoutId={`card-${image.id}`}
+                  onClick={() => setActive(image)}
+                  onMouseEnter={() => setHovered(index)}
+                  onMouseLeave={() => setHovered(null)}
+                  className={cn(
+                    "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-900 ease-out cursor-pointer",
+                    hovered !== null &&
+                      hovered !== index &&
+                      "blur-sm scale-[0.98]"
+                  )}
+                >
                   <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    whileHover={{ scale: 1, opacity: 1 }}
-                    className='flex items-center gap-2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium text-gray-800 shadow-lg'
+                    layoutId={`image-${image.id}`}
+                    className='absolute inset-0'
                   >
-                    <ZoomIn className='h-4 w-4' />
-                    View Image
+                    <img
+                      src={image.src}
+                      alt={image.alt}
+                      className='w-full h-full object-cover'
+                    />
                   </motion.div>
-                </div>
-
-                {/* Mobile tap indicator */}
-                <div className='absolute bottom-2 right-2 md:hidden'>
-                  <div className='bg-black/70 backdrop-blur-sm p-1.5 rounded-full'>
-                    <ZoomIn className='h-3 w-3 text-white' />
+                  <div
+                    className={cn(
+                      "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300",
+                      hovered === index ? "opacity-100" : "opacity-0"
+                    )}
+                  >
+                    <div className='text-white'>
+                      <h3 className='text-xl md:text-2xl font-bold mb-2'>
+                        {image.title}
+                      </h3>
+                      <div className='flex items-center gap-4 text-sm opacity-90'>
+                        <div className='flex items-center gap-1'>
+                          <Calendar className='h-4 w-4' />
+                          {image.date}
+                        </div>
+                        <div className='flex items-center gap-1'>
+                          <MapPin className='h-4 w-4' />
+                          {image.location}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Modal */}
+      {/* Expanded Modal */}
       <AnimatePresence>
-        {isModalOpen && selectedImageIndex !== null && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className='fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4'
-            onClick={closeModal}
-            onKeyDown={handleKeyDown}
-            tabIndex={0}
-          >
-            {/* Modal Content */}
+        {active && (
+          <>
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className='relative max-w-5xl max-h-[90vh] w-full'
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Close Button */}
-              <button
-                onClick={closeModal}
-                className='absolute -top-12 right-0 z-10 p-2 text-white hover:text-gray-300 transition-colors'
-                aria-label='Close modal'
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className='fixed inset-0 bg-black/50 backdrop-blur-sm h-full w-full z-50'
+              onClick={closeModal}
+            />
+            <div className='fixed inset-0 grid place-items-center z-[100] p-4'>
+              <motion.div
+                layoutId={`card-${active.id}`}
+                className='w-full max-w-4xl bg-white dark:bg-neutral-900 rounded-2xl overflow-hidden shadow-2xl'
               >
-                <X className='h-8 w-8' />
-              </button>
-
-              {/* Navigation Buttons */}
-              {galleryImages.length > 1 && (
-                <>
-                  <button
-                    onClick={() => navigateImage("prev")}
-                    className='absolute left-4 top-1/2 -translate-y-1/2 z-10 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors'
-                    aria-label='Previous image'
-                  >
-                    <ChevronLeft className='h-6 w-6' />
-                  </button>
-                  <button
-                    onClick={() => navigateImage("next")}
-                    className='absolute right-4 top-1/2 -translate-y-1/2 z-10 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors'
-                    aria-label='Next image'
-                  >
-                    <ChevronRight className='h-6 w-6' />
-                  </button>
-                </>
-              )}
-
-              {/* Image Container */}
-              <div className='relative bg-white rounded-lg overflow-hidden shadow-2xl'>
-                <motion.img
-                  key={selectedImageIndex}
+                {/* Close Button */}
+                <motion.button
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                  src={galleryImages[selectedImageIndex].src}
-                  alt={galleryImages[selectedImageIndex].alt}
-                  className='w-full h-auto max-h-[80vh] object-contain'
-                />
+                  exit={{ opacity: 0 }}
+                  className='absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm rounded-full p-2 hover:bg-white transition-colors'
+                  onClick={closeModal}
+                >
+                  <X className='h-5 w-5 text-gray-800' />
+                </motion.button>
 
-                {/* Image Title */}
-                <div className='absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6'>
-                  <h3 className='text-white text-lg font-semibold'>
-                    {galleryImages[selectedImageIndex].title}
-                  </h3>
-                  <p className='text-white/80 text-sm mt-1'>
-                    {selectedImageIndex + 1} of {galleryImages.length}
-                  </p>
-                </div>
-              </div>
+                {/* Image */}
+                <motion.div
+                  layoutId={`image-${active.id}`}
+                  className='relative h-64 md:h-96 w-full overflow-hidden'
+                >
+                  <img
+                    src={active.src}
+                    alt={active.alt}
+                    className='w-full h-full object-cover'
+                  />
+                  {/* Gradient Overlay */}
+                  <div className='absolute inset-0 bg-gradient-to-t from-black/60 to-transparent' />
 
-              {/* Thumbnail Navigation */}
-              {galleryImages.length > 1 && (
-                <div className='flex justify-center gap-2 mt-4 px-4'>
-                  {galleryImages.map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImageIndex(index)}
-                      className={`relative w-16 h-16 rounded-lg overflow-hidden transition-all duration-200 ${
-                        index === selectedImageIndex
-                          ? "ring-2 ring-white scale-110"
-                          : "opacity-70 hover:opacity-100"
-                      }`}
-                    >
-                      <img
-                        src={image.src}
-                        alt={image.alt}
-                        className='w-full h-full object-cover'
-                      />
-                    </button>
-                  ))}
+                  {/* Title on Image */}
+                  <div className='absolute bottom-6 left-6 text-white'>
+                    <h2 className='text-3xl md:text-4xl font-bold mb-2'>
+                      {active.title}
+                    </h2>
+                    <div className='flex flex-wrap items-center gap-4 text-sm opacity-90'>
+                      <div className='flex items-center gap-1'>
+                        <Calendar className='h-4 w-4' />
+                        {active.date}
+                      </div>
+                      <div className='flex items-center gap-1'>
+                        <MapPin className='h-4 w-4' />
+                        {active.location}
+                      </div>
+                      {active.attendees && (
+                        <div className='flex items-center gap-1'>
+                          <Users className='h-4 w-4' />
+                          {active.attendees}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Content */}
+                <div className='p-6 md:p-8'>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1, duration: 0.3 }}
+                  >
+                    <p className='text-gray-600 dark:text-gray-300 text-lg leading-relaxed mb-6'>
+                      {active.description}
+                    </p>
+
+                    {/* Details Grid */}
+                    <div className='grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 dark:bg-neutral-800 rounded-lg'>
+                      <div className='text-center'>
+                        <Calendar className='h-6 w-6 mx-auto mb-2 text-[#FF9933]' />
+                        <div className='text-sm font-medium text-gray-800 dark:text-gray-200'>
+                          Date
+                        </div>
+                        <div className='text-sm text-gray-600 dark:text-gray-400'>
+                          {active.date}
+                        </div>
+                      </div>
+                      <div className='text-center'>
+                        <MapPin className='h-6 w-6 mx-auto mb-2 text-[#138808]' />
+                        <div className='text-sm font-medium text-gray-800 dark:text-gray-200'>
+                          Location
+                        </div>
+                        <div className='text-sm text-gray-600 dark:text-gray-400'>
+                          {active.location}
+                        </div>
+                      </div>
+                      {active.attendees && (
+                        <div className='text-center'>
+                          <Users className='h-6 w-6 mx-auto mb-2 text-blue-600' />
+                          <div className='text-sm font-medium text-gray-800 dark:text-gray-200'>
+                            Attendees
+                          </div>
+                          <div className='text-sm text-gray-600 dark:text-gray-400'>
+                            {active.attendees}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
                 </div>
-              )}
-            </motion.div>
-          </motion.div>
+              </motion.div>
+            </div>
+          </>
         )}
       </AnimatePresence>
     </>

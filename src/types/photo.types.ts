@@ -8,9 +8,6 @@ export interface Photo {
   date: string;
   location: string;
   description: string;
-  tags: string[];
-  likes: number;
-  views: number;
 }
 
 export interface Category {

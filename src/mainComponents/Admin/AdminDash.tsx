@@ -120,7 +120,7 @@ const AdminDash = () => {
       title: "Upload Photo",
       icon: Upload,
       color: "bg-blue-500",
-      action: () => alert("Photo upload"),
+      action: () => navigate("/admin/addPhoto"),
     },
     {
       title: "Add Video",
@@ -156,6 +156,10 @@ const AdminDash = () => {
     } else {
       return "Just now";
     }
+  };
+
+  const navigateToPhotoDash = () => {
+    navigate("/admin/photoDashboard");
   };
 
   return (
@@ -419,7 +423,10 @@ const AdminDash = () => {
             </CardHeader>
             <CardContent>
               <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                <div className='p-4 border rounded-lg hover:bg-slate-50 transition-colors'>
+                <div
+                  className='p-4 border rounded-lg hover:bg-slate-50 transition-colors'
+                  onClick={navigateToPhotoDash}
+                >
                   <div className='flex items-center justify-between mb-2'>
                     <h3 className='font-medium'>Gallery Photos</h3>
                     <Badge>186</Badge>
