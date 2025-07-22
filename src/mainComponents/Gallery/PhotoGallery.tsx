@@ -12,8 +12,6 @@ import {
   ChevronRight,
   Grid3X3,
   List,
-  Heart,
-  Eye,
   Filter,
   ChevronDown,
   ChevronUp,
@@ -25,14 +23,14 @@ import { Photo } from "@/types/photo.types";
 import { categories, samplePhotos } from "@/MockData/photoGalleryData";
 
 const PhotoGallery = () => {
-  const [photos, setPhotos] = useState<Photo[]>(samplePhotos);
+  const [photos] = useState<Photo[]>(samplePhotos);
   const [filteredPhotos, setFilteredPhotos] = useState<Photo[]>(samplePhotos);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState<string>("date");
-  const [likedPhotos, setLikedPhotos] = useState<Set<number>>(new Set());
+
   const [currentLightboxIndex, setCurrentLightboxIndex] = useState<number>(0);
   const [showMobileControls, setShowMobileControls] = useState<boolean>(false);
 
@@ -52,10 +50,7 @@ const PhotoGallery = () => {
       filtered = filtered.filter(
         (photo) =>
           photo.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          photo.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          photo.tags.some((tag) =>
-            tag.toLowerCase().includes(searchTerm.toLowerCase())
-          )
+          photo.description.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -64,10 +59,7 @@ const PhotoGallery = () => {
       switch (sortBy) {
         case "date":
           return new Date(b.date).getTime() - new Date(a.date).getTime();
-        case "likes":
-          return b.likes - a.likes;
-        case "views":
-          return b.views - a.views;
+
         case "title":
           return a.title.localeCompare(b.title);
         default:
@@ -77,30 +69,6 @@ const PhotoGallery = () => {
 
     setFilteredPhotos(filtered);
   }, [photos, selectedCategory, searchTerm, sortBy]);
-
-  const handleLike = (photoId: number) => {
-    const newLikedPhotos = new Set(likedPhotos);
-    if (newLikedPhotos.has(photoId)) {
-      newLikedPhotos.delete(photoId);
-    } else {
-      newLikedPhotos.add(photoId);
-    }
-    setLikedPhotos(newLikedPhotos);
-
-    // Update photo likes count
-    setPhotos((prev) =>
-      prev.map((photo) =>
-        photo.id === photoId
-          ? {
-              ...photo,
-              likes: newLikedPhotos.has(photoId)
-                ? photo.likes + 1
-                : photo.likes - 1,
-            }
-          : photo
-      )
-    );
-  };
 
   const openLightbox = (photo: Photo, index: number) => {
     setSelectedPhoto(photo);
@@ -341,39 +309,8 @@ const PhotoGallery = () => {
                     </div>
                   </div>
 
-                  <div className='flex flex-wrap gap-1 mb-4'>
-                    {photo.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className='px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-full'
-                      >
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-
                   <div className='flex items-center justify-between'>
-                    <div className='flex items-center gap-4 text-sm text-slate-500'>
-                      <div className='flex items-center gap-1'>
-                        <Eye className='w-4 h-4' />
-                        {photo.views}
-                      </div>
-                      <button
-                        onClick={() => handleLike(photo.id)}
-                        className={`flex items-center gap-1 transition-colors ${
-                          likedPhotos.has(photo.id)
-                            ? "text-red-500"
-                            : "hover:text-red-500"
-                        }`}
-                      >
-                        <Heart
-                          className={`w-4 h-4 ${
-                            likedPhotos.has(photo.id) ? "fill-red-500" : ""
-                          }`}
-                        />
-                        {photo.likes}
-                      </button>
-                    </div>
+                    <div className='flex items-center gap-4 text-sm text-slate-500'></div>
                   </div>
                 </div>
               </motion.div>
@@ -466,42 +403,7 @@ const PhotoGallery = () => {
                       </div>
                     </div>
 
-                    <div className='flex flex-wrap gap-2 mb-6'>
-                      {selectedPhoto.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className='px-3 py-1 bg-slate-100 text-slate-600 text-sm rounded-full'
-                        >
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-
                     <div className='flex items-center justify-between pt-4 border-t'>
-                      <div className='flex items-center gap-4'>
-                        <div className='flex items-center gap-1 text-slate-500'>
-                          <Eye className='w-5 h-5' />
-                          {selectedPhoto.views}
-                        </div>
-                        <button
-                          onClick={() => handleLike(selectedPhoto.id)}
-                          className={`flex items-center gap-1 transition-colors ${
-                            likedPhotos.has(selectedPhoto.id)
-                              ? "text-red-500"
-                              : "hover:text-red-500"
-                          }`}
-                        >
-                          <Heart
-                            className={`w-5 h-5 ${
-                              likedPhotos.has(selectedPhoto.id)
-                                ? "fill-red-500"
-                                : ""
-                            }`}
-                          />
-                          {selectedPhoto.likes}
-                        </button>
-                      </div>
-
                       <div className='flex gap-2'>
                         <button className='p-2 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors'>
                           <Share2 className='w-5 h-5' />
