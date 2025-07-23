@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
@@ -11,16 +11,6 @@ interface ExpandableCardContextType {
 const ExpandableCardContext = createContext<
   ExpandableCardContextType | undefined
 >(undefined);
-
-const useExpandableCard = () => {
-  const context = useContext(ExpandableCardContext);
-  if (!context) {
-    throw new Error(
-      "useExpandableCard must be used within ExpandableCardProvider"
-    );
-  }
-  return context;
-};
 
 export interface ExpandableCardProps {
   children: React.ReactNode;

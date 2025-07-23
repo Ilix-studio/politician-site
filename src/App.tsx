@@ -2,7 +2,7 @@ import "./App.css";
 import { Routes, Route, useLocation } from "react-router-dom";
 import Home from "./Home";
 import ExtendAbout from "./mainComponents/AboutMe/ExtendAbout";
-import PhotoGallery from "./mainComponents/Gallery/PhotoGallery";
+
 import VideoGallery from "./mainComponents/Gallery/VideoGallery";
 import ShowPressById from "./mainComponents/Press/ShowPressById";
 import { useEffect } from "react";
@@ -28,7 +28,7 @@ const App = () => {
     <Routes>
       <Route path='/' element={<Home />} />
       <Route path='/about' element={<ExtendAbout />} />
-      <Route path='/photo-gallery' element={<PhotoGallery />} />
+
       <Route path='/video-gallery' element={<VideoGallery />} />
       <Route path='/press/:id' element={<ShowPressById />} />
       {/* Admin Routes */}
