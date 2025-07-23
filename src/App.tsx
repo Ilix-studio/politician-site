@@ -29,8 +29,6 @@ const App = () => {
       <Route path='/' element={<Home />} />
       <Route path='/about' element={<ExtendAbout />} />
 
-      <Route path='/video-gallery' element={<VideoGallery />} />
-      <Route path='/press/:id' element={<ShowPressById />} />
       {/* Admin Routes */}
       <Route path='/admin/login' element={<LoginUser />} />
       <Route path='/admin/dashboard' element={<AdminDash />} />
@@ -39,6 +37,11 @@ const App = () => {
       <Route path='/admin/addPhoto' element={<AddPhoto />} />
       <Route path='/admin/view/:id' element={<PhotoViewPage />} />
       <Route path='/admin/edit/:id' element={<EditPhoto />} />
+
+      {/* Admin Routes */}
+      <Route path='/video-gallery' element={<VideoGallery />} />
+      {/* Admin Routes */}
+      <Route path='/press/:id' element={<ShowPressById />} />
 
       {/*  Contact  Routes */}
       <Route path='/contact' element={<ContactUs />} />
