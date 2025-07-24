@@ -21,6 +21,10 @@ import VideoDash from "./mainComponents/Admin/AdminVideo/VideoDash";
 import AddVideo from "./mainComponents/Admin/AdminVideo/AddVideo";
 import PlayVideo from "./mainComponents/Admin/AdminVideo/PlayVideo";
 import EditVideo from "./mainComponents/Admin/AdminVideo/EditVideo";
+import PressDash from "./mainComponents/Admin/AdminPress/PressDash";
+import AddPress from "./mainComponents/Admin/AdminPress/AddPress";
+import ReadPress from "./mainComponents/Admin/AdminPress/ReadPress";
+import EditPress from "./mainComponents/Admin/AdminPress/EditPress";
 
 // import PressDash from "./mainComponents/Admin/AdminPress/PressDash";
 
@@ -56,6 +60,10 @@ const App = () => {
       {/* Press Articles Routes */}
       <Route path='/press/:id' element={<ShowPressById />} />
       {/* <Route path='/admin/pressDashboard' element={<PressDash />} /> */}
+      <Route path='/admin/pressDashboard' element={<PressDash />} />
+      <Route path='/admin/addPress' element={<AddPress />} />
+      <Route path='/admin/read/:id' element={<ReadPress />} />
+      <Route path='/admin/editPress/:id' element={<EditPress />} />
 
       {/*  Contact  Routes */}
       <Route path='/contact' element={<ContactUs />} />

@@ -34,6 +34,9 @@ import {
   useGetContactMessagesQuery,
   useMarkMessageAsReadMutation,
 } from "@/redux-store/services/contactApi";
+import { useGetPhotosQuery } from "@/redux-store/services/photoApi";
+import { useGetVideosQuery } from "@/redux-store/services/videoApi";
+import { useGetPressQuery } from "@/redux-store/services/pressApi";
 
 const AdminDash = () => {
   const dispatch = useDispatch();
@@ -54,6 +57,22 @@ const AdminDash = () => {
 
   const [markMessageAsRead, { isLoading: markingAsRead }] =
     useMarkMessageAsReadMutation();
+
+  // Get counts for photos, videos, and press articles
+  const { data: photosData } = useGetPhotosQuery({
+    page: 1,
+    limit: 1, // We only need the count
+  });
+
+  const { data: videosData } = useGetVideosQuery({
+    page: "1",
+    limit: "1", // We only need the count
+  });
+
+  const { data: pressData } = useGetPressQuery({
+    page: "1",
+    limit: "1", // We only need the count
+  });
 
   if (!isAuthenticated || !isAdmin) {
     return <Navigate to='/admin/login' />;
@@ -82,7 +101,7 @@ const AdminDash = () => {
     console.log("View message:", id);
   };
 
-  // Static stats - you can replace with real data from other API calls
+  // Dynamic stats with real data from APIs
   const stats = [
     {
       title: "Total Visitors",
@@ -100,14 +119,14 @@ const AdminDash = () => {
     },
     {
       title: "Gallery Photos",
-      value: "186",
+      value: photosData?.data?.pagination?.total?.toString() || "0",
       change: "+8",
       icon: Image,
       color: "text-purple-600",
     },
     {
       title: "Videos",
-      value: "32",
+      value: videosData?.data?.pagination?.totalVideos?.toString() || "0",
       change: "+2",
       icon: Video,
       color: "text-orange-600",
@@ -128,10 +147,10 @@ const AdminDash = () => {
       action: () => navigate("/admin/addVideo"),
     },
     {
-      title: "Write Acticle",
+      title: "Write Article",
       icon: FileText,
       color: "bg-purple-500",
-      action: () => alert("New post"),
+      action: () => navigate("/admin/addPress"),
     },
   ];
 
@@ -156,6 +175,9 @@ const AdminDash = () => {
   };
   const navigateToVideoDash = () => {
     navigate("/admin/videoDashboard");
+  };
+  const navigateToPressDash = () => {
+    navigate("/admin/pressDashboard");
   };
 
   return (
@@ -420,12 +442,12 @@ const AdminDash = () => {
             <CardContent>
               <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
                 <div
-                  className='p-4 border rounded-lg hover:bg-slate-50 transition-colors'
+                  className='p-4 border rounded-lg hover:bg-slate-50 transition-colors cursor-pointer'
                   onClick={navigateToPhotoDash}
                 >
                   <div className='flex items-center justify-between mb-2'>
                     <h3 className='font-medium'>Gallery Photos</h3>
-                    <Badge>186</Badge>
+                    <Badge>{photosData?.data?.pagination?.total || 0}</Badge>
                   </div>
                   <p className='text-sm text-muted-foreground mb-3'>
                     Manage photo gallery
@@ -441,12 +463,14 @@ const AdminDash = () => {
                 </div>
 
                 <div
-                  className='p-4 border rounded-lg hover:bg-slate-50 transition-colors'
+                  className='p-4 border rounded-lg hover:bg-slate-50 transition-colors cursor-pointer'
                   onClick={navigateToVideoDash}
                 >
                   <div className='flex items-center justify-between mb-2'>
                     <h3 className='font-medium'>Videos</h3>
-                    <Badge>32</Badge>
+                    <Badge>
+                      {videosData?.data?.pagination?.totalVideos || 0}
+                    </Badge>
                   </div>
                   <p className='text-sm text-muted-foreground mb-3'>
                     Manage video content
@@ -461,10 +485,15 @@ const AdminDash = () => {
                   </div>
                 </div>
 
-                <div className='p-4 border rounded-lg hover:bg-slate-50 transition-colors'>
+                <div
+                  className='p-4 border rounded-lg hover:bg-slate-50 transition-colors cursor-pointer'
+                  onClick={navigateToPressDash}
+                >
                   <div className='flex items-center justify-between mb-2'>
                     <h3 className='font-medium'>Press Articles</h3>
-                    <Badge>24</Badge>
+                    <Badge>
+                      {pressData?.data?.pagination?.totalPress || 0}
+                    </Badge>
                   </div>
                   <p className='text-sm text-muted-foreground mb-3'>
                     Manage press releases
