@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSendContactMessageMutation } from "@/redux-store/services/contactApi";
 
 interface FormData {
@@ -35,6 +35,7 @@ const Contact = () => {
   });
   const [sendContactMessage, { isLoading, isSuccess, error }] =
     useSendContactMessageMutation();
+  const navigate = useNavigate();
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -76,6 +77,10 @@ const Contact = () => {
       return "Network error. Please try again.";
     }
     return "";
+  };
+
+  const navigatetoAdminRoute = async () => {
+    await navigate("https://biswajitphukan.in/admin/dashboard");
   };
 
   return (
@@ -154,6 +159,7 @@ const Contact = () => {
               <Link
                 to='https://biswajitphukan.in/admin/login'
                 className='h-12 w-12 rounded-full bg-[#FFFFFF]/10 flex items-center justify-center hover:bg-[#FFFFFF]/20 transition-colors'
+                onClick={navigatetoAdminRoute}
               >
                 <TriangleDashed className='h-5 w-5 text-[#FFFFFF]' />
               </Link>
