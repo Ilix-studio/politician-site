@@ -20,6 +20,8 @@ import { adminAuthApi } from "./services/adminApi";
 import { cloudinaryApi } from "./services/cloudinaryApi";
 import { contactApi } from "./services/contactApi";
 import { photoApi } from "./services/photoApi";
+import { videoApi } from "./services/videoApi";
+import { pressApi } from "./services/pressApi";
 
 // Create IndexedDB storage for redux-persist
 const idbStorage = createIdbStorage("politician-site-db");
@@ -38,6 +40,8 @@ const rootReducer = combineReducers({
   [cloudinaryApi.reducerPath]: cloudinaryApi.reducer,
   [contactApi.reducerPath]: contactApi.reducer,
   [photoApi.reducerPath]: photoApi.reducer,
+  [videoApi.reducerPath]: videoApi.reducer,
+  [pressApi.reducerPath]: pressApi.reducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -54,7 +58,9 @@ export const store = configureStore({
       adminAuthApi.middleware,
       cloudinaryApi.middleware,
       contactApi.middleware,
-      photoApi.middleware
+      photoApi.middleware,
+      videoApi.middleware,
+      pressApi.middleware
     ),
 });
 

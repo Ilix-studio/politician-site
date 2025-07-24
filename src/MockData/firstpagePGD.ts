@@ -16,9 +16,7 @@ export interface Article {
   category: string;
   author: string;
   readTime: string;
-  views: number;
   content: string;
-  tags: string[];
   excerpt: string;
 }
 
@@ -35,7 +33,7 @@ export const pressArticles: Article[] = [
     category: "Development",
     author: "Staff Reporter",
     readTime: "3 min read",
-    views: 1250,
+
     excerpt:
       "MLA Biswajit Phukan inaugurated a comprehensive rural development project worth ₹15 crores in Sarupathar constituency, aimed at transforming infrastructure and living conditions in remote villages.",
     content: `
@@ -59,12 +57,6 @@ export const pressArticles: Article[] = [
       
       <p>The project timeline spans 18 months, with the first phase focusing on road connectivity and the second phase on health and education infrastructure. Regular monitoring committees have been established to ensure timely completion and quality implementation.</p>
     `,
-    tags: [
-      "Rural Development",
-      "Infrastructure",
-      "Sarupathar",
-      "Government Initiative",
-    ],
   },
   {
     id: 2,
@@ -77,7 +69,7 @@ export const pressArticles: Article[] = [
     category: "Healthcare",
     author: "Priya Sharma",
     readTime: "4 min read",
-    views: 980,
+
     excerpt:
       "BJP MLA Biswajit Phukan unveiled the 'Swasthya Seva Abhiyan', an ambitious healthcare initiative aimed at improving medical services in rural areas through mobile medical units and telemedicine facilities.",
     content: `
@@ -101,7 +93,6 @@ export const pressArticles: Article[] = [
       
       <p>The initiative has received backing from the state health department and will be implemented in phases over the next two years, with an estimated budget of ₹8 crores.</p>
     `,
-    tags: ["Healthcare", "Rural", "Telemedicine", "Mobile Medical Units"],
   },
   {
     id: 3,
@@ -113,7 +104,7 @@ export const pressArticles: Article[] = [
     category: "Education",
     author: "Ankit Patel",
     readTime: "5 min read",
-    views: 1500,
+
     excerpt:
       "MLA Biswajit Phukan launched a comprehensive education reform policy introducing digital learning platforms, teacher training programs, and scholarship schemes for economically disadvantaged students.",
     content: `
@@ -140,7 +131,6 @@ export const pressArticles: Article[] = [
       
       <p>Industry partnerships have been established to provide practical training and internship opportunities for students in emerging fields like renewable energy, digital marketing, and sustainable agriculture.</p>
     `,
-    tags: ["Education", "Digital Learning", "Scholarships", "Teacher Training"],
   },
   {
     id: 4,
@@ -153,7 +143,7 @@ export const pressArticles: Article[] = [
     category: "Infrastructure",
     author: "Ravi Kumar",
     readTime: "3 min read",
-    views: 850,
+
     excerpt:
       "MLA Biswajit Phukan outlined a comprehensive roadmap for infrastructure development in Golaghat district, focusing on transportation, power, and communication networks.",
     content: `
@@ -177,7 +167,6 @@ export const pressArticles: Article[] = [
       
       <p>The total project cost is estimated at ₹25 crores, with funding secured from both state and central government schemes. Implementation will begin in the next quarter with completion expected within 24 months.</p>
     `,
-    tags: ["Infrastructure", "Transportation", "Power", "Communication"],
   },
   {
     id: 5,
@@ -189,7 +178,7 @@ export const pressArticles: Article[] = [
     category: "Recognition",
     author: "Dipak Gogoi",
     readTime: "2 min read",
-    views: 1100,
+
     excerpt:
       "The Assam Legislative Assembly formally recognized MLA Biswajit Phukan's contributions to constituency development and public service, with fellow legislators praising his dedication.",
     content: `
@@ -213,7 +202,6 @@ export const pressArticles: Article[] = [
       
       <p>The assembly also noted his efforts in promoting sustainable development practices and his commitment to environmental conservation in all development projects undertaken in his constituency.</p>
     `,
-    tags: ["Recognition", "Assembly", "Public Service", "Achievements"],
   },
   {
     id: 6,
@@ -226,7 +214,7 @@ export const pressArticles: Article[] = [
     category: "Culture",
     author: "Meena Devi",
     readTime: "4 min read",
-    views: 750,
+
     excerpt:
       "MLA Biswajit Phukan launched a comprehensive cultural preservation initiative to document, preserve, and celebrate the rich cultural traditions of the region.",
     content: `
@@ -252,6 +240,5 @@ export const pressArticles: Article[] = [
       
       <p>A cultural advisory committee comprising historians, artists, and community elders has been formed to guide the initiative and ensure its cultural authenticity and relevance.</p>
     `,
-    tags: ["Culture", "Heritage", "Traditional Crafts", "Education"],
   },
 ];

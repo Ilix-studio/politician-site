@@ -10,6 +10,7 @@ import {
   MapPin,
   Phone,
   Twitter,
+  TriangleDashed,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -149,6 +150,12 @@ const Contact = () => {
                 className='h-12 w-12 rounded-full bg-[#138808]/10 flex items-center justify-center hover:bg-[#138808]/20 transition-colors'
               >
                 <Instagram className='h-5 w-5 text-[#138808]' />
+              </Link>
+              <Link
+                to='https://biswajitphukan.in/admin/login'
+                className='h-12 w-12 rounded-full bg-[#FFFFFF]/10 flex items-center justify-center hover:bg-[#FFFFFF]/20 transition-colors'
+              >
+                <TriangleDashed className='h-5 w-5 text-[#FFFFFF]' />
               </Link>
             </div>
           </div>

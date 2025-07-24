@@ -38,7 +38,7 @@ import { useSelector } from "react-redux";
 import { logout, selectIsAdmin } from "@/redux-store/slices/authSlice";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import PhotoCard from "./AdminPhoto/PhotoCard";
+import PhotoCard from "./PhotoCard";
 
 // Skeleton Components
 const PhotoCardSkeleton: React.FC<{ viewMode: "grid" | "list" }> = ({

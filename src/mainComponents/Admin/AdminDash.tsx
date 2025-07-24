@@ -9,7 +9,6 @@ import {
   Image,
   Video,
   FileText,
-  Settings,
   LogOut,
   Eye,
   Calendar,
@@ -126,19 +125,13 @@ const AdminDash = () => {
       title: "Add Video",
       icon: Video,
       color: "bg-green-500",
-      action: () => alert("Video upload"),
+      action: () => navigate("/admin/addVideo"),
     },
     {
-      title: "New Post",
+      title: "Write Acticle",
       icon: FileText,
       color: "bg-purple-500",
       action: () => alert("New post"),
-    },
-    {
-      title: "Settings",
-      icon: Settings,
-      color: "bg-gray-500",
-      action: () => alert("Settings"),
     },
   ];
 
@@ -160,6 +153,9 @@ const AdminDash = () => {
 
   const navigateToPhotoDash = () => {
     navigate("/admin/photoDashboard");
+  };
+  const navigateToVideoDash = () => {
+    navigate("/admin/videoDashboard");
   };
 
   return (
@@ -444,7 +440,10 @@ const AdminDash = () => {
                   </div>
                 </div>
 
-                <div className='p-4 border rounded-lg hover:bg-slate-50 transition-colors'>
+                <div
+                  className='p-4 border rounded-lg hover:bg-slate-50 transition-colors'
+                  onClick={navigateToVideoDash}
+                >
                   <div className='flex items-center justify-between mb-2'>
                     <h3 className='font-medium'>Videos</h3>
                     <Badge>32</Badge>

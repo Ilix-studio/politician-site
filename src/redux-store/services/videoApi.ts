@@ -51,13 +51,6 @@ export const videoApi = createApi({
       transformErrorResponse: (response) => handleApiError(response),
     }),
 
-    // Get featured videos
-    getFeaturedVideos: builder.query<VideosResponse, { limit?: number }>({
-      query: ({ limit = 6 } = {}) => `/videos/featured?limit=${limit}`,
-      providesTags: [{ type: "Video", id: "FEATURED" }],
-      transformErrorResponse: (response) => handleApiError(response),
-    }),
-
     // Upload video with file
     uploadVideo: builder.mutation<
       VideoResponse,
@@ -131,20 +124,6 @@ export const videoApi = createApi({
       transformErrorResponse: (response) => handleApiError(response),
     }),
 
-    // Toggle featured status
-    toggleVideoFeatured: builder.mutation<VideoResponse, string>({
-      query: (id) => ({
-        url: `/videos/${id}/featured`,
-        method: "PATCH",
-      }),
-      invalidatesTags: (_, __, id) => [
-        { type: "Video", id },
-        { type: "Video", id: "FEATURED" },
-        "Video",
-      ],
-      transformErrorResponse: (response) => handleApiError(response),
-    }),
-
     // Get video categories
     getVideoCategories: builder.query<CategoriesResponse, void>({
       query: () => "/videos/categories",
@@ -158,11 +137,9 @@ export const videoApi = createApi({
 export const {
   useGetVideosQuery,
   useGetVideoQuery,
-  useGetFeaturedVideosQuery,
   useUploadVideoMutation,
   useCreateVideoMutation,
   useUpdateVideoMutation,
   useDeleteVideoMutation,
-  useToggleVideoFeaturedMutation,
   useGetVideoCategoriesQuery,
 } = videoApi;
