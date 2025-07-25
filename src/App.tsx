@@ -4,27 +4,29 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import Home from "./Home";
 import ExtendAbout from "./mainComponents/AboutMe/ExtendAbout";
 
-import VideoGallery from "./mainComponents/Gallery/VideoGallery";
-import ShowPressById from "./mainComponents/Press/ShowPressById";
-
 import LoginUser from "./mainComponents/Admin/LoginUser";
 import AdminDash from "./mainComponents/Admin/AdminDash";
 import ViewMessage from "./mainComponents/Admin/ViewMessage";
 import NotFound from "./mainComponents/NotFound";
 import ContactUs from "./mainComponents/Contact";
+
 import AddPhoto from "./mainComponents/Admin/AdminPhoto/AddPhoto";
 import PhotoDash from "./mainComponents/Admin/AdminPhoto/PhotoDash";
-
 import PhotoViewPage from "./mainComponents/Admin/AdminPhoto/PhotoCardWrapper";
 import EditPhoto from "./mainComponents/Admin/AdminPhoto/EditPhoto";
+import ViewPhotoId from "./mainComponents/Admin/AdminPhoto/ViewPhotoId";
+
 import VideoDash from "./mainComponents/Admin/AdminVideo/VideoDash";
 import AddVideo from "./mainComponents/Admin/AdminVideo/AddVideo";
 import PlayVideo from "./mainComponents/Admin/AdminVideo/PlayVideo";
 import EditVideo from "./mainComponents/Admin/AdminVideo/EditVideo";
+
 import PressDash from "./mainComponents/Admin/AdminPress/PressDash";
 import AddPress from "./mainComponents/Admin/AdminPress/AddPress";
 import ReadPress from "./mainComponents/Admin/AdminPress/ReadPress";
 import EditPress from "./mainComponents/Admin/AdminPress/EditPress";
+import ShowPressById from "./mainComponents/Press/ShowPressById";
+import ViewVideoId from "./mainComponents/Admin/AdminVideo/ViewVideoId";
 
 // import PressDash from "./mainComponents/Admin/AdminPress/PressDash";
 
@@ -48,18 +50,19 @@ const App = () => {
       <Route path='/admin/addPhoto' element={<AddPhoto />} />
       <Route path='/admin/view/:id' element={<PhotoViewPage />} />
       <Route path='/admin/edit/:id' element={<EditPhoto />} />
-      {/* Gallery component */}
+      {/* Public Gallery Photo component */}
+      <Route path='/view/photo/:id' element={<ViewPhotoId />} />
 
       {/* Video Routes */}
       <Route path='/admin/videoDashboard' element={<VideoDash />} />
       <Route path='/admin/addVideo' element={<AddVideo />} />
-      <Route path='/video-gallery' element={<VideoGallery />} />
       <Route path='/admin/play/:id' element={<PlayVideo />} />
       <Route path='/admin/editVideo/:id' element={<EditVideo />} />
+      {/* Public Gallery Videocomponent */}
+      <Route path='/view/video/:id' element={<ViewVideoId />} />
 
       {/* Press Articles Routes */}
       <Route path='/press/:id' element={<ShowPressById />} />
-      {/* <Route path='/admin/pressDashboard' element={<PressDash />} /> */}
       <Route path='/admin/pressDashboard' element={<PressDash />} />
       <Route path='/admin/addPress' element={<AddPress />} />
       <Route path='/admin/read/:id' element={<ReadPress />} />

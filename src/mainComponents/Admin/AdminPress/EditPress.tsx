@@ -72,7 +72,7 @@ const EditPress = () => {
   }
 
   if (!id) {
-    return <Navigate to='/admin/press' />;
+    return <Navigate to='/admin/dashboard' />;
   }
 
   // Populate form when press data loads
@@ -118,7 +118,7 @@ const EditPress = () => {
     try {
       await updatePress({ id, data: formData }).unwrap();
       setHasChanges(false);
-      navigate(`/admin/press/read/${id}`);
+      navigate(`/admin/read/${id}`);
     } catch (error: any) {
       console.error("Failed to update press article:", error);
       alert(error.data?.message || "Failed to update press article");
@@ -132,7 +132,7 @@ const EditPress = () => {
       );
       if (!confirmed) return;
     }
-    navigate(`/admin/press/read/${id}`);
+    navigate(`/admin/read/${id}`);
   };
 
   const formatDate = (date: string | Date) => {
@@ -167,7 +167,7 @@ const EditPress = () => {
               The press article you're trying to edit doesn't exist or has been
               removed.
             </p>
-            <Button onClick={() => navigate("/admin/press")}>
+            <Button onClick={() => navigate("/admin/pressDashboard")}>
               Back to Press Dashboard
             </Button>
           </CardContent>
@@ -195,7 +195,7 @@ const EditPress = () => {
           <div className='flex items-center gap-2'>
             <Button
               variant='outline'
-              onClick={() => navigate(`/admin/press/read/${id}`)}
+              onClick={() => navigate(`/admin/read/${id}`)}
             >
               <Eye className='w-4 h-4 mr-1' />
               Preview
@@ -509,7 +509,7 @@ const EditPress = () => {
                   <Button
                     type='button'
                     variant='outline'
-                    onClick={() => navigate(`/admin/press/read/${id}`)}
+                    onClick={() => navigate(`/admin/read/${id}`)}
                   >
                     <Eye className='w-4 h-4 mr-2' />
                     Preview

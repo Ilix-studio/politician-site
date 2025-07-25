@@ -319,9 +319,7 @@ const PressDash = () => {
                           <Button
                             variant='outline'
                             size='sm'
-                            onClick={() =>
-                              navigate(`/admin/press/read/${press._id}`)
-                            }
+                            onClick={() => navigate(`/admin/read/${press._id}`)}
                           >
                             <Eye className='w-4 h-4 mr-1' />
                             View
@@ -330,7 +328,7 @@ const PressDash = () => {
                             variant='outline'
                             size='sm'
                             onClick={() =>
-                              navigate(`/admin/press/edit/${press._id}`)
+                              navigate(`/admin/editPress/${press._id}`)
                             }
                           >
                             <Edit className='w-4 h-4 mr-1' />

@@ -38,7 +38,7 @@ const ReadPress = () => {
 
   // Redirect if no ID provided
   if (!id) {
-    return <Navigate to='/admin/press' />;
+    return <Navigate to='/admin/dashboard' />;
   }
 
   const { data: pressData, isLoading, error } = useGetPressByIdQuery(id);
@@ -82,7 +82,7 @@ const ReadPress = () => {
     if (confirmed) {
       try {
         await deletePress(press._id).unwrap();
-        navigate("/admin/press");
+        navigate("/admin/pressDashboard");
       } catch (error: any) {
         console.error("Delete failed:", error);
         alert(error.data?.message || "Failed to delete press article");
@@ -92,7 +92,7 @@ const ReadPress = () => {
 
   const handleEdit = () => {
     if (press) {
-      navigate(`/admin/press/edit/${press._id}`);
+      navigate(`/admin/editPress/${press._id}`);
     }
   };
 
@@ -144,7 +144,7 @@ const ReadPress = () => {
               The press article you're looking for doesn't exist or has been
               removed.
             </p>
-            <Button onClick={() => navigate("/admin/press")}>
+            <Button onClick={() => navigate("/admin/pressDashboard")}>
               Back to Press Dashboard
             </Button>
           </CardContent>
@@ -159,7 +159,7 @@ const ReadPress = () => {
       <header className='sticky top-0 z-40 w-full border-b bg-white/95 backdrop-blur'>
         <div className='container flex h-16 items-center justify-between'>
           <Button
-            onClick={() => navigate("/admin/press")}
+            onClick={() => navigate("/admin/pressDashboard")}
             variant='ghost'
             className='flex items-center gap-2'
           >
