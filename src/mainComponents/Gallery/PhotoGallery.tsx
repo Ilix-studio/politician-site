@@ -1,4 +1,4 @@
-// src/components/VideoGallery.tsx
+// src/components/PhotoGallery.tsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -14,30 +13,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Calendar, Clock, Eye, Play, ArrowLeft } from "lucide-react";
+import { Search, Calendar, MapPin, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useGetVideosQuery } from "@/redux-store/services/videoApi";
-import { VideoQueryParams } from "@/types/video.types";
+import { useGetPhotosQuery, PhotoQuery } from "@/redux-store/services/photoApi";
 
-const VideoGallery: React.FC = () => {
+const PhotoGallery: React.FC = () => {
   const navigate = useNavigate();
   const [hovered, setHovered] = useState<number | null>(null);
-  const [queryParams, setQueryParams] = useState<VideoQueryParams>({
-    page: "1",
-    limit: "24",
+  const [queryParams, setQueryParams] = useState<PhotoQuery>({
+    page: 1,
+    limit: 24,
     category: "",
     search: "",
-    sortBy: "date",
+    sortBy: "createdAt",
     sortOrder: "desc",
   });
 
-  const { data: videosData, isLoading, error } = useGetVideosQuery(queryParams);
+  const { data: photosData, isLoading, error } = useGetPhotosQuery(queryParams);
 
   const categories = [
-    { value: "speech", label: "Speeches" },
-    { value: "event", label: "Events" },
-    { value: "interview", label: "Interviews" },
-    { value: "initiative", label: "Initiatives" },
+    { value: "political-events", label: "Political Events" },
+    { value: "community-service", label: "Community Service" },
+    { value: "public-rallies", label: "Public Rallies" },
+    { value: "meetings", label: "Meetings" },
+    { value: "awards", label: "Awards" },
+    { value: "personal", label: "Personal" },
+    { value: "campaigns", label: "Campaigns" },
+    { value: "speeches", label: "Speeches" },
+    { value: "other", label: "Other" },
   ];
 
   const formatDate = (dateString: string) => {
@@ -48,37 +51,33 @@ const VideoGallery: React.FC = () => {
     });
   };
 
-  const handleVideoClick = (videoId: string) => {
-    navigate(`/view/video/${videoId}`);
+  const handlePhotoClick = (photoId: string) => {
+    navigate(`/view/photo/${photoId}`);
   };
 
   const handleSearch = (search: string) => {
-    setQueryParams((prev) => ({ ...prev, search, page: "1" }));
+    setQueryParams((prev) => ({ ...prev, search, page: 1 }));
   };
 
   const handleCategoryFilter = (category: string) => {
     setQueryParams((prev) => ({
       ...prev,
       category: category === "all" ? "" : category,
-      page: "1",
+      page: 1,
     }));
   };
 
   const handlePageChange = (page: number) => {
-    setQueryParams((prev) => ({ ...prev, page: page.toString() }));
+    setQueryParams((prev) => ({ ...prev, page }));
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const VideoSkeleton = () => (
+  const PhotoSkeleton = () => (
     <Card className='overflow-hidden'>
-      <Skeleton className='aspect-video w-full' />
+      <Skeleton className='aspect-[4/3] w-full' />
       <CardContent className='p-4 space-y-2'>
         <Skeleton className='h-5 w-3/4' />
         <Skeleton className='h-4 w-1/2' />
-        <div className='flex gap-2'>
-          <Skeleton className='h-3 w-16' />
-          <Skeleton className='h-3 w-16' />
-        </div>
       </CardContent>
     </Card>
   );
@@ -87,14 +86,13 @@ const VideoGallery: React.FC = () => {
     return (
       <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white p-4'>
         <div className='container mx-auto text-center py-12'>
-          <p className='text-red-600'>Failed to load videos.</p>
+          <p className='text-red-600'>Failed to load photos.</p>
         </div>
       </div>
     );
   }
 
-  const videos = videosData?.data.videos || [];
-  const pagination = videosData?.data.pagination;
+  const photos = photosData?.data.photos || [];
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white'>
@@ -109,10 +107,10 @@ const VideoGallery: React.FC = () => {
               </Button>
               <div>
                 <h1 className='text-3xl font-bold text-slate-800'>
-                  Video Gallery
+                  Photo Gallery
                 </h1>
                 <p className='text-slate-600'>
-                  Watch our speeches, events, and initiatives
+                  Browse our collection of memorable moments
                 </p>
               </div>
             </div>
@@ -124,7 +122,7 @@ const VideoGallery: React.FC = () => {
               <div className='relative'>
                 <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
                 <Input
-                  placeholder='Search videos...'
+                  placeholder='Search photos...'
                   value={queryParams.search || ""}
                   onChange={(e) => handleSearch(e.target.value)}
                   className='pl-10'
@@ -156,111 +154,74 @@ const VideoGallery: React.FC = () => {
         {isLoading ? (
           <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
             {Array.from({ length: 24 }, (_, i) => (
-              <VideoSkeleton key={i} />
+              <PhotoSkeleton key={i} />
             ))}
           </div>
-        ) : videos.length === 0 ? (
+        ) : photos.length === 0 ? (
           <div className='text-center py-12'>
-            <p className='text-gray-500 text-lg'>No videos found.</p>
+            <p className='text-gray-500 text-lg'>No photos found.</p>
           </div>
         ) : (
           <>
             <div className='mb-6'>
               <p className='text-gray-600'>
-                Showing {videos.length} of {pagination?.totalVideos || 0} videos
+                Showing {photos.length} of{" "}
+                {photosData?.data.pagination.total || 0} photos
               </p>
             </div>
 
             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
-              {videos.map((video, index) => (
+              {photos.map((photo, index) => (
                 <motion.div
-                  key={video._id}
+                  key={photo._id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
                   onMouseEnter={() => setHovered(index)}
                   onMouseLeave={() => setHovered(null)}
-                  onClick={() => handleVideoClick(video._id)}
+                  onClick={() => handlePhotoClick(photo._id)}
                   className={cn(
-                    "cursor-pointer rounded-xl overflow-hidden bg-white shadow-lg hover:shadow-xl transition-all duration-300 group",
+                    "cursor-pointer rounded-xl overflow-hidden bg-white shadow-lg hover:shadow-xl transition-all duration-300",
                     hovered === index && "scale-105"
                   )}
                 >
-                  <div className='relative aspect-video overflow-hidden'>
+                  <div className='relative aspect-[4/3] overflow-hidden'>
                     <img
-                      src={video.thumbnail}
-                      alt={video.title}
+                      src={photo.src}
+                      alt={photo.alt}
                       className='w-full h-full object-cover'
                     />
-
-                    {/* Play Button Overlay */}
-                    <div className='absolute inset-0 flex items-center justify-center'>
-                      <div className='w-16 h-16 bg-white/90 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform'>
-                        <Play className='w-8 h-8 text-[#FF9933] ml-1' />
-                      </div>
-                    </div>
-
-                    {/* Category Badge */}
-                    <div className='absolute top-3 right-3'>
-                      <Badge
-                        variant='secondary'
-                        className='bg-white/90 text-gray-800'
-                      >
-                        {video.category.charAt(0).toUpperCase() +
-                          video.category.slice(1)}
-                      </Badge>
-                    </div>
-
-                    {/* Featured Badge */}
-                    {video.featured && (
-                      <div className='absolute top-3 left-3'>
-                        <Badge className='bg-yellow-500 text-white'>
-                          Featured
-                        </Badge>
-                      </div>
-                    )}
-
-                    {/* Hover Overlay */}
                     <div className='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300'>
                       <div className='absolute bottom-4 left-4 text-white'>
-                        <h3 className='font-bold text-lg mb-1 line-clamp-2'>
-                          {video.title}
+                        <h3 className='font-bold text-lg mb-1'>
+                          {photo.title}
                         </h3>
                         <div className='flex items-center gap-3 text-sm'>
                           <div className='flex items-center gap-1'>
                             <Calendar className='w-3 h-3' />
-                            {formatDate(video.date)}
+                            {formatDate(photo.date)}
                           </div>
-                          <div className='flex items-center gap-1'>
-                            <Clock className='w-3 h-3' />
-                            {video.duration}
-                          </div>
+                          {photo.location && (
+                            <div className='flex items-center gap-1'>
+                              <MapPin className='w-3 h-3' />
+                              {photo.location}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
                   </div>
 
                   <CardContent className='p-4'>
-                    <h3 className='font-semibold text-gray-900 line-clamp-2 mb-2'>
-                      {video.title}
+                    <h3 className='font-semibold text-gray-900 line-clamp-1 mb-1'>
+                      {photo.title}
                     </h3>
-
-                    <div className='flex items-center justify-between text-sm text-gray-600 mb-2'>
-                      <div className='flex items-center gap-1'>
-                        <Clock className='w-3 h-3' />
-                        {video.duration}
-                      </div>
-                      {video.views && (
-                        <div className='flex items-center gap-1'>
-                          <Eye className='w-3 h-3' />
-                          {video.views.toLocaleString()}
-                        </div>
-                      )}
-                    </div>
-
-                    {video.description && (
-                      <p className='text-sm text-gray-500 line-clamp-2'>
-                        {video.description}
+                    <p className='text-sm text-gray-600 capitalize'>
+                      {photo.category.replace("-", " ")}
+                    </p>
+                    {photo.description && (
+                      <p className='text-sm text-gray-500 line-clamp-2 mt-2'>
+                        {photo.description}
                       </p>
                     )}
                   </CardContent>
@@ -269,24 +230,26 @@ const VideoGallery: React.FC = () => {
             </div>
 
             {/* Pagination */}
-            {pagination && pagination.totalPages > 1 && (
-              <div className='flex justify-center mt-8 space-x-2'>
-                {Array.from({ length: pagination.totalPages }, (_, i) => (
-                  <Button
-                    key={i + 1}
-                    variant={
-                      parseInt(queryParams.page || "1") === i + 1
-                        ? "default"
-                        : "outline"
-                    }
-                    size='sm'
-                    onClick={() => handlePageChange(i + 1)}
-                  >
-                    {i + 1}
-                  </Button>
-                ))}
-              </div>
-            )}
+            {photosData?.data.pagination &&
+              photosData.data.pagination.pages > 1 && (
+                <div className='flex justify-center mt-8 space-x-2'>
+                  {Array.from(
+                    { length: photosData.data.pagination.pages },
+                    (_, i) => (
+                      <Button
+                        key={i + 1}
+                        variant={
+                          queryParams.page === i + 1 ? "default" : "outline"
+                        }
+                        size='sm'
+                        onClick={() => handlePageChange(i + 1)}
+                      >
+                        {i + 1}
+                      </Button>
+                    )
+                  )}
+                </div>
+              )}
           </>
         )}
       </div>
@@ -294,4 +257,4 @@ const VideoGallery: React.FC = () => {
   );
 };
 
-export default VideoGallery;
+export default PhotoGallery;

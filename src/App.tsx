@@ -27,6 +27,8 @@ import ReadPress from "./mainComponents/Admin/AdminPress/ReadPress";
 import EditPress from "./mainComponents/Admin/AdminPress/EditPress";
 import ShowPressById from "./mainComponents/Press/ShowPressById";
 import ViewVideoId from "./mainComponents/Admin/AdminVideo/ViewVideoId";
+import PhotoGallery from "./mainComponents/Gallery/PhotoGallery";
+import VideoGallery from "./mainComponents/Gallery/VideoGallery";
 
 // import PressDash from "./mainComponents/Admin/AdminPress/PressDash";
 
@@ -51,6 +53,7 @@ const App = () => {
       <Route path='/admin/view/:id' element={<PhotoViewPage />} />
       <Route path='/admin/edit/:id' element={<EditPhoto />} />
       {/* Public Gallery Photo component */}
+      <Route path='/photo-gallery' element={<PhotoGallery />} />
       <Route path='/view/photo/:id' element={<ViewPhotoId />} />
 
       {/* Video Routes */}
@@ -59,6 +62,7 @@ const App = () => {
       <Route path='/admin/play/:id' element={<PlayVideo />} />
       <Route path='/admin/editVideo/:id' element={<EditVideo />} />
       {/* Public Gallery Videocomponent */}
+      <Route path='/video-gallery' element={<VideoGallery />} />
       <Route path='/view/video/:id' element={<ViewVideoId />} />
 
       {/* Press Articles Routes */}
