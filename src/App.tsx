@@ -1,36 +1,38 @@
 import "./App.css";
 import { useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
+
 import Home from "./Home";
 import ExtendAbout from "./mainComponents/AboutMe/ExtendAbout";
+import ContactUs from "./mainComponents/Contact";
 
 import LoginUser from "./mainComponents/Admin/LoginUser";
 import AdminDash from "./mainComponents/Admin/AdminDash";
-import ViewMessage from "./mainComponents/Admin/ViewMessage";
-import NotFound from "./mainComponents/NotFound";
-import ContactUs from "./mainComponents/Contact";
-
+// Photo
 import AddPhoto from "./mainComponents/Admin/AdminPhoto/AddPhoto";
 import PhotoDash from "./mainComponents/Admin/AdminPhoto/PhotoDash";
 import PhotoViewPage from "./mainComponents/Admin/AdminPhoto/PhotoCardWrapper";
 import EditPhoto from "./mainComponents/Admin/AdminPhoto/EditPhoto";
 import ViewPhotoId from "./mainComponents/Admin/AdminPhoto/ViewPhotoId";
-
+import PhotoGallery from "./mainComponents/Gallery/PhotoGallery";
+//Video
 import VideoDash from "./mainComponents/Admin/AdminVideo/VideoDash";
 import AddVideo from "./mainComponents/Admin/AdminVideo/AddVideo";
 import PlayVideo from "./mainComponents/Admin/AdminVideo/PlayVideo";
 import EditVideo from "./mainComponents/Admin/AdminVideo/EditVideo";
-
+import ViewVideoId from "./mainComponents/Admin/AdminVideo/ViewVideoId";
+import VideoGallery from "./mainComponents/Gallery/VideoGallery";
+//Press Articles
 import PressDash from "./mainComponents/Admin/AdminPress/PressDash";
 import AddPress from "./mainComponents/Admin/AdminPress/AddPress";
 import ReadPress from "./mainComponents/Admin/AdminPress/ReadPress";
 import EditPress from "./mainComponents/Admin/AdminPress/EditPress";
 import ShowPressById from "./mainComponents/Press/ShowPressById";
-import ViewVideoId from "./mainComponents/Admin/AdminVideo/ViewVideoId";
-import PhotoGallery from "./mainComponents/Gallery/PhotoGallery";
-import VideoGallery from "./mainComponents/Gallery/VideoGallery";
-
-// import PressDash from "./mainComponents/Admin/AdminPress/PressDash";
+// Admin Message
+import ViewMessage from "./mainComponents/Admin/AdminMessage/ViewMessage";
+import ViewAllMessage from "./mainComponents/Admin/AdminMessage/ViewAllMessage";
+//Not Found
+import NotFound from "./mainComponents/NotFound";
 
 const App = () => {
   const location = useLocation();
@@ -66,14 +68,17 @@ const App = () => {
       <Route path='/view/video/:id' element={<ViewVideoId />} />
 
       {/* Press Articles Routes */}
-      <Route path='/press/:id' element={<ShowPressById />} />
+
       <Route path='/admin/pressDashboard' element={<PressDash />} />
       <Route path='/admin/addPress' element={<AddPress />} />
       <Route path='/admin/read/:id' element={<ReadPress />} />
       <Route path='/admin/editPress/:id' element={<EditPress />} />
+      {/* Public Press Articles */}
+      <Route path='/press/:id' element={<ShowPressById />} />
 
       {/*  Contact  Routes */}
       <Route path='/contact' element={<ContactUs />} />
+      <Route path='/admin/messages' element={<ViewAllMessage />} />
       <Route path='/admin/messages/:id' element={<ViewMessage />} />
 
       {/*  Not Found  Routes */}

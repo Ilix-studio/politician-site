@@ -18,6 +18,8 @@ import {
   Edit,
   Loader2,
   Delete,
+  RefreshCw,
+  AlertTriangle,
 } from "lucide-react";
 
 import { useSelector } from "react-redux";
@@ -37,6 +39,12 @@ import {
 import { useGetPhotosQuery } from "@/redux-store/services/photoApi";
 import { useGetVideosQuery } from "@/redux-store/services/videoApi";
 import { useGetPressQuery } from "@/redux-store/services/pressApi";
+
+// Import Visitor API hooks
+import {
+  useGetVisitorStatsQuery,
+  useGetVisitorCountQuery,
+} from "@/redux-store/services/visitorApi";
 
 const AdminDash = () => {
   const dispatch = useDispatch();
@@ -74,6 +82,20 @@ const AdminDash = () => {
     limit: "1", // We only need the count
   });
 
+  // Visitor API hooks
+  const {
+    data: visitorStatsData,
+    isLoading: visitorStatsLoading,
+    error: visitorStatsError,
+    refetch: refetchVisitorStats,
+  } = useGetVisitorStatsQuery();
+
+  const {
+    data: visitorCountData,
+    isLoading: visitorCountLoading,
+    error: visitorCountError,
+  } = useGetVisitorCountQuery();
+
   if (!isAuthenticated || !isAdmin) {
     return <Navigate to='/admin/login' />;
   }
@@ -101,14 +123,30 @@ const AdminDash = () => {
     console.log("View message:", id);
   };
 
+  // Calculate visitor growth percentage
+  const getVisitorGrowthText = () => {
+    if (visitorStatsLoading) return "Loading...";
+    if (visitorStatsError) return "Error";
+    if (!visitorStatsData?.data?.weeklyStats) return "0%";
+
+    const growth = visitorStatsData.data.weeklyStats.growth;
+    return growth >= 0 ? `+${growth}%` : `${growth}%`;
+  };
+
   // Dynamic stats with real data from APIs
   const stats = [
     {
       title: "Total Visitors",
-      value: "12,458",
-      change: "+12%",
+      value: visitorStatsLoading
+        ? "Loading..."
+        : visitorStatsError
+        ? "Error"
+        : visitorStatsData?.data?.totalVisitors?.toLocaleString() || "0",
+      change: getVisitorGrowthText(),
       icon: Users,
       color: "text-blue-600",
+      loading: visitorStatsLoading,
+      error: visitorStatsError,
     },
     {
       title: "Contact Messages",
@@ -116,6 +154,8 @@ const AdminDash = () => {
       change: messagesData?.unreadCount ? `+${messagesData.unreadCount}` : "0",
       icon: Mail,
       color: "text-green-600",
+      loading: messagesLoading,
+      error: messagesError,
     },
     {
       title: "Gallery Photos",
@@ -195,14 +235,32 @@ const AdminDash = () => {
             </div>
           </div>
 
-          <Button
-            onClick={handleLogout}
-            variant='ghost'
-            className='flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50'
-          >
-            <LogOut className='w-4 h-4' />
-            Logout
-          </Button>
+          <div className='flex items-center gap-2'>
+            {/* Refresh Visitor Stats Button */}
+            <Button
+              onClick={() => refetchVisitorStats()}
+              variant='ghost'
+              size='sm'
+              className='flex items-center gap-1'
+              disabled={visitorStatsLoading}
+            >
+              <RefreshCw
+                className={`w-4 h-4 ${
+                  visitorStatsLoading ? "animate-spin" : ""
+                }`}
+              />
+              <span className='hidden sm:inline'>Refresh Stats</span>
+            </Button>
+
+            <Button
+              onClick={handleLogout}
+              variant='ghost'
+              className='flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50'
+            >
+              <LogOut className='w-4 h-4' />
+              Logout
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -237,8 +295,31 @@ const AdminDash = () => {
                     <p className='text-sm font-medium text-muted-foreground'>
                       {stat.title}
                     </p>
-                    <p className='text-2xl font-bold'>{stat.value}</p>
-                    <p className='text-xs text-green-600'>{stat.change}</p>
+                    <div className='flex items-center gap-2'>
+                      <p className='text-2xl font-bold'>
+                        {stat.loading ? (
+                          <Loader2 className='w-6 h-6 animate-spin' />
+                        ) : stat.error ? (
+                          <span className='text-red-500 text-sm'>Error</span>
+                        ) : (
+                          stat.value
+                        )}
+                      </p>
+                      {stat.error && (
+                        <AlertTriangle className='w-4 h-4 text-red-500' />
+                      )}
+                    </div>
+                    <p
+                      className={`text-xs ${
+                        stat.change.startsWith("+")
+                          ? "text-green-600"
+                          : stat.change.startsWith("-")
+                          ? "text-red-600"
+                          : "text-gray-600"
+                      }`}
+                    >
+                      {stat.change}
+                    </p>
                   </div>
                   <div
                     className={`p-3 rounded-full bg-slate-100 ${stat.color}`}
@@ -250,6 +331,61 @@ const AdminDash = () => {
             </Card>
           ))}
         </motion.div>
+
+        {/* Visitor Analytics Section */}
+        {visitorStatsData?.data && (
+          <motion.div
+            className='mb-8'
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle className='flex items-center gap-2'>
+                  <TrendingUp className='w-5 h-5 text-blue-600' />
+                  Visitor Analytics
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+                  <div className='text-center p-4 bg-blue-50 rounded-lg'>
+                    <p className='text-2xl font-bold text-blue-900'>
+                      {visitorStatsData.data.todayVisitors}
+                    </p>
+                    <p className='text-blue-600 text-sm'>Today's Visitors</p>
+                  </div>
+                  <div className='text-center p-4 bg-green-50 rounded-lg'>
+                    <p className='text-2xl font-bold text-green-900'>
+                      {visitorStatsData.data.weeklyStats.thisWeek}
+                    </p>
+                    <p className='text-green-600 text-sm'>This Week</p>
+                  </div>
+                  <div className='text-center p-4 bg-purple-50 rounded-lg'>
+                    <p
+                      className={`text-2xl font-bold ${
+                        visitorStatsData.data.weeklyStats.growth >= 0
+                          ? "text-green-900"
+                          : "text-red-900"
+                      }`}
+                    >
+                      {visitorStatsData.data.weeklyStats.growth >= 0 ? "+" : ""}
+                      {visitorStatsData.data.weeklyStats.growth}%
+                    </p>
+                    <p className='text-purple-600 text-sm'>Weekly Growth</p>
+                  </div>
+                </div>
+
+                {visitorStatsData.data.lastVisit && (
+                  <div className='mt-4 text-center text-sm text-gray-600'>
+                    Last visitor:{" "}
+                    {formatTimeAgo(visitorStatsData.data.lastVisit)}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
           {/* Recent Messages */}
@@ -397,9 +533,15 @@ const AdminDash = () => {
                     </Badge>
                   </div>
                   <div className='flex items-center justify-between'>
-                    <span className='text-sm'>Last Backup</span>
-                    <span className='text-sm text-muted-foreground'>
-                      2 hours ago
+                    <span className='text-sm'>Total Visitors</span>
+                    <span className='text-sm font-medium'>
+                      {visitorCountLoading ? (
+                        <Loader2 className='w-4 h-4 animate-spin inline' />
+                      ) : visitorCountError ? (
+                        <span className='text-red-500'>Error</span>
+                      ) : (
+                        visitorCountData?.count?.toLocaleString() || "0"
+                      )}
                     </span>
                   </div>
                   <div className='flex items-center justify-between'>

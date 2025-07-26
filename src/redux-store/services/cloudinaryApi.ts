@@ -1,4 +1,3 @@
-// src/redux-store/services/cloudinaryApi.ts
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQuery, handleApiError } from "../../lib/apiConfig";
 

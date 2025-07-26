@@ -1,4 +1,3 @@
-// src/redux-store/services/pressApi.ts
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQuery } from "../../lib/apiConfig";
 import {

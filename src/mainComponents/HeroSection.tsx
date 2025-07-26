@@ -7,7 +7,16 @@ import {
   Play,
   Users,
   ArrowDown,
+  Eye,
+  TrendingUp,
 } from "lucide-react";
+
+// Import Visitor API hooks
+import {
+  useIncrementVisitorCounterMutation,
+  useGetVisitorCountQuery,
+  useLazyGetVisitorCountQuery,
+} from "@/redux-store/services/visitorApi";
 
 import Image1 from "./../assets/carousel/A.jpg";
 import Image2 from "./../assets/carousel/B.jpg";
@@ -16,6 +25,65 @@ import Image3 from "./../assets/carousel/C.jpg";
 const HeroSection = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [visitorTracked, setVisitorTracked] = useState(false);
+
+  // Visitor tracking hooks
+  const [
+    incrementVisitorCounter,
+    { isLoading: incrementLoading, error: incrementError },
+  ] = useIncrementVisitorCounterMutation();
+
+  const [getVisitorCount, { isLoading: getCountLoading }] =
+    useLazyGetVisitorCountQuery();
+
+  const { data: currentVisitorData, isLoading: visitorCountLoading } =
+    useGetVisitorCountQuery();
+
+  // Check if user has visited before
+  const isReturningVisitor = (): boolean => {
+    return localStorage.getItem("visitor_tracked") === "true";
+  };
+
+  // Mark user as having visited
+  const markAsVisited = (): void => {
+    localStorage.setItem("visitor_tracked", "true");
+    setVisitorTracked(true);
+  };
+
+  // Track visitor on component mount
+  useEffect(() => {
+    const trackVisitor = async () => {
+      if (visitorTracked) return; // Prevent double tracking
+
+      try {
+        const returning = isReturningVisitor();
+
+        if (returning) {
+          // Returning visitor - just get current count
+          console.log("Returning visitor detected");
+          await getVisitorCount().unwrap();
+        } else {
+          // New visitor - increment count
+          console.log("New visitor detected, incrementing counter");
+          const result = await incrementVisitorCounter().unwrap();
+          markAsVisited();
+          console.log("Visitor count incremented to:", result.count);
+        }
+      } catch (error) {
+        console.error("Error tracking visitor:", error);
+        // Fallback: try to get current count
+        try {
+          await getVisitorCount().unwrap();
+        } catch (fallbackError) {
+          console.error("Fallback visitor count failed:", fallbackError);
+        }
+      }
+    };
+
+    // Track visitor after a short delay to ensure proper loading
+    const timer = setTimeout(trackVisitor, 1000);
+    return () => clearTimeout(timer);
+  }, [incrementVisitorCounter, getVisitorCount, visitorTracked]);
 
   // Carousel images with enhanced data
   const carouselImages = [
@@ -91,8 +159,43 @@ const HeroSection = () => {
     },
   };
 
+  const visitorVariants = {
+    hidden: { opacity: 0, x: 20 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: { duration: 0.6, delay: 0.8 },
+    },
+  };
+
   return (
     <section id='home' className='relative overflow-hidden '>
+      {/* Visitor Counter Badge - Top Right */}
+      <motion.div
+        className='absolute top-4 right-4 z-30'
+        initial='hidden'
+        animate='visible'
+        variants={visitorVariants}
+      >
+        <div className='backdrop-blur-md bg-white/10 p-3 rounded-full border border-white/20 shadow-xl'>
+          <div className='flex items-center gap-2 text-white'>
+            <Eye className='w-4 h-4' />
+            <span className='text-sm font-medium'>
+              {visitorCountLoading || incrementLoading ? (
+                <span className='animate-pulse'>Loading...</span>
+              ) : (
+                <>
+                  {currentVisitorData?.count?.toLocaleString() || "0"} visitors
+                </>
+              )}
+            </span>
+            {!isReturningVisitor() && !visitorTracked && (
+              <TrendingUp className='w-3 h-3 text-green-400 animate-pulse' />
+            )}
+          </div>
+        </div>
+      </motion.div>
+
       {/* Carousel Background */}
       <div className='absolute inset-0 z-0'>
         <AnimatePresence mode='wait'>
@@ -200,7 +303,7 @@ const HeroSection = () => {
             2021.
           </motion.p>
 
-          {/* Stats Banner */}
+          {/* Enhanced Stats Banner with Live Visitor Count */}
           <motion.div
             variants={textVariants}
             className='flex justify-center items-center space-x-8 py-4'
@@ -211,6 +314,26 @@ const HeroSection = () => {
               </div>
               <div className='text-sm text-white/70'>Votes Received</div>
             </div>
+            <div className='w-px h-12 bg-white/30'></div>
+
+            {/* Live Website Visitors */}
+            <div className='text-center'>
+              <div className='text-2xl md:text-3xl font-bold text-orange-300'>
+                {visitorCountLoading || incrementLoading ? (
+                  <div className='animate-pulse'>...</div>
+                ) : (
+                  currentVisitorData?.count?.toLocaleString() || "0"
+                )}
+              </div>
+              <div className='text-sm text-white/70 flex items-center justify-center gap-1'>
+                <Eye className='w-3 h-3' />
+                Website Visitors
+                {!isReturningVisitor() && !visitorTracked && (
+                  <TrendingUp className='w-3 h-3 text-green-400 animate-pulse' />
+                )}
+              </div>
+            </div>
+
             <div className='w-px h-12 bg-white/30'></div>
             <div className='text-center'>
               <div className='text-2xl md:text-3xl font-bold text-orange-300'>
@@ -257,6 +380,26 @@ const HeroSection = () => {
               </Button>
             </a>
           </motion.div>
+
+          {/* Visitor Status Message (Optional) */}
+          {(incrementLoading || getCountLoading) && (
+            <motion.div
+              variants={textVariants}
+              className='text-white/70 text-sm flex items-center justify-center gap-2'
+            >
+              <div className='animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full'></div>
+              Tracking visitor...
+            </motion.div>
+          )}
+
+          {incrementError && (
+            <motion.div
+              variants={textVariants}
+              className='text-red-400 text-sm'
+            >
+              Unable to track visitor count
+            </motion.div>
+          )}
         </motion.div>
 
         {/* Scroll Indicator */}
