@@ -5,25 +5,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
-  ArrowLeft,
   Calendar,
   Clock,
   User,
   Building,
-  ExternalLink,
-  Edit,
-  Trash2,
   Loader2,
   AlertCircle,
-  Share2,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { selectAuth, selectIsAdmin } from "@/redux-store/slices/authSlice";
 import { Navigate } from "react-router-dom";
-import {
-  useGetPressByIdQuery,
-  useDeletePressArticleMutation,
-} from "@/redux-store/services/pressApi";
+import { useGetPressByIdQuery } from "@/redux-store/services/pressApi";
+import { BackNavigation } from "@/config/navigation/BackNavigation";
 
 const ReadPress = () => {
   const { id } = useParams<{ id: string }>();
@@ -42,9 +35,6 @@ const ReadPress = () => {
   }
 
   const { data: pressData, isLoading, error } = useGetPressByIdQuery(id);
-
-  const [deletePress, { isLoading: deleting }] =
-    useDeletePressArticleMutation();
 
   const press = pressData?.data?.press;
 
@@ -70,54 +60,6 @@ const ReadPress = () => {
       other: "bg-orange-100 text-orange-800",
     };
     return colors[category] || colors.other;
-  };
-
-  const handleDelete = async () => {
-    if (!press) return;
-
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this press article? This action cannot be undone."
-    );
-
-    if (confirmed) {
-      try {
-        await deletePress(press._id).unwrap();
-        navigate("/admin/pressDashboard");
-      } catch (error: any) {
-        console.error("Delete failed:", error);
-        alert(error.data?.message || "Failed to delete press article");
-      }
-    }
-  };
-
-  const handleEdit = () => {
-    if (press) {
-      navigate(`/admin/editPress/${press._id}`);
-    }
-  };
-
-  const handleExternalLink = () => {
-    if (press?.link) {
-      window.open(press.link, "_blank", "noopener,noreferrer");
-    }
-  };
-
-  const handleShare = async () => {
-    if (press && navigator.share) {
-      try {
-        await navigator.share({
-          title: press.title,
-          text: press.excerpt,
-          url: press.link,
-        });
-      } catch (error) {
-        console.log("Share failed:", error);
-      }
-    } else if (press) {
-      // Fallback to clipboard
-      navigator.clipboard.writeText(press.link);
-      alert("Link copied to clipboard!");
-    }
   };
 
   if (isLoading) {
@@ -155,44 +97,7 @@ const ReadPress = () => {
 
   return (
     <>
-      {/* Header */}
-      <header className='sticky top-0 z-40 w-full border-b bg-white/95 backdrop-blur'>
-        <div className='container flex h-16 items-center justify-between'>
-          <Button
-            onClick={() => navigate("/admin/pressDashboard")}
-            variant='ghost'
-            className='flex items-center gap-2'
-          >
-            <ArrowLeft className='w-4 h-4' />
-            Back to Press Dashboard
-          </Button>
-
-          <div className='flex items-center gap-2'>
-            <Button variant='outline' size='sm' onClick={handleShare}>
-              <Share2 className='w-4 h-4 mr-1' />
-              Share
-            </Button>
-            <Button variant='outline' size='sm' onClick={handleEdit}>
-              <Edit className='w-4 h-4 mr-1' />
-              Edit
-            </Button>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={handleDelete}
-              disabled={deleting}
-              className='text-red-600 hover:text-red-700'
-            >
-              {deleting ? (
-                <Loader2 className='w-4 h-4 mr-1 animate-spin' />
-              ) : (
-                <Trash2 className='w-4 h-4 mr-1' />
-              )}
-              Delete
-            </Button>
-          </div>
-        </div>
-      </header>
+      <BackNavigation />
 
       <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white'>
         <div className='max-w-4xl mx-auto p-4 py-8'>
@@ -283,14 +188,6 @@ const ReadPress = () => {
                       </>
                     )}
                   </div>
-
-                  <Button
-                    onClick={handleExternalLink}
-                    className='bg-gradient-to-r from-[#FF9933] to-[#138808] hover:from-[#FF9933]/90 hover:to-[#138808]/90'
-                  >
-                    <ExternalLink className='w-4 h-4 mr-2' />
-                    Read Original Article
-                  </Button>
                 </div>
               </CardContent>
             </Card>

@@ -1,13 +1,11 @@
 import {
   Share2,
-  MessageSquare,
   LogOut,
   ImagePlus,
   FileText,
   Home,
   Settings,
   Users,
-  BarChart,
   Lock,
 } from "lucide-react";
 import { ContextualButton, NavigationContext } from "./navigationUtils";
@@ -66,14 +64,6 @@ export const getContextualButtonsForPage = (
           priority: 2,
           showOnMobile: false,
         },
-        {
-          icon: <MessageSquare className='w-4 h-4' />,
-          label: "Contact",
-          onClick: () => safeNavigate("/contact"),
-          variant: "default",
-          priority: 1,
-          showOnMobile: true,
-        },
       ];
 
     case "contact":
@@ -104,22 +94,6 @@ export const getContextualButtonsForPage = (
       if (!isAuthenticated || !isAdmin) return [];
 
       return [
-        {
-          icon: <BarChart className='w-4 h-4' />,
-          label: "Analytics",
-          onClick: () => safeNavigate("/admin/analytics"),
-          variant: "outline",
-          priority: 3,
-          showOnMobile: false,
-        },
-        {
-          icon: <Settings className='w-4 h-4' />,
-          label: "Settings",
-          onClick: () => safeNavigate("/admin/settings"),
-          variant: "outline",
-          priority: 2,
-          showOnMobile: false,
-        },
         {
           icon: <LogOut className='w-4 h-4' />,
           label: "Logout",
@@ -196,7 +170,6 @@ export const getContextualButtonsForPage = (
         },
       ];
 
-    // UPDATED: Admin specific route buttons (Save buttons removed)
     case "video-specific":
       if (!isAuthenticated || !isAdmin) return [];
 
@@ -221,7 +194,6 @@ export const getContextualButtonsForPage = (
 
       const photoButtons: ContextualButton[] = [];
 
-      // Only add edit/delete buttons for edit pages
       if (currentPath.includes("/editVideo/"))
         photoButtons.push({
           icon: <LogOut className='w-4 h-4' />,
@@ -239,7 +211,6 @@ export const getContextualButtonsForPage = (
 
       const pressButtons: ContextualButton[] = [];
 
-      // Only add edit/delete buttons for edit pages
       if (currentPath.includes("/editPress/"))
         pressButtons.push({
           icon: <LogOut className='w-4 h-4' />,

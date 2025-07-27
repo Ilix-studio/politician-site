@@ -18,15 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Search,
-  Plus,
-  AlertCircle,
-  Grid3X3,
-  List,
-  LogOut,
-  ArrowLeft,
-} from "lucide-react";
+import { Search, AlertCircle, Grid3X3, List } from "lucide-react";
 import {
   useGetPhotosQuery,
   useUpdatePhotoMutation,
@@ -35,10 +27,11 @@ import {
   PhotoQuery,
 } from "@/redux-store/services/photoApi";
 import { useSelector } from "react-redux";
-import { logout, selectIsAdmin } from "@/redux-store/slices/authSlice";
-import { useDispatch } from "react-redux";
+import { selectIsAdmin } from "@/redux-store/slices/authSlice";
+
 import { useNavigate } from "react-router-dom";
 import PhotoCard from "./PhotoCard";
+import { BackNavigation } from "@/config/navigation/BackNavigation";
 
 // Skeleton Components
 const PhotoCardSkeleton: React.FC<{ viewMode: "grid" | "list" }> = ({
@@ -95,7 +88,6 @@ const PhotoGridSkeleton: React.FC<{ viewMode: "grid" | "list" }> = ({
 };
 
 const PhotoDash: React.FC = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const isAdmin = useSelector(selectIsAdmin);
   const [editingPhoto, setEditingPhoto] = useState<Photo | null>(null);
@@ -193,49 +185,9 @@ const PhotoDash: React.FC = () => {
     }
   };
 
-  const handleLogout = () => {
-    dispatch(logout());
-  };
-
-  const navigateToAddPhoto = () => {
-    navigate("/admin/addPhoto");
-  };
-
-  const handleHomeRedirect = () => {
-    window.location.href = "/admin/dashboard";
-  };
-
   return (
     <>
-      {/* Header */}
-      <header className='sticky top-0 z-40 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60'>
-        <div className='container flex h-16 items-center justify-between'>
-          <div className='flex items-center gap-4'>
-            <Button
-              onClick={handleHomeRedirect}
-              variant='ghost'
-              className='group flex items-center gap-3 px-4 py-2 hover:bg-gradient-to-r hover:from-[#FF9933]/10 hover:to-[#138808]/10 rounded-xl transition-all duration-300'
-            >
-              <div className='relative'>
-                <ArrowLeft className='w-5 h-5 group-hover:-translate-x-1 transition-transform duration-300' />
-                <div className='absolute inset-0 bg-[#FF9933] rounded-full opacity-0 group-hover:opacity-20 animate-ping'></div>
-              </div>
-              <span className='font-medium'>Back to Admin Dashboard</span>
-            </Button>
-
-            <div className='hidden sm:block w-px h-6 bg-gray-300'></div>
-          </div>
-
-          <Button
-            onClick={handleLogout}
-            variant='ghost'
-            className='flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50'
-          >
-            <LogOut className='w-4 h-4' />
-            Logout
-          </Button>
-        </div>
-      </header>
+      <BackNavigation />
 
       <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white p-4'>
         <div className='max-w-5xl mx-auto space-y-6'>
@@ -258,11 +210,6 @@ const PhotoDash: React.FC = () => {
                 ) : (
                   <Grid3X3 className='w-4 h-4' />
                 )}
-              </Button>
-
-              <Button disabled={isLoading} onClick={navigateToAddPhoto}>
-                <Plus className='w-4 h-4 mr-2' />
-                Add Photo
               </Button>
             </div>
           </div>

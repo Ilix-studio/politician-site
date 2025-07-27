@@ -267,7 +267,7 @@ export const BackNavigation = () => {
       </div>
 
       {/* Development Debug Panel */}
-      {process.env.NODE_ENV === "development" && (
+      {/* {process.env.NODE_ENV === "development" && (
         <div className='bg-gray-100 px-4 py-2 text-xs text-gray-600 border-t'>
           <div className='container mx-auto flex flex-wrap gap-4'>
             <span>
@@ -293,7 +293,7 @@ export const BackNavigation = () => {
             )}
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

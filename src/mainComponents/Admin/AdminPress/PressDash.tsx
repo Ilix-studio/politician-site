@@ -5,26 +5,19 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
-  ArrowLeft,
-  Plus,
   Search,
   Filter,
   Eye,
   Edit,
   Trash2,
-  LogOut,
   Calendar,
   FileText,
   ExternalLink,
   Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import {
-  selectAuth,
-  selectIsAdmin,
-  logout,
-} from "@/redux-store/slices/authSlice";
+import { useSelector } from "react-redux";
+import { selectAuth, selectIsAdmin } from "@/redux-store/slices/authSlice";
 import { Navigate } from "react-router-dom";
 import {
   useGetPressQuery,
@@ -32,10 +25,11 @@ import {
   useDeletePressArticleMutation,
 } from "@/redux-store/services/pressApi";
 import { PressQueryParams, PressDocument } from "@/types/press.types";
+import { BackNavigation } from "@/config/navigation/BackNavigation";
 
 const PressDash = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+
   const { isAuthenticated } = useSelector(selectAuth);
   const isAdmin = useSelector(selectIsAdmin);
 
@@ -110,30 +104,7 @@ const PressDash = () => {
 
   return (
     <>
-      {/* Header */}
-      <header className='sticky top-0 z-40 w-full border-b bg-white/95 backdrop-blur'>
-        <div className='container flex h-16 items-center justify-between'>
-          <div className='flex items-center gap-4'>
-            <Button
-              onClick={() => navigate("/admin/dashboard")}
-              variant='ghost'
-              className='flex items-center gap-2'
-            >
-              <ArrowLeft className='w-4 h-4' />
-              Back to Dashboard
-            </Button>
-          </div>
-
-          <Button
-            onClick={() => dispatch(logout())}
-            variant='ghost'
-            className='flex items-center gap-2 text-red-600 hover:text-red-700'
-          >
-            <LogOut className='w-4 h-4' />
-            Logout
-          </Button>
-        </div>
-      </header>
+      <BackNavigation />
 
       <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white p-4'>
         <div className='max-w-7xl mx-auto space-y-6'>
@@ -147,14 +118,6 @@ const PressDash = () => {
                 Manage press articles and media coverage
               </p>
             </div>
-
-            <Button
-              onClick={() => navigate("/admin/addPress")}
-              className='bg-gradient-to-r from-[#FF9933] to-[#138808] hover:from-[#FF9933]/90 hover:to-[#138808]/90'
-            >
-              <Plus className='w-4 h-4 mr-2' />
-              Add Press Article
-            </Button>
           </div>
 
           {/* Filters */}
