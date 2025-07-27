@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Award,
@@ -11,7 +11,6 @@ import {
   Users,
   Building,
   Trophy,
-  BookOpen,
   Target,
   ChevronDown,
   ChevronUp,
@@ -24,7 +23,7 @@ import BiswajitPhukan from "./../../assets/user.jpg";
 import BJP from "./../../assets/bjp.png";
 
 import Footer from "../Footer";
-import { BackNavigation } from "./BackNavigation";
+import { BackNavigation } from "@/config/navigation/BackNavigation";
 
 const ExtendAbout = () => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
@@ -440,28 +439,6 @@ const ExtendAbout = () => {
         </div>
       </section>
 
-      {/* Call to Action Section */}
-      <section className='py-16 bg-gradient-to-r from-[#FF9933]/10 to-[#138808]/10'>
-        <div className='container px-4 sm:px-6 text-center'>
-          <h3 className='text-2xl font-bold mb-4'>
-            Let's Build a Better Tomorrow Together
-          </h3>
-          <p className='text-muted-foreground mb-8 max-w-2xl mx-auto'>
-            Join me in the journey towards progress, development, and prosperity
-            for our beloved Assam and our great nation.
-          </p>
-          <div className='flex flex-wrap justify-center gap-4'>
-            <Button size='lg' className='bg-[#FF9933] hover:bg-[#FF9933]/90'>
-              <Users className='w-4 h-4 mr-2' />
-              Connect With Me
-            </Button>
-            <Button size='lg' variant='outline'>
-              <BookOpen className='w-4 h-4 mr-2' />
-              View My Work
-            </Button>
-          </div>
-        </div>
-      </section>
       <Footer />
     </>
   );

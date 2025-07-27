@@ -87,15 +87,15 @@ const Header = () => {
       {isMenuOpen && (
         <div className='md:hidden bg-background border-b'>
           <nav className='container py-4 flex flex-col items-center text-center space-y-3'>
-            <a
-              href='#home'
+            <Link
+              to='#home'
               className='text-sm font-medium hover:text-primary py-2 w-full'
               onClick={toggleMenu}
             >
               Home
-            </a>
+            </Link>
             <a
-              href='#about'
+              href='/about'
               className='text-sm font-medium hover:text-primary py-2 w-full'
               onClick={toggleMenu}
             >

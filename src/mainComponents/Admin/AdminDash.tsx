@@ -41,10 +41,7 @@ import { useGetVideosQuery } from "@/redux-store/services/videoApi";
 import { useGetPressQuery } from "@/redux-store/services/pressApi";
 
 // Import Visitor API hooks
-import {
-  useGetVisitorStatsQuery,
-  useGetVisitorCountQuery,
-} from "@/redux-store/services/visitorApi";
+import { useGetVisitorStatsQuery } from "@/redux-store/services/visitorApi";
 
 const AdminDash = () => {
   const dispatch = useDispatch();
@@ -86,15 +83,8 @@ const AdminDash = () => {
   const {
     data: visitorStatsData,
     isLoading: visitorStatsLoading,
-    error: visitorStatsError,
     refetch: refetchVisitorStats,
   } = useGetVisitorStatsQuery();
-
-  const {
-    data: visitorCountData,
-    isLoading: visitorCountLoading,
-    error: visitorCountError,
-  } = useGetVisitorCountQuery();
 
   if (!isAuthenticated || !isAdmin) {
     return <Navigate to='/admin/login' />;
@@ -123,33 +113,10 @@ const AdminDash = () => {
     console.log("View message:", id);
   };
 
-  // Calculate visitor growth percentage
-  const getVisitorGrowthText = () => {
-    if (visitorStatsLoading) return "Loading...";
-    if (visitorStatsError) return "Error";
-    if (!visitorStatsData?.data?.weeklyStats) return "0%";
-
-    const growth = visitorStatsData.data.weeklyStats.growth;
-    return growth >= 0 ? `+${growth}%` : `${growth}%`;
-  };
-
   // Dynamic stats with real data from APIs
   const stats = [
     {
-      title: "Total Visitors",
-      value: visitorStatsLoading
-        ? "Loading..."
-        : visitorStatsError
-        ? "Error"
-        : visitorStatsData?.data?.totalVisitors?.toLocaleString() || "0",
-      change: getVisitorGrowthText(),
-      icon: Users,
-      color: "text-blue-600",
-      loading: visitorStatsLoading,
-      error: visitorStatsError,
-    },
-    {
-      title: "Contact Messages",
+      title: "Total Contact Messages",
       value: messagesData?.pagination?.total?.toString() || "0",
       change: messagesData?.unreadCount ? `+${messagesData.unreadCount}` : "0",
       icon: Mail,
@@ -158,18 +125,25 @@ const AdminDash = () => {
       error: messagesError,
     },
     {
-      title: "Gallery Photos",
+      title: "Total Gallery Photos",
       value: photosData?.data?.pagination?.total?.toString() || "0",
       change: "+8",
       icon: Image,
       color: "text-purple-600",
     },
     {
-      title: "Videos",
+      title: "Total Gallery Videos",
       value: videosData?.data?.pagination?.totalVideos?.toString() || "0",
-      change: "+2",
+
       icon: Video,
       color: "text-orange-600",
+    },
+    {
+      title: "Total Press Articles",
+      value: pressData?.data?.pagination?.totalPress?.toString(),
+
+      icon: Users,
+      color: "text-blue-600",
     },
   ];
 
@@ -309,17 +283,6 @@ const AdminDash = () => {
                         <AlertTriangle className='w-4 h-4 text-red-500' />
                       )}
                     </div>
-                    <p
-                      className={`text-xs ${
-                        stat.change.startsWith("+")
-                          ? "text-green-600"
-                          : stat.change.startsWith("-")
-                          ? "text-red-600"
-                          : "text-gray-600"
-                      }`}
-                    >
-                      {stat.change}
-                    </p>
                   </div>
                   <div
                     className={`p-3 rounded-full bg-slate-100 ${stat.color}`}
@@ -348,7 +311,14 @@ const AdminDash = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
+                  <div className='text-center p-4 bg-orange-50 rounded-lg'>
+                    <p className='text-2xl font-bold text-orange-900'>
+                      {visitorStatsData.data.totalVisitors?.toLocaleString() ||
+                        "0"}
+                    </p>
+                    <p className='text-orange-600 text-sm'>Total Visitors</p>
+                  </div>
                   <div className='text-center p-4 bg-blue-50 rounded-lg'>
                     <p className='text-2xl font-bold text-blue-900'>
                       {visitorStatsData.data.todayVisitors}
@@ -386,7 +356,6 @@ const AdminDash = () => {
             </Card>
           </motion.div>
         )}
-
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
           {/* Recent Messages */}
           <motion.div
@@ -532,34 +501,10 @@ const AdminDash = () => {
                       Online
                     </Badge>
                   </div>
-                  <div className='flex items-center justify-between'>
-                    <span className='text-sm'>Total Visitors</span>
-                    <span className='text-sm font-medium'>
-                      {visitorCountLoading ? (
-                        <Loader2 className='w-4 h-4 animate-spin inline' />
-                      ) : visitorCountError ? (
-                        <span className='text-red-500'>Error</span>
-                      ) : (
-                        visitorCountData?.count?.toLocaleString() || "0"
-                      )}
-                    </span>
-                  </div>
+
                   <div className='flex items-center justify-between'>
                     <span className='text-sm'>Server Health</span>
                     <Badge className='bg-green-100 text-green-800'>Good</Badge>
-                  </div>
-                  <div className='flex items-center justify-between'>
-                    <span className='text-sm'>Unread Messages</span>
-                    <Badge
-                      variant={
-                        messagesData?.unreadCount &&
-                        messagesData.unreadCount > 0
-                          ? "destructive"
-                          : "secondary"
-                      }
-                    >
-                      {messagesData?.unreadCount || 0}
-                    </Badge>
                   </div>
                 </div>
               </CardContent>

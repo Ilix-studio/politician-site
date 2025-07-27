@@ -6,7 +6,6 @@ import {
   Eye,
   Edit2,
   Trash2,
-  Star,
   Play,
   Calendar,
   Clock,
@@ -81,9 +80,6 @@ const VideoCard = ({
                 <div className='absolute inset-0 bg-black bg-opacity-20 rounded-lg flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity'>
                   <Play className='w-6 h-6 text-white' />
                 </div>
-                {video.featured && (
-                  <Star className='absolute top-1 right-1 w-4 h-4 text-yellow-400 fill-current' />
-                )}
               </div>
 
               {/* Content */}
@@ -120,19 +116,7 @@ const VideoCard = ({
                         onClick={() => onToggleFeatured?.(video._id)}
                         disabled={isToggling}
                         className={video.featured ? "bg-yellow-50" : ""}
-                      >
-                        {isToggling ? (
-                          <Loader2 className='w-4 h-4 animate-spin' />
-                        ) : (
-                          <Star
-                            className={`w-4 h-4 ${
-                              video.featured
-                                ? "text-yellow-500 fill-current"
-                                : "text-gray-400"
-                            }`}
-                          />
-                        )}
-                      </Button>
+                      ></Button>
                       <Button
                         variant='outline'
                         size='sm'
@@ -200,11 +184,7 @@ const VideoCard = ({
           <div className='absolute inset-0 bg-black bg-opacity-20 rounded-t-lg flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity'>
             <Play className='w-8 h-8 text-white' />
           </div>
-          {video.featured && (
-            <div className='absolute top-2 right-2'>
-              <Star className='w-5 h-5 text-yellow-400 fill-current' />
-            </div>
-          )}
+
           <div className='absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded'>
             {video.duration}
           </div>
@@ -260,25 +240,7 @@ const VideoCard = ({
               >
                 <Edit2 className='w-4 h-4' />
               </Button>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={() => onToggleFeatured?.(video._id)}
-                disabled={isToggling}
-                className={video.featured ? "bg-yellow-50" : ""}
-              >
-                {isToggling ? (
-                  <Loader2 className='w-4 h-4 animate-spin' />
-                ) : (
-                  <Star
-                    className={`w-4 h-4 ${
-                      video.featured
-                        ? "text-yellow-500 fill-current"
-                        : "text-gray-400"
-                    }`}
-                  />
-                )}
-              </Button>
+
               <Button
                 variant='outline'
                 size='sm'

@@ -15,7 +15,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  ArrowLeft,
   Save,
   Loader2,
   Image as ImageIcon,
@@ -32,6 +31,7 @@ import {
   useGetPressCategoriesQuery,
 } from "@/redux-store/services/pressApi";
 import { PressUpdateData } from "@/types/press.types";
+import { BackNavigation } from "@/config/navigation/BackNavigation";
 
 const EditPress = () => {
   const { id } = useParams<{ id: string }>();
@@ -180,34 +180,7 @@ const EditPress = () => {
 
   return (
     <>
-      {/* Header */}
-      <header className='sticky top-0 z-40 w-full border-b bg-white/95 backdrop-blur'>
-        <div className='container flex h-16 items-center justify-between'>
-          <Button
-            onClick={handleCancel}
-            variant='ghost'
-            className='flex items-center gap-2'
-          >
-            <ArrowLeft className='w-4 h-4' />
-            Back to Article
-          </Button>
-
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='outline'
-              onClick={() => navigate(`/admin/read/${id}`)}
-            >
-              <Eye className='w-4 h-4 mr-1' />
-              Preview
-            </Button>
-            {hasChanges && (
-              <span className='text-sm text-amber-600 font-medium'>
-                Unsaved changes
-              </span>
-            )}
-          </div>
-        </div>
-      </header>
+      <BackNavigation />
 
       <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white p-4'>
         <div className='max-w-4xl mx-auto'>

@@ -87,14 +87,7 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
                 >
                   <h2 className='w-22 h-4'> View Photo</h2>
                 </Button>
-                <Button
-                  size='sm'
-                  variant='secondary'
-                  className='bg-white/90 hover:bg-white backdrop-blur-sm border-0 shadow-lg'
-                  onClick={() => onEdit(photo)}
-                >
-                  <Edit className='w-4 h-4' />
-                </Button>
+
                 <Button
                   size='sm'
                   variant='destructive'

@@ -190,13 +190,10 @@ const ViewMessage = () => {
               </Button>
               <Separator orientation='vertical' className='h-6' />
               <div>
-                <h1 className='text-2xl font-bold text-gray-900 flex items-center gap-2'>
+                <h1 className='text-1xl font-bold text-gray-900 flex items-center gap-2'>
                   <MessageCircle className='w-6 h-6 text-[#FF9933]' />
                   Message Details
                 </h1>
-                <p className='text-gray-600 text-sm'>
-                  View and manage this contact message
-                </p>
               </div>
             </div>
             <Badge

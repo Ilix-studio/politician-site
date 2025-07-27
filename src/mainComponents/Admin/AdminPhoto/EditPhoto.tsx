@@ -15,23 +15,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Calendar,
-  MapPin,
-  Save,
-  ArrowLeft,
-  AlertCircle,
-  Loader2,
-  LogOut,
-} from "lucide-react";
+import { Calendar, MapPin, Save, AlertCircle, Loader2 } from "lucide-react";
 import {
   useGetPhotoQuery,
   useUpdatePhotoMutation,
   PhotoUploadData,
 } from "@/redux-store/services/photoApi";
 import { useSelector } from "react-redux";
-import { logout, selectIsAdmin } from "@/redux-store/slices/authSlice";
-import { useDispatch } from "react-redux";
+import { selectIsAdmin } from "@/redux-store/slices/authSlice";
+
+import { BackNavigation } from "@/config/navigation/BackNavigation";
 
 const categories = [
   { value: "political-events", label: "Political Events" },
@@ -48,7 +41,7 @@ const categories = [
 const EditPhoto: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   // const navigate = useNavigate();
-  const dispatch = useDispatch();
+
   const isAdmin = useSelector(selectIsAdmin);
 
   const { data: photoData, isLoading, error } = useGetPhotoQuery(id!);
@@ -188,43 +181,9 @@ const EditPhoto: React.FC = () => {
     }
   };
 
-  const handleLogout = () => {
-    dispatch(logout());
-  };
-  const handleHomeRedirect = () => {
-    window.location.href = "/admin/photoDashboard";
-  };
-
   return (
     <>
-      <header className='sticky top-0 z-40 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60'>
-        <div className='container flex h-16 items-center justify-between'>
-          <div className='flex items-center gap-4'>
-            <Button
-              onClick={handleHomeRedirect}
-              variant='ghost'
-              className='group flex items-center gap-3 px-4 py-2 hover:bg-gradient-to-r hover:from-[#FF9933]/10 hover:to-[#138808]/10 rounded-xl transition-all duration-300'
-            >
-              <div className='relative'>
-                <ArrowLeft className='w-5 h-5 group-hover:-translate-x-1 transition-transform duration-300' />
-                <div className='absolute inset-0 bg-[#FF9933] rounded-full opacity-0 group-hover:opacity-20 animate-ping'></div>
-              </div>
-              <span className='font-medium'>Back to Photo Dashboard</span>
-            </Button>
-
-            <div className='hidden sm:block w-px h-6 bg-gray-300'></div>
-          </div>
-
-          <Button
-            onClick={handleLogout}
-            variant='ghost'
-            className='flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50'
-          >
-            <LogOut className='w-4 h-4' />
-            Logout
-          </Button>
-        </div>
-      </header>
+      <BackNavigation />
       <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white p-4'>
         <div className='max-w-2xl mx-auto'>
           <motion.div
