@@ -1,172 +1,174 @@
-// src/services/cloudinaryService.ts
-
+// services/cloudinaryService.ts
 import { API_CONFIG } from "@/lib/apiConfig";
+import {
+  CloudinarySignatureResponse,
+  CloudinaryUploadSingleRequest,
+  CloudinaryUploadSingleResponse,
+  CloudinaryUploadMultipleRequest,
+  CloudinaryUploadMultipleResponse,
+  CloudinaryDeleteMultipleRequest,
+  CloudinaryDeleteMultipleResponse,
+  CloudinaryDeleteSingleResponse,
+  CloudinaryImageDetailsResponse,
+  CloudinaryListFolderResponse,
+} from "../../types/cloudinary.types";
 
-// Interface for signature response
-export interface CloudinarySignature {
-  timestamp: number;
-  signature: string;
-  cloudName: string;
-  apiKey: string;
-  folder: string;
-}
+const BASE_URL = `${API_CONFIG.BASE_URL}/cloudinary`;
 
-// Interface for upload response
-export interface CloudinaryUploadResponse {
-  public_id: string;
-  version: number;
-  signature: string;
-  width: number;
-  height: number;
-  format: string;
-  resource_type: string;
-  url: string;
-  secure_url: string;
-}
-
-/**
- * Service for handling Cloudinary uploads
- */
 class CloudinaryService {
   /**
-   * Get a signature for authenticated Cloudinary uploads
-   * @param token JWT authentication token
-   * @param folder Optional folder path in Cloudinary
-   * @returns CloudinarySignature object with upload credentials
+   * Generate a signature for authenticated Cloudinary uploads
    */
-  async getUploadSignature(
-    token: string,
-    folder = "dynamic-images-for-politician"
-  ): Promise<CloudinarySignature> {
-    try {
-      const response = await fetch(
-        `${API_CONFIG.BASE_URL}/cloudinary/signature`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ folder }),
-        }
-      );
+  generateSignature = async (
+    folder?: string
+  ): Promise<CloudinarySignatureResponse> => {
+    const response = await fetch(`${BASE_URL}/signature`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ folder }),
+    });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.message || "Failed to get Cloudinary signature"
-        );
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error("Error getting upload signature:", error);
-      throw error;
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to generate signature");
     }
-  }
+
+    return response.json();
+  };
 
   /**
-   * Upload an image to Cloudinary using signed upload
-   * @param file Image file to upload
-   * @param signature Signature data from getUploadSignature
-   * @returns Cloudinary upload response
+   * Upload single image to Cloudinary
    */
-  async uploadImage(
-    file: File,
-    signature: CloudinarySignature
-  ): Promise<CloudinaryUploadResponse> {
-    try {
-      // Create form data for upload
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("api_key", signature.apiKey);
-      formData.append("timestamp", signature.timestamp.toString());
-      formData.append("signature", signature.signature);
-      formData.append("folder", signature.folder);
+  uploadSingleImage = async ({
+    file,
+    folder,
+    alt,
+  }: CloudinaryUploadSingleRequest): Promise<CloudinaryUploadSingleResponse> => {
+    const formData = new FormData();
+    formData.append("image", file);
 
-      // Upload to Cloudinary
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${signature.cloudName}/image/upload`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+    if (folder) formData.append("folder", folder);
+    if (alt) formData.append("alt", alt);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error?.message || "Failed to upload to Cloudinary"
-        );
-      }
+    const response = await fetch(`${BASE_URL}/upload-single`, {
+      method: "POST",
+      body: formData,
+    });
 
-      return await response.json();
-    } catch (error) {
-      console.error("Error uploading image to Cloudinary:", error);
-      throw error;
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to upload image");
     }
-  }
+
+    return response.json();
+  };
 
   /**
-   * Delete an image from Cloudinary
-   * @param token JWT authentication token
-   * @param publicId Cloudinary public ID of the image
-   * @returns Success response
+   * Upload multiple images to Cloudinary
    */
-  async deleteImage(
-    token: string,
+  uploadMultipleImages = async ({
+    files,
+    folder,
+    altTexts,
+  }: CloudinaryUploadMultipleRequest): Promise<CloudinaryUploadMultipleResponse> => {
+    const formData = new FormData();
+
+    files.forEach((file) => {
+      formData.append("images", file);
+    });
+
+    if (folder) formData.append("folder", folder);
+    if (altTexts) formData.append("altTexts", JSON.stringify(altTexts));
+
+    const response = await fetch(`${BASE_URL}/upload-multiple`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to upload images");
+    }
+
+    return response.json();
+  };
+
+  /**
+   * Delete multiple images from Cloudinary
+   */
+  deleteMultipleImages = async ({
+    publicIds,
+  }: CloudinaryDeleteMultipleRequest): Promise<CloudinaryDeleteMultipleResponse> => {
+    const response = await fetch(`${BASE_URL}/delete-multiple`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ publicIds }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to delete images");
+    }
+
+    return response.json();
+  };
+
+  /**
+   * Delete single image from Cloudinary
+   */
+  deleteSingleImage = async (
     publicId: string
-  ): Promise<{ success: boolean; message: string }> {
-    try {
-      const response = await fetch(
-        `${API_CONFIG.BASE_URL}/cloudinary/${publicId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+  ): Promise<CloudinaryDeleteSingleResponse> => {
+    const response = await fetch(`${BASE_URL}/${publicId}`, {
+      method: "DELETE",
+    });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to delete image");
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error("Error deleting image from Cloudinary:", error);
-      throw error;
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to delete image");
     }
-  }
+
+    return response.json();
+  };
 
   /**
-   * Extract public ID from a Cloudinary URL
-   * @param url Cloudinary URL
-   * @returns Public ID or null if not a Cloudinary URL
+   * Get image details from Cloudinary
    */
-  extractPublicId(url: string): string | null {
-    if (!url || !url.includes("cloudinary.com")) {
-      return null;
+  getImageDetails = async (
+    publicId: string
+  ): Promise<CloudinaryImageDetailsResponse> => {
+    const response = await fetch(`${BASE_URL}/details/${publicId}`);
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to get image details");
     }
 
-    try {
-      const urlParts = url.split("/");
-      const uploadIndex = urlParts.indexOf("upload");
+    return response.json();
+  };
 
-      if (uploadIndex !== -1 && urlParts.length > uploadIndex + 2) {
-        // Get everything after 'upload/v{version}/'
-        const publicIdWithExtension = urlParts.slice(uploadIndex + 2).join("/");
-        // Remove file extension
-        return publicIdWithExtension.replace(/\.[^/.]+$/, "");
-      }
+  /**
+   * List images in a folder
+   */
+  listImagesInFolder = async (
+    folderName: string,
+    maxResults = 50
+  ): Promise<CloudinaryListFolderResponse> => {
+    const response = await fetch(
+      `${BASE_URL}/folder/${folderName}?maxResults=${maxResults}`
+    );
 
-      return null;
-    } catch (error) {
-      console.error("Error extracting public ID:", error);
-      return null;
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to list folder images");
     }
-  }
+
+    return response.json();
+  };
 }
 
-export default new CloudinaryService();
+export const cloudinaryService = new CloudinaryService();

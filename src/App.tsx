@@ -3,6 +3,7 @@
 import "./App.css";
 import { useEffect } from "react";
 import { Routes, useLocation } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 
 // Import route configurations
 import {
@@ -30,30 +31,94 @@ const App = () => {
   }, [location.pathname]);
 
   return (
-    <Routes>
-      {/* Step 1: Immediate routes (no lazy loading) */}
-      {immediateRoutes.map(({ path, component }) =>
-        createImmediateRoute(path, component)
-      )}
+    <>
+      <Toaster
+        position='top-right'
+        reverseOrder={false}
+        gutter={8}
+        containerClassName=''
+        containerStyle={{
+          top: 20,
+          left: 20,
+          bottom: 20,
+          right: 20,
+        }}
+        toastOptions={{
+          // Default options for all toasts
+          duration: 3000,
+          style: {
+            background: "#fff",
+            color: "#363636",
+            border: "1px solid #e5e7eb",
+            borderRadius: "8px",
+            boxShadow:
+              "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+            fontSize: "14px",
+            maxWidth: "420px",
+            padding: "12px 16px",
+            fontFamily: "system-ui, -apple-system, sans-serif",
+          },
+          // Specific styles for different toast types
+          success: {
+            duration: 4000,
+            iconTheme: {
+              primary: "#10b981",
+              secondary: "#fff",
+            },
+            style: {
+              border: "1px solid #10b981",
+              background: "#f0fdf4",
+              color: "#065f46",
+            },
+          },
+          error: {
+            duration: 5000,
+            iconTheme: {
+              primary: "#ef4444",
+              secondary: "#fff",
+            },
+            style: {
+              border: "1px solid #ef4444",
+              background: "#fef2f2",
+              color: "#991b1b",
+            },
+          },
+          loading: {
+            duration: Infinity,
+            style: {
+              border: "1px solid #3b82f6",
+              background: "#eff6ff",
+              color: "#1e40af",
+            },
+          },
+        }}
+      />
 
-      {/* Step 2: Public routes (with lazy loading) */}
-      {publicRoutes.map(({ path, component }) =>
-        createPublicRoute(path, component)
-      )}
+      <Routes>
+        {/* Step 1: Immediate routes (no lazy loading) */}
+        {immediateRoutes.map(({ path, component }) =>
+          createImmediateRoute(path, component)
+        )}
 
-      {/* Step 3: Admin routes (with protection + lazy loading) */}
-      {adminRoutes.map(({ path, component }) =>
-        createAdminRoute(path, component)
-      )}
+        {/* Step 2: Public routes (with lazy loading) */}
+        {publicRoutes.map(({ path, component }) =>
+          createPublicRoute(path, component)
+        )}
 
-      {/* Step 4: Admin Specific Dashboard routes (with protection + lazy loading) */}
-      {adSpecificRoutes.map(({ path, component }) =>
-        createAdSpecificRoute(path, component)
-      )}
+        {/* Step 3: Admin routes (with protection + lazy loading) */}
+        {adminRoutes.map(({ path, component }) =>
+          createAdminRoute(path, component)
+        )}
 
-      {/* Step 4: Fallback route */}
-      {createImmediateRoute(fallbackRoute.path, fallbackRoute.component)}
-    </Routes>
+        {/* Step 4: Admin Specific Dashboard routes (with protection + lazy loading) */}
+        {adSpecificRoutes.map(({ path, component }) =>
+          createAdSpecificRoute(path, component)
+        )}
+
+        {/* Step 4: Fallback route */}
+        {createImmediateRoute(fallbackRoute.path, fallbackRoute.component)}
+      </Routes>
+    </>
   );
 };
 

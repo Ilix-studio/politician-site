@@ -68,6 +68,9 @@ const ViewMessage = lazy(
 const ViewAllMessage = lazy(
   () => import("../mainComponents/Admin/AdminMessage/ViewAllMessage")
 );
+const CategoryManager = lazy(
+  () => import("../mainComponents/Admin/AdminCategory/CategoryManager")
+);
 
 // Route configuration
 export const immediateRoutes = [
@@ -92,6 +95,7 @@ export const adminRoutes = [
   { path: "/admin/pressDashboard", component: PressDash },
   { path: "/admin/messages", component: ViewAllMessage },
   { path: "/admin/messages/:id", component: ViewMessage },
+  { path: "/admin/categories", component: CategoryManager },
 ];
 
 // NEW: Admin specific routes with dashboard mapping

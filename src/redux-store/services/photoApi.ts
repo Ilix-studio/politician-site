@@ -1,123 +1,62 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { baseQuery, handleApiError } from "../../lib/apiConfig";
-
-// Types matching your Photo interface
-export interface Photo {
-  _id: string;
-  src: string;
-  alt: string;
-  title: string;
-  category: string;
-  date: string;
-  location: string;
-  description: string;
-  cloudinaryPublicId: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Category {
-  id: string;
-  name: string;
-  count: number;
-}
-
-export interface PhotoUploadData {
-  title: string;
-  category: string;
-  date?: string;
-  location?: string;
-  description?: string;
-}
-
-export interface PhotoCreateData extends PhotoUploadData {
-  src: string;
-  cloudinaryPublicId: string;
-}
-
-export interface PhotosResponse {
-  success: boolean;
-  data: {
-    photos: Photo[];
-    pagination: {
-      current: number;
-      pages: number;
-      total: number;
-      hasNext: boolean;
-      hasPrev: boolean;
-    };
-  };
-}
-
-export interface PhotoResponse {
-  success: boolean;
-  data: Photo;
-}
-
-export interface CategoriesResponse {
-  success: boolean;
-  data: Category[];
-}
-
-export interface PhotoQuery {
-  page?: number;
-  limit?: number;
-  category?: string;
-  tags?: string | string[];
-  search?: string;
-  sortBy?: string;
-  sortOrder?: "asc" | "desc";
-}
-
-export interface DeleteResponse {
-  success: boolean;
-  message: string;
-}
+import { baseQuery } from "../../lib/apiConfig";
+import {
+  PhotoCreateData,
+  PhotoMultipleUploadData,
+  PhotoResponse,
+  // Add this new type
+  PhotosQueryParams,
+  PhotosResponse,
+  PhotoUpdateData,
+  PhotoUploadData,
+} from "@/types/photo.types";
 
 export const photoApi = createApi({
   reducerPath: "photoApi",
   baseQuery,
-  tagTypes: ["Photo", "Category"],
+  tagTypes: ["Photo"],
   endpoints: (builder) => ({
-    // Get photos with pagination and filtering
-    getPhotos: builder.query<PhotosResponse, PhotoQuery | void>({
-      query: (params) => {
+    // Get photos with pagination and filtering (Public)
+    getPhotos: builder.query<PhotosResponse, PhotosQueryParams>({
+      query: (params = {}) => {
         const searchParams = new URLSearchParams();
 
-        if (params?.page) searchParams.append("page", params.page.toString());
-        if (params?.limit)
-          searchParams.append("limit", params.limit.toString());
-        if (params?.category) searchParams.append("category", params.category);
-        if (params?.search) searchParams.append("search", params.search);
-        if (params?.sortBy) searchParams.append("sortBy", params.sortBy);
-        if (params?.sortOrder)
-          searchParams.append("sortOrder", params.sortOrder);
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== "") {
+            searchParams.append(key, value.toString());
+          }
+        });
 
-        const queryString = searchParams.toString();
-        return `/photos${queryString ? `?${queryString}` : ""}`;
+        return `/photos?${searchParams.toString()}`;
       },
-      providesTags: (result) =>
-        result
-          ? [
-              ...result.data.photos.map(({ _id }) => ({
-                type: "Photo" as const,
-                id: _id,
-              })),
-              { type: "Photo", id: "LIST" },
-            ]
-          : [{ type: "Photo", id: "LIST" }],
-      transformErrorResponse: (response) => handleApiError(response),
+      providesTags: (result) => [
+        "Photo",
+        ...(result?.data.photos || []).map(({ _id }) => ({
+          type: "Photo" as const,
+          id: _id,
+        })),
+      ],
     }),
 
-    // Get single photo
+    // Get single photo by ID (Public)
     getPhoto: builder.query<PhotoResponse, string>({
       query: (id) => `/photos/${id}`,
-      providesTags: (_, __, id) => [{ type: "Photo", id }],
-      transformErrorResponse: (response) => handleApiError(response),
+      transformResponse: (response: PhotoResponse) => response,
+      providesTags: (_result, _error, id) => [{ type: "Photo", id }],
     }),
 
-    // Upload photo with file
+    // Create photo with existing URLs (Admin only)
+    createPhoto: builder.mutation<PhotoResponse, PhotoCreateData>({
+      query: (data) => ({
+        url: "/photos",
+        method: "POST",
+        body: data,
+      }),
+      transformResponse: (response: PhotoResponse) => response,
+      invalidatesTags: ["Photo"],
+    }),
+
+    // Upload single photo (Admin only) - Use PhotoUploadResponse
     uploadPhoto: builder.mutation<
       PhotoResponse,
       { file: File; data: PhotoUploadData }
@@ -126,14 +65,9 @@ export const photoApi = createApi({
         const formData = new FormData();
         formData.append("photo", file);
 
-        // Append other data
         Object.entries(data).forEach(([key, value]) => {
-          if (value !== undefined) {
-            if (Array.isArray(value)) {
-              formData.append(key, value.join(","));
-            } else {
-              formData.append(key, value.toString());
-            }
+          if (value !== undefined && value !== null) {
+            formData.append(key, value.toString());
           }
         });
 
@@ -143,54 +77,104 @@ export const photoApi = createApi({
           body: formData,
         };
       },
-      invalidatesTags: ["Photo", "Category"],
-      transformErrorResponse: (response) => handleApiError(response),
+      transformResponse: (response: PhotoResponse) => response,
+      invalidatesTags: ["Photo"],
     }),
 
-    // Create photo (with existing Cloudinary URL)
-    createPhoto: builder.mutation<PhotoResponse, PhotoCreateData>({
-      query: (data) => ({
-        url: "/photos",
-        method: "POST",
-        body: data,
-      }),
-      invalidatesTags: ["Photo", "Category"],
-      transformErrorResponse: (response) => handleApiError(response),
+    // Upload multiple photos (Admin only) - Use PhotoUploadResponse
+    uploadMultiplePhotos: builder.mutation<
+      PhotoResponse,
+      { files: File[]; data: PhotoMultipleUploadData }
+    >({
+      query: ({ files, data }) => {
+        const formData = new FormData();
+
+        files.forEach((file) => {
+          formData.append("photos", file);
+        });
+
+        Object.entries(data).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            if (key === "altTexts" && Array.isArray(value)) {
+              formData.append(key, JSON.stringify(value));
+            } else {
+              formData.append(key, value.toString());
+            }
+          }
+        });
+
+        return {
+          url: "/photos/upload-multiple",
+          method: "POST",
+          body: formData,
+        };
+      },
+      transformResponse: (response: PhotoResponse) => response,
+      invalidatesTags: ["Photo"],
     }),
 
-    // Update photo
+    // Update photo (Admin only)
     updatePhoto: builder.mutation<
       PhotoResponse,
-      { id: string; data: Partial<PhotoCreateData> }
+      { id: string; data: PhotoUpdateData }
     >({
       query: ({ id, data }) => ({
         url: `/photos/${id}`,
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: (_, __, { id }) => [
+      transformResponse: (response: PhotoResponse) => response,
+      invalidatesTags: (_result, _error, { id }) => [
         { type: "Photo", id },
         "Photo",
-        "Category",
       ],
-      transformErrorResponse: (response) => handleApiError(response),
     }),
 
-    // Delete photo
-    deletePhoto: builder.mutation<DeleteResponse, string>({
+    // Delete photo (Admin only)
+    deletePhoto: builder.mutation<
+      { success: boolean; message: string },
+      string
+    >({
       query: (id) => ({
         url: `/photos/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Photo", "Category"],
-      transformErrorResponse: (response) => handleApiError(response),
+      invalidatesTags: (_result, _error, id) => [
+        { type: "Photo", id },
+        "Photo",
+      ],
     }),
 
-    // Get categories
-    getCategories: builder.query<CategoriesResponse, void>({
-      query: () => "/photos/categories",
-      providesTags: ["Category"],
-      transformErrorResponse: (response) => handleApiError(response),
+    // Get photos by category (Public)
+    getPhotosByCategory: builder.query<
+      PhotosResponse,
+      { category: string; limit?: number }
+    >({
+      query: ({ category, limit = 12 }) =>
+        `/photos?category=${category}&limit=${limit}`,
+      providesTags: (result, _error, { category }) => [
+        { type: "Photo", id: `category-${category}` },
+        ...(result?.data.photos || []).map(({ _id }) => ({
+          type: "Photo" as const,
+          id: _id,
+        })),
+      ],
+    }),
+
+    // Search photos (Public)
+    searchPhotos: builder.query<
+      PhotosResponse,
+      { search: string; limit?: number }
+    >({
+      query: ({ search, limit = 12 }) =>
+        `/photos?search=${encodeURIComponent(search)}&limit=${limit}`,
+      providesTags: (result, _error, { search }) => [
+        { type: "Photo", id: `search-${search}` },
+        ...(result?.data.photos || []).map(({ _id }) => ({
+          type: "Photo" as const,
+          id: _id,
+        })),
+      ],
     }),
   }),
 });
@@ -198,9 +182,11 @@ export const photoApi = createApi({
 export const {
   useGetPhotosQuery,
   useGetPhotoQuery,
-  useUploadPhotoMutation,
   useCreatePhotoMutation,
+  useUploadPhotoMutation,
+  useUploadMultiplePhotosMutation,
   useUpdatePhotoMutation,
   useDeletePhotoMutation,
-  useGetCategoriesQuery,
+  useGetPhotosByCategoryQuery,
+  useSearchPhotosQuery,
 } = photoApi;

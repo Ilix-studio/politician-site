@@ -23,6 +23,7 @@ import { photoApi } from "./services/photoApi";
 import { videoApi } from "./services/videoApi";
 import { pressApi } from "./services/pressApi";
 import { visitorApi } from "./services/visitorApi";
+import { categoryApi } from "./services/categoryApi";
 
 // Create IndexedDB storage for redux-persist
 const idbStorage = createIdbStorage("politician-site-db");
@@ -44,6 +45,7 @@ const rootReducer = combineReducers({
   [videoApi.reducerPath]: videoApi.reducer,
   [pressApi.reducerPath]: pressApi.reducer,
   [visitorApi.reducerPath]: visitorApi.reducer,
+  [categoryApi.reducerPath]: categoryApi.reducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -63,7 +65,8 @@ export const store = configureStore({
       photoApi.middleware,
       videoApi.middleware,
       pressApi.middleware,
-      visitorApi.middleware
+      visitorApi.middleware,
+      categoryApi.middleware
     ),
 });
 
