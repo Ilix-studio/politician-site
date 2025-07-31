@@ -29,6 +29,7 @@ export const getPageType = (path: string): string => {
   if (path.startsWith("/admin/photoDashboard")) return "photo-dashboard";
   if (path.startsWith("/admin/pressDashboard")) return "press-dashboard";
   if (path.startsWith("/admin/messages")) return "admin-messages";
+  if (path.startsWith("/admin/categories")) return "admin-categories";
 
   // NEW: Check for admin specific routes
   if (

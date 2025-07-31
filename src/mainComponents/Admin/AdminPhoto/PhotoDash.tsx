@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,32 +17,53 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Search, AlertCircle, Grid3X3, List } from "lucide-react";
+import { Search, AlertCircle, Grid3X3, List, Plus } from "lucide-react";
 import {
   useGetPhotosQuery,
   useUpdatePhotoMutation,
-  useDeletePhotoMutation,
-  Photo,
-  PhotoQuery,
+  // useDeletePhotoMutation,
 } from "@/redux-store/services/photoApi";
+import { useGetCategoriesByTypeQuery } from "@/redux-store/services/categoryApi";
 import { useSelector } from "react-redux";
 import { selectIsAdmin } from "@/redux-store/slices/authSlice";
-
 import { useNavigate } from "react-router-dom";
 import PhotoCard from "./PhotoCard";
 import { BackNavigation } from "@/config/navigation/BackNavigation";
+import { toast } from "react-hot-toast";
 
-// Skeleton Components
+// Import types from the correct location
+import { Photo, PhotosQueryParams, PhotoUpdateData } from "@/types/photo.types";
+
+// Define the PhotoCard-compatible interface
+interface PhotoCardData {
+  _id: string;
+  title: string;
+  description?: string;
+  src: string;
+  alt: string;
+  date: string;
+  location?: string;
+  category: {
+    _id: string;
+    name: string;
+    type: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Skeleton Components (unchanged)
 const PhotoCardSkeleton: React.FC<{ viewMode: "grid" | "list" }> = ({
   viewMode,
 }) => {
   if (viewMode === "grid") {
     return (
       <Card className='overflow-hidden'>
-        <Skeleton className='aspect-video w-full' />
+        <Skeleton className='aspect-[4/3] w-full' />
         <CardContent className='p-4 space-y-2'>
           <Skeleton className='h-5 w-3/4' />
           <Skeleton className='h-4 w-1/2' />
+          <Skeleton className='h-3 w-1/3' />
         </CardContent>
       </Card>
     );
@@ -87,6 +107,46 @@ const PhotoGridSkeleton: React.FC<{ viewMode: "grid" | "list" }> = ({
   );
 };
 
+// Helper functions for category handling
+// const getCategoryName = (category: Photo["category"]): string => {
+//   if (typeof category === "string") {
+//     return category;
+//   }
+//   return category.name;
+// };
+
+const getCategoryId = (category: Photo["category"]): string => {
+  if (typeof category === "string") {
+    return category;
+  }
+  return category._id;
+};
+
+// Convert API Photo to PhotoCard-compatible format
+const convertPhotoForCard = (photo: Photo): PhotoCardData => {
+  // Get the first image or use a placeholder
+  const firstImage = photo.images?.[0];
+
+  // Ensure category is in object format
+  const categoryObj =
+    typeof photo.category === "string"
+      ? { _id: photo.category, name: photo.category, type: "photo" }
+      : photo.category;
+
+  return {
+    _id: photo._id,
+    title: photo.title,
+    description: photo.description,
+    src: firstImage?.src || "", // Use the src from the first image
+    alt: firstImage?.alt || photo.title, // Use the alt from the first image or title as fallback
+    date: photo.date.toString(),
+    location: photo.location,
+    category: categoryObj,
+    createdAt: photo.createdAt.toString(),
+    updatedAt: photo.updatedAt.toString(),
+  };
+};
+
 const PhotoDash: React.FC = () => {
   const navigate = useNavigate();
   const isAdmin = useSelector(selectIsAdmin);
@@ -94,7 +154,7 @@ const PhotoDash: React.FC = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   // Query parameters
-  const [queryParams, setQueryParams] = useState<PhotoQuery>({
+  const [queryParams, setQueryParams] = useState<PhotosQueryParams>({
     page: 1,
     limit: 12,
     category: "",
@@ -104,28 +164,48 @@ const PhotoDash: React.FC = () => {
   });
 
   // API hooks
-  const { data: photosData, isLoading } = useGetPhotosQuery(queryParams);
-  const [updatePhoto, { isLoading: isUpdating }] = useUpdatePhotoMutation();
-  const [deletePhoto, { isLoading: isDeleting }] = useDeletePhotoMutation();
+  const {
+    data: photosData,
+    isLoading: isLoadingPhotos,
+    error: photosError,
+    refetch: refetchPhotos,
+  } = useGetPhotosQuery(queryParams);
 
-  const categories = [
-    { value: "political-events", label: "Political Events" },
-    { value: "community-service", label: "Community Service" },
-    { value: "public-rallies", label: "Public Rallies" },
-    { value: "meetings", label: "Meetings" },
-    { value: "awards", label: "Awards" },
-    { value: "personal", label: "Personal" },
-    { value: "campaigns", label: "Campaigns" },
-    { value: "speeches", label: "Speeches" },
-    { value: "other", label: "Other" },
-  ];
+  const { data: categories = [], isLoading: isLoadingCategories } =
+    useGetCategoriesByTypeQuery("photo");
+
+  const [updatePhoto, { isLoading: isUpdating }] = useUpdatePhotoMutation();
+  // const [deletePhoto ] = useDeletePhotoMutation();
 
   if (!isAdmin) {
     return (
-      <Alert className='max-w-md mx-auto mt-8'>
-        <AlertCircle className='h-4 w-4' />
-        <AlertDescription>Admin access required.</AlertDescription>
-      </Alert>
+      <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white p-4'>
+        <BackNavigation />
+        <Alert className='max-w-md mx-auto mt-8'>
+          <AlertCircle className='h-4 w-4' />
+          <AlertDescription>Admin access required.</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  // Handle error state
+  if (photosError) {
+    return (
+      <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white p-4'>
+        <BackNavigation />
+        <Alert className='max-w-md mx-auto mt-8' variant='destructive'>
+          <AlertCircle className='h-4 w-4' />
+          <AlertDescription>
+            Failed to load photos. Please try again.
+          </AlertDescription>
+        </Alert>
+        <div className='flex justify-center mt-4'>
+          <Button onClick={() => refetchPhotos()} variant='outline'>
+            Retry
+          </Button>
+        </div>
+      </div>
     );
   }
 
@@ -133,10 +213,10 @@ const PhotoDash: React.FC = () => {
     setQueryParams((prev) => ({ ...prev, search, page: 1 }));
   };
 
-  const handleCategoryFilter = (category: string) => {
+  const handleCategoryFilter = (categoryId: string) => {
     setQueryParams((prev) => ({
       ...prev,
-      category: category === "all" ? "" : category,
+      category: categoryId === "all" ? "" : categoryId,
       page: 1,
     }));
   };
@@ -145,44 +225,69 @@ const PhotoDash: React.FC = () => {
     setQueryParams((prev) => ({ ...prev, page }));
   };
 
-  const handleViewPhoto = (photo: Photo) => {
+  const handleViewPhoto = (photo: PhotoCardData) => {
     navigate(`/admin/view/${photo._id}`);
   };
 
-  const handleEditPhoto = (photo: Photo) => {
-    setEditingPhoto(photo);
-  };
-
-  const handleDeletePhoto = async (photoId: string) => {
-    if (!confirm("Delete this photo?")) return;
-
-    try {
-      await deletePhoto(photoId).unwrap();
-    } catch (error: any) {
-      console.error("Delete failed:", error.data?.message || "Delete failed");
+  const handleEditPhoto = (photo: PhotoCardData) => {
+    // Find the original Photo object to edit
+    const originalPhoto = photosData?.data.photos.find(
+      (p) => p._id === photo._id
+    );
+    if (originalPhoto) {
+      setEditingPhoto(originalPhoto);
     }
   };
+
+  // const handleDeletePhoto = async (photoId: string) => {
+  //   if (
+  //     !confirm(
+  //       "Are you sure you want to delete this photo? This action cannot be undone."
+  //     )
+  //   )
+  //     return;
+
+  //   try {
+  //     await deletePhoto(photoId).unwrap();
+  //     toast.success("Photo deleted successfully");
+  //   } catch (error: any) {
+  //     const errorMessage =
+  //       error?.data?.message || error?.message || "Delete failed";
+  //     toast.error(`Delete failed: ${errorMessage}`);
+  //     console.error("Delete failed:", error);
+  //   }
+  // };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingPhoto) return;
 
     try {
+      const updateData: PhotoUpdateData = {
+        title: editingPhoto.title,
+        category: getCategoryId(editingPhoto.category),
+        location: editingPhoto.location,
+        description: editingPhoto.description,
+        date: editingPhoto.date.toString(),
+      };
+
       await updatePhoto({
         id: editingPhoto._id,
-        data: {
-          title: editingPhoto.title,
-          category: editingPhoto.category,
-          location: editingPhoto.location,
-          description: editingPhoto.description,
-          date: editingPhoto.date,
-        },
+        data: updateData,
       }).unwrap();
 
+      toast.success("Photo updated successfully");
       setEditingPhoto(null);
     } catch (error: any) {
-      console.error("Update failed:", error.data?.message || "Update failed");
+      const errorMessage =
+        error?.data?.message || error?.message || "Update failed";
+      toast.error(`Update failed: ${errorMessage}`);
+      console.error("Update failed:", error);
     }
+  };
+
+  const handleAddPhoto = () => {
+    navigate("/admin/addPhoto");
   };
 
   return (
@@ -190,7 +295,7 @@ const PhotoDash: React.FC = () => {
       <BackNavigation />
 
       <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white p-4'>
-        <div className='max-w-5xl mx-auto space-y-6'>
+        <div className='max-w-7xl mx-auto space-y-6'>
           <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
             <h1 className='text-3xl font-bold text-slate-800'>
               Photo Dashboard
@@ -203,7 +308,7 @@ const PhotoDash: React.FC = () => {
                 onClick={() =>
                   setViewMode(viewMode === "grid" ? "list" : "grid")
                 }
-                disabled={isLoading}
+                disabled={isLoadingPhotos}
               >
                 {viewMode === "grid" ? (
                   <List className='w-4 h-4' />
@@ -213,6 +318,32 @@ const PhotoDash: React.FC = () => {
               </Button>
             </div>
           </div>
+
+          {/* Stats Card */}
+          <Card>
+            <CardContent className='pt-6'>
+              <div className='grid grid-cols-1 md:grid-cols-3 gap-4 text-center'>
+                <div>
+                  <h3 className='text-2xl font-bold text-blue-600'>
+                    {photosData?.data.pagination.total || 0}
+                  </h3>
+                  <p className='text-sm text-gray-600'>Total Photos</p>
+                </div>
+                <div>
+                  <h3 className='text-2xl font-bold text-green-600'>
+                    {categories.length}
+                  </h3>
+                  <p className='text-sm text-gray-600'>Categories</p>
+                </div>
+                <div>
+                  <h3 className='text-2xl font-bold text-purple-600'>
+                    {photosData?.data.pagination.pages || 0}
+                  </h3>
+                  <p className='text-sm text-gray-600'>Pages</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Filters */}
           <Card>
@@ -226,14 +357,14 @@ const PhotoDash: React.FC = () => {
                       value={queryParams.search || ""}
                       onChange={(e) => handleSearch(e.target.value)}
                       className='pl-10'
-                      disabled={isLoading}
+                      disabled={isLoadingPhotos}
                     />
                   </div>
                 </div>
                 <Select
                   value={queryParams.category || "all"}
                   onValueChange={handleCategoryFilter}
-                  disabled={isLoading}
+                  disabled={isLoadingPhotos || isLoadingCategories}
                 >
                   <SelectTrigger className='w-48'>
                     <SelectValue placeholder='Filter by category' />
@@ -241,8 +372,8 @@ const PhotoDash: React.FC = () => {
                   <SelectContent>
                     <SelectItem value='all'>All Categories</SelectItem>
                     {categories.map((cat) => (
-                      <SelectItem key={cat.value} value={cat.value}>
-                        {cat.label}
+                      <SelectItem key={cat._id} value={cat._id}>
+                        {cat.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -252,12 +383,16 @@ const PhotoDash: React.FC = () => {
           </Card>
 
           {/* Photos Grid/List with Skeleton Loading */}
-          {isLoading ? (
+          {isLoadingPhotos ? (
             <PhotoGridSkeleton viewMode={viewMode} />
           ) : photosData?.data.photos.length === 0 ? (
             <Card>
               <CardContent className='text-center py-12'>
-                <p className='text-gray-500'>No photos found.</p>
+                <p className='text-gray-500 mb-4'>No photos found.</p>
+                <Button onClick={handleAddPhoto} variant='outline'>
+                  <Plus className='w-4 h-4 mr-2' />
+                  Add Your First Photo
+                </Button>
               </CardContent>
             </Card>
           ) : (
@@ -271,46 +406,59 @@ const PhotoDash: React.FC = () => {
               {photosData?.data.photos.map((photo) => (
                 <PhotoCard
                   key={photo._id}
-                  photo={photo}
+                  photo={convertPhotoForCard(photo)}
                   viewMode={viewMode}
                   onView={handleViewPhoto}
                   onEdit={handleEditPhoto}
-                  onDelete={handleDeletePhoto}
-                  isDeleting={isDeleting}
+                  showEditButton={true}
                 />
               ))}
             </div>
           )}
 
-          {/* Pagination with Skeleton */}
-          {isLoading ? (
-            <div className='flex justify-center space-x-2'>
-              {Array.from({ length: 5 }, (_, i) => (
-                <Skeleton key={i} className='h-8 w-8' />
-              ))}
-            </div>
-          ) : (
+          {/* Pagination */}
+          {!isLoadingPhotos &&
             photosData?.data.pagination &&
             photosData.data.pagination.pages > 1 && (
               <div className='flex justify-center space-x-2'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => handlePageChange(queryParams.page! - 1)}
+                  disabled={!photosData.data.pagination.hasPrev}
+                >
+                  Previous
+                </Button>
+
                 {Array.from(
-                  { length: photosData.data.pagination.pages },
-                  (_, i) => (
-                    <Button
-                      key={i + 1}
-                      variant={
-                        queryParams.page === i + 1 ? "default" : "outline"
-                      }
-                      size='sm'
-                      onClick={() => handlePageChange(i + 1)}
-                    >
-                      {i + 1}
-                    </Button>
-                  )
+                  { length: Math.min(photosData.data.pagination.pages, 5) },
+                  (_, i) => {
+                    const page = i + 1;
+                    return (
+                      <Button
+                        key={page}
+                        variant={
+                          queryParams.page === page ? "default" : "outline"
+                        }
+                        size='sm'
+                        onClick={() => handlePageChange(page)}
+                      >
+                        {page}
+                      </Button>
+                    );
+                  }
                 )}
+
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => handlePageChange(queryParams.page! + 1)}
+                  disabled={!photosData.data.pagination.hasNext}
+                >
+                  Next
+                </Button>
               </div>
-            )
-          )}
+            )}
 
           {/* Edit Photo Dialog */}
           <Dialog
@@ -334,15 +482,24 @@ const PhotoDash: React.FC = () => {
                               prev ? { ...prev, title: e.target.value } : null
                             )
                           }
+                          required
                         />
                       </div>
                       <div>
                         <label className='text-sm font-medium'>Category</label>
                         <Select
-                          value={editingPhoto.category}
+                          value={getCategoryId(editingPhoto.category)}
                           onValueChange={(value) =>
                             setEditingPhoto((prev) =>
-                              prev ? { ...prev, category: value } : null
+                              prev
+                                ? {
+                                    ...prev,
+                                    category:
+                                      categories.find(
+                                        (cat) => cat._id === value
+                                      ) || value,
+                                  }
+                                : null
                             )
                           }
                         >
@@ -351,8 +508,8 @@ const PhotoDash: React.FC = () => {
                           </SelectTrigger>
                           <SelectContent>
                             {categories.map((cat) => (
-                              <SelectItem key={cat.value} value={cat.value}>
-                                {cat.label}
+                              <SelectItem key={cat._id} value={cat._id}>
+                                {cat.name}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -362,10 +519,12 @@ const PhotoDash: React.FC = () => {
                         <label className='text-sm font-medium'>Date</label>
                         <Input
                           type='date'
-                          value={editingPhoto.date.split("T")[0]}
+                          value={editingPhoto.date.toString().split("T")[0]}
                           onChange={(e) =>
                             setEditingPhoto((prev) =>
-                              prev ? { ...prev, date: e.target.value } : null
+                              prev
+                                ? { ...prev, date: new Date(e.target.value) }
+                                : null
                             )
                           }
                         />
@@ -373,7 +532,7 @@ const PhotoDash: React.FC = () => {
                       <div>
                         <label className='text-sm font-medium'>Location</label>
                         <Input
-                          value={editingPhoto.location}
+                          value={editingPhoto.location || ""}
                           onChange={(e) =>
                             setEditingPhoto((prev) =>
                               prev
@@ -388,9 +547,9 @@ const PhotoDash: React.FC = () => {
                     <div>
                       <label className='text-sm font-medium'>Description</label>
                       <textarea
-                        className='w-full p-2 border rounded'
+                        className='w-full p-2 border rounded-md'
                         rows={3}
-                        value={editingPhoto.description}
+                        value={editingPhoto.description || ""}
                         onChange={(e) =>
                           setEditingPhoto((prev) =>
                             prev
@@ -401,13 +560,23 @@ const PhotoDash: React.FC = () => {
                       />
                     </div>
 
-                    <Button
-                      type='submit'
-                      disabled={isUpdating}
-                      className='w-full'
-                    >
-                      {isUpdating ? "Updating..." : "Update Photo"}
-                    </Button>
+                    <div className='flex gap-3'>
+                      <Button
+                        type='button'
+                        variant='outline'
+                        onClick={() => setEditingPhoto(null)}
+                        className='flex-1'
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type='submit'
+                        disabled={isUpdating}
+                        className='flex-1'
+                      >
+                        {isUpdating ? "Updating..." : "Update Photo"}
+                      </Button>
+                    </div>
                   </form>
                 </>
               )}

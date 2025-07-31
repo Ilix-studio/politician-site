@@ -157,7 +157,7 @@ const AdminDash = () => {
     {
       title: "Add Video",
       icon: Video,
-      color: "bg-green-500",
+      color: "bg-pink-500",
       action: () => navigate("/admin/addVideo"),
     },
     {
@@ -165,6 +165,12 @@ const AdminDash = () => {
       icon: FileText,
       color: "bg-purple-500",
       action: () => navigate("/admin/addPress"),
+    },
+    {
+      title: "Create Category",
+      icon: FileText,
+      color: "bg-green-500",
+      action: () => navigate("/admin/categories"),
     },
   ];
 
