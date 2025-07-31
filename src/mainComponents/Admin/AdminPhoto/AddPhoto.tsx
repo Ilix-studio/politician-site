@@ -1,431 +1,603 @@
-import React, { useState } from "react";
-
-import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import React, { useState, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Upload,
-  Image as ImageIcon,
   X,
+  ImagePlus,
+  Plus,
+  Loader2,
   Calendar,
   MapPin,
-  Loader2,
-  CheckCircle,
-  AlertCircle,
+  FileText,
+  Tag,
+  Check,
 } from "lucide-react";
+import toast from "react-hot-toast";
+
+// Import API hooks
 import {
   useUploadPhotoMutation,
-  PhotoUploadData,
-} from "@/redux-store/services/photoApi";
-import { useSelector } from "react-redux";
-import { selectIsAdmin } from "@/redux-store/slices/authSlice";
-
+  useUploadMultiplePhotosMutation,
+} from "../../../redux-store/services/photoApi";
+import {
+  useGetCategoriesByTypeQuery,
+  useCreateCategoryMutation,
+} from "../../../redux-store/services/categoryApi";
+import {
+  MultiplePhotosUploadData,
+  SinglePhotoUploadData,
+  FilePreview,
+  PhotoFormData,
+  UploadMode,
+  isUploadResponse,
+} from "@/types/photo.types";
 import { BackNavigation } from "@/config/navigation/BackNavigation";
 
 const AddPhoto: React.FC = () => {
-  const isAdmin = useSelector(selectIsAdmin);
-  const [uploadPhoto, { isLoading: isUploading }] = useUploadPhotoMutation();
+  const navigate = useNavigate();
 
-  const [formData, setFormData] = useState<PhotoUploadData>({
+  // Form state
+  const [formData, setFormData] = useState<PhotoFormData>({
     title: "",
     category: "",
+    date: "",
     location: "",
     description: "",
-    date: new Date().toISOString().split("T")[0],
+    altText: "", // For single photo
   });
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>("");
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [successMessage, setSuccessMessage] = useState("");
+  // File handling
+  const [selectedFiles, setSelectedFiles] = useState<FilePreview[]>([]);
+  const [uploadMode, setUploadMode] = useState<UploadMode>("single");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const categories = [
-    { value: "political-events", label: "Political Events" },
-    { value: "community-service", label: "Community Service" },
-    { value: "public-rallies", label: "Public Rallies" },
-    { value: "meetings", label: "Meetings" },
-    { value: "awards", label: "Awards" },
-    { value: "personal", label: "Personal" },
-    { value: "campaigns", label: "Campaigns" },
-    { value: "speeches", label: "Speeches" },
-    { value: "other", label: "Other" },
-  ];
+  // Category management
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
 
-  // Redirect if not admin
-  if (!isAdmin) {
+  // API hooks
+  const {
+    data: categories = [],
+    isLoading: categoriesLoading,
+    error: categoriesError,
+  } = useGetCategoriesByTypeQuery("photo");
+  const [uploadPhoto, { isLoading: uploadingSingle }] =
+    useUploadPhotoMutation();
+  const [uploadMultiplePhotos, { isLoading: uploadingMultiple }] =
+    useUploadMultiplePhotosMutation();
+  const [createCategory, { isLoading: creatingCategory }] =
+    useCreateCategoryMutation();
+
+  const isUploading = uploadingSingle || uploadingMultiple;
+
+  // Debug logging
+  console.log("Categories from API:", categories);
+  console.log("Categories loading:", categoriesLoading);
+  console.log("Categories error:", categoriesError);
+  console.log("Form data category:", formData.category);
+
+  // Check if categories are properly loaded
+  const selectedCategory = categories.find(
+    (cat) => cat._id === formData.category
+  );
+  console.log("Selected category object:", selectedCategory);
+
+  // Handle file selection
+  const handleFileSelect = useCallback(
+    (files: FileList) => {
+      const newFiles: FilePreview[] = [];
+
+      Array.from(files).forEach((file) => {
+        if (file.type.startsWith("image/")) {
+          const preview = URL.createObjectURL(file);
+          newFiles.push({
+            file,
+            preview,
+            altText: formData.title || file.name.split(".")[0],
+          });
+        } else {
+          toast.error(`${file.name} is not a valid image file`);
+        }
+      });
+
+      if (uploadMode === "single" && newFiles.length > 1) {
+        toast.error("Single mode: Only one file allowed");
+        return;
+      }
+
+      if (newFiles.length > 10) {
+        toast.error("Maximum 10 files allowed");
+        return;
+      }
+
+      setSelectedFiles((prev) => [...prev, ...newFiles]);
+    },
+    [uploadMode, formData.title]
+  );
+
+  // Handle drag & drop
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        handleFileSelect(files);
+      }
+    },
+    [handleFileSelect]
+  );
+
+  // Remove file
+  const removeFile = (index: number) => {
+    setSelectedFiles((prev) => {
+      const updated = prev.filter((_, i) => i !== index);
+      // Clean up object URL
+      URL.revokeObjectURL(prev[index].preview);
+      return updated;
+    });
+  };
+
+  // Update alt text for specific file
+  const updateAltText = (index: number, altText: string) => {
+    setSelectedFiles((prev) =>
+      prev.map((file, i) => (i === index ? { ...file, altText } : file))
+    );
+  };
+
+  // Handle form input changes
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Create new category
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim()) {
+      toast.error("Please enter a category name");
+      return;
+    }
+
+    try {
+      const result = await createCategory({
+        name: newCategoryName.trim(),
+        type: "photo",
+      }).unwrap();
+
+      console.log("Created category:", result);
+      toast.success("Category created successfully");
+      setNewCategoryName("");
+      setShowAddCategory(false);
+
+      // Auto-select the newly created category
+      setFormData((prev) => ({ ...prev, category: result._id }));
+    } catch (error: any) {
+      console.error("Create category error:", error);
+      toast.error(
+        error?.data?.message || error?.message || "Failed to create category"
+      );
+    }
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.title.trim()) {
+      toast.error("Please enter a title");
+      return;
+    }
+
+    if (!formData.category) {
+      toast.error("Please select a category");
+      return;
+    }
+
+    if (selectedFiles.length === 0) {
+      toast.error("Please select at least one image");
+      return;
+    }
+
+    // DEBUG: Log all the data being sent
+    console.log("=== DEBUGGING FORM SUBMISSION ===");
+    console.log("Form data:", formData);
+    console.log("Selected files:", selectedFiles);
+    console.log("Selected category ID:", formData.category);
+    console.log("Category type:", typeof formData.category);
+    console.log("All categories:", categories);
+    console.log("Selected category object:", selectedCategory);
+
+    try {
+      if (uploadMode === "single") {
+        const uploadData: SinglePhotoUploadData = {
+          title: formData.title,
+          category: formData.category, // This should be the ObjectId
+          date: formData.date || undefined,
+          location: formData.location || undefined,
+          description: formData.description || undefined,
+          alt: selectedFiles[0].altText || formData.title,
+        };
+
+        console.log("Single upload data being sent:", uploadData);
+
+        const result = await uploadPhoto({
+          file: selectedFiles[0].file,
+          data: uploadData,
+        }).unwrap();
+
+        console.log("Upload result:", result);
+        toast.success("Photo uploaded successfully!");
+      } else {
+        const uploadData: MultiplePhotosUploadData = {
+          title: formData.title,
+          category: formData.category, // This should be the ObjectId
+          date: formData.date || undefined,
+          location: formData.location || undefined,
+          description: formData.description || undefined,
+          altTexts: selectedFiles.map((f) => f.altText),
+        };
+
+        console.log("Multiple upload data being sent:", uploadData);
+
+        const result = await uploadMultiplePhotos({
+          files: selectedFiles.map((f) => f.file),
+          data: uploadData,
+        }).unwrap();
+
+        console.log("Upload result:", result);
+
+        // Check if the response has the expected structure
+        if (isUploadResponse(result.data)) {
+          toast.success(
+            `${result.data.imagesCount} photos uploaded successfully!`
+          );
+        } else {
+          toast.success("Photos uploaded successfully!");
+        }
+      }
+
+      // Clean up and navigate
+      selectedFiles.forEach((file) => URL.revokeObjectURL(file.preview));
+      navigate("/admin/photoDashboard");
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      console.error("Error details:", {
+        message: error?.message,
+        data: error?.data,
+        status: error?.status,
+      });
+      toast.error(error?.data?.message || error?.message || "Upload failed");
+    }
+  };
+
+  // Show loading state while categories are loading
+  if (categoriesLoading) {
     return (
-      <div className='min-h-screen flex items-center justify-center'>
-        <Alert className='max-w-md'>
-          <AlertCircle className='h-4 w-4' />
-          <AlertDescription>
-            Access denied. Admin authentication required.
-          </AlertDescription>
-        </Alert>
+      <div className='min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 p-4 flex items-center justify-center'>
+        <div className='flex items-center gap-2'>
+          <Loader2 className='w-6 h-6 animate-spin' />
+          <span>Loading categories...</span>
+        </div>
       </div>
     );
   }
 
-  const handleInputChange = (field: keyof PhotoUploadData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }));
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith("image/")) {
-        setErrors((prev) => ({ ...prev, file: "Please select an image file" }));
-        return;
-      }
-
-      // Validate file size (10MB limit)
-      if (file.size > 10 * 1024 * 1024) {
-        setErrors((prev) => ({
-          ...prev,
-          file: "File size must be less than 10MB",
-        }));
-        return;
-      }
-
-      setSelectedFile(file);
-      setErrors((prev) => ({ ...prev, file: "" }));
-
-      // Create preview URL
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-
-      // Auto-fill title if empty
-      if (!formData.title) {
-        const fileName = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
-        setFormData((prev) => ({ ...prev, title: fileName }));
-      }
-    }
-  };
-
-  const removeFile = () => {
-    setSelectedFile(null);
-    setPreviewUrl("");
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
-    setErrors((prev) => ({ ...prev, file: "" }));
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!selectedFile) {
-      newErrors.file = "Please select a photo to upload";
-    }
-
-    if (!formData.title.trim()) {
-      newErrors.title = "Title is required";
-    }
-
-    if (!formData.category) {
-      newErrors.category = "Category is required";
-    }
-
-    if (formData.title.length > 100) {
-      newErrors.title = "Title must be less than 100 characters";
-    }
-
-    if (formData.description && formData.description.length > 500) {
-      newErrors.description = "Description must be less than 500 characters";
-    }
-
-    if (formData.location && formData.location.length > 100) {
-      newErrors.location = "Location must be less than 100 characters";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSuccessMessage("");
-
-    if (!validateForm()) return;
-
-    try {
-      const uploadData: PhotoUploadData = {
-        ...formData,
-      };
-
-      await uploadPhoto({
-        file: selectedFile!,
-        data: uploadData,
-      }).unwrap();
-
-      // Success - reset form
-      setFormData({
-        title: "",
-        category: "",
-
-        location: "",
-        description: "",
-
-        date: new Date().toISOString().split("T")[0],
-      });
-      removeFile();
-      setSuccessMessage("Photo uploaded successfully!");
-
-      // Scroll to top to show success message
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch (error: any) {
-      const errorMessage =
-        error.data?.message || error.message || "Failed to upload photo";
-      setErrors((prev) => ({ ...prev, submit: errorMessage }));
-    }
-  };
+  // Show error state if categories failed to load
+  if (categoriesError) {
+    return (
+      <div className='min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 p-4 flex items-center justify-center'>
+        <div className='text-center'>
+          <p className='text-red-600 mb-4'>Failed to load categories</p>
+          <button
+            onClick={() => window.location.reload()}
+            className='px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700'
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
       <BackNavigation />
-      <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white p-4'>
-        <div className='max-w-2xl mx-auto'>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <Card className='shadow-xl'>
-              <CardHeader className='text-center'>
-                <CardTitle className='text-2xl font-bold text-slate-800 flex items-center justify-center gap-2'>
-                  <ImageIcon className='w-6 h-6 text-blue-600' />
-                  Add New Photo
-                </CardTitle>
-              </CardHeader>
 
-              <CardContent className='space-y-6'>
-                {/* Success Message */}
-                {successMessage && (
-                  <Alert className='border-green-200 bg-green-50'>
-                    <CheckCircle className='h-4 w-4 text-green-600' />
-                    <AlertDescription className='text-green-800'>
-                      {successMessage}
-                    </AlertDescription>
-                  </Alert>
-                )}
+      <div className='min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 p-2'>
+        <div className='max-w-4xl mx-auto'>
+          <div className='bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden'>
+            {/* Header */}
+            <div className='bg-gradient-to-r from-[#ffffff] to-[#ffffff] p-5'>
+              <h1 className='text-2xl font-bold text-black flex items-center gap-2'>
+                <ImagePlus className='w-6 h-6' />
+                Add New Photo{uploadMode === "multiple" ? "s" : ""}
+              </h1>
+              <p className='text-black/90 mt-1'>
+                Upload and manage your photo gallery
+              </p>
+            </div>
 
-                {/* Submit Error */}
-                {errors.submit && (
-                  <Alert variant='destructive'>
-                    <AlertCircle className='h-4 w-4' />
-                    <AlertDescription>{errors.submit}</AlertDescription>
-                  </Alert>
-                )}
+            <form onSubmit={handleSubmit} className='p-6 space-y-6'>
+              {/* Upload Mode Toggle */}
+              <div className='flex gap-2 p-1 bg-gray-100 rounded-lg w-fit'>
+                <button
+                  type='button'
+                  onClick={() => {
+                    setUploadMode("single");
+                    setSelectedFiles([]);
+                  }}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    uploadMode === "single"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  Single Photo
+                </button>
+                <button
+                  type='button'
+                  onClick={() => {
+                    setUploadMode("multiple");
+                    setSelectedFiles([]);
+                  }}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    uploadMode === "multiple"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  Multiple Photos
+                </button>
+              </div>
 
-                <form onSubmit={handleSubmit} className='space-y-6'>
-                  {/* File Upload */}
-                  <div className='space-y-2'>
-                    <Label htmlFor='photo' className='text-sm font-medium'>
-                      Photo *
-                    </Label>
+              {/* File Upload Area */}
+              <div
+                onDrop={handleDrop}
+                onDragOver={(e) => e.preventDefault()}
+                className='border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-[#FF9933] transition-colors'
+              >
+                <Upload className='w-12 h-12 text-gray-400 mx-auto mb-4' />
+                <div className='space-y-2'>
+                  <p className='text-lg font-medium text-gray-700'>
+                    Drop images here or click to upload
+                  </p>
+                  <p className='text-sm text-gray-500'>
+                    {uploadMode === "single"
+                      ? "Only One Image can be select"
+                      : "Select up to 10 images"}
+                  </p>
+                  <button
+                    type='button'
+                    onClick={() => fileInputRef.current?.click()}
+                    className='inline-flex items-center gap-2 px-4 py-2 bg-[#FF9933] text-white rounded-lg hover:bg-[#e8842e] transition-colors'
+                  >
+                    <ImagePlus className='w-4 h-4' />
+                    Choose Files
+                  </button>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type='file'
+                  accept='image/*'
+                  multiple={uploadMode === "multiple"}
+                  onChange={(e) =>
+                    e.target.files && handleFileSelect(e.target.files)
+                  }
+                  className='hidden'
+                />
+              </div>
 
-                    {!selectedFile ? (
-                      <div className='border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors'>
-                        <input
-                          id='photo'
-                          type='file'
-                          accept='image/*'
-                          onChange={handleFileChange}
-                          className='hidden'
-                        />
-                        <Label
-                          htmlFor='photo'
-                          className='cursor-pointer flex flex-col items-center gap-2'
-                        >
-                          <Upload className='w-8 h-8 text-gray-400' />
-                          <span className='text-sm text-gray-600'>
-                            Click to upload or drag and drop
-                          </span>
-                          <span className='text-xs text-gray-400'>
-                            PNG, JPG, GIF up to 10MB
-                          </span>
-                        </Label>
-                      </div>
-                    ) : (
-                      <div className='relative'>
+              {/* File Previews */}
+              {selectedFiles.length > 0 && (
+                <div className='space-y-4'>
+                  <h3 className='font-medium text-gray-900'>Selected Images</h3>
+                  <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+                    {selectedFiles.map((file, index) => (
+                      <div
+                        key={index}
+                        className='relative group bg-gray-50 rounded-lg overflow-hidden'
+                      >
                         <img
-                          src={previewUrl}
-                          alt='Preview'
-                          className='w-full h-48 object-cover rounded-lg'
+                          src={file.preview}
+                          alt={file.altText}
+                          className='w-full h-32 object-cover'
                         />
-                        <Button
+                        <button
                           type='button'
-                          variant='destructive'
-                          size='sm'
-                          className='absolute top-2 right-2'
-                          onClick={removeFile}
+                          onClick={() => removeFile(index)}
+                          className='absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity'
                         >
                           <X className='w-4 h-4' />
-                        </Button>
-                        <div className='mt-2 text-sm text-gray-600'>
-                          {selectedFile.name} (
-                          {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
+                        </button>
+                        <div className='p-3'>
+                          <input
+                            type='text'
+                            value={file.altText}
+                            onChange={(e) =>
+                              updateAltText(index, e.target.value)
+                            }
+                            placeholder='Alt text'
+                            className='w-full text-xs border rounded px-2 py-1 focus:ring-1 focus:ring-[#FF9933] focus:border-[#FF9933]'
+                          />
                         </div>
                       </div>
-                    )}
-
-                    {errors.file && (
-                      <p className='text-sm text-red-600'>{errors.file}</p>
-                    )}
+                    ))}
                   </div>
+                </div>
+              )}
 
-                  {/* Title */}
-                  <div className='space-y-2'>
-                    <Label htmlFor='title' className='text-sm font-medium'>
-                      Title *
-                    </Label>
-                    <Input
-                      id='title'
-                      type='text'
-                      value={formData.title}
-                      onChange={(e) =>
-                        handleInputChange("title", e.target.value)
-                      }
-                      placeholder='Enter photo title'
-                      className={errors.title ? "border-red-500" : ""}
-                    />
-                    {errors.title && (
-                      <p className='text-sm text-red-600'>{errors.title}</p>
-                    )}
-                  </div>
+              {/* Form Fields */}
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                {/* Title */}
+                <div className='md:col-span-2'>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                    <FileText className='w-4 h-4 inline mr-1' />
+                    Title *
+                  </label>
+                  <input
+                    type='text'
+                    name='title'
+                    value={formData.title}
+                    onChange={handleInputChange}
+                    required
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF9933] focus:border-transparent'
+                    placeholder='Enter photo title'
+                  />
+                </div>
 
-                  {/* Category */}
-                  <div className='space-y-2'>
-                    <Label className='text-sm font-medium'>Category *</Label>
-                    <Select
+                {/* Category with Add Button */}
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                    <Tag className='w-4 h-4 inline mr-1' />
+                    Category *
+                  </label>
+                  <div className='flex gap-2'>
+                    <select
+                      name='category'
                       value={formData.category}
-                      onValueChange={(value) =>
-                        handleInputChange("category", value)
-                      }
+                      onChange={handleInputChange}
+                      required
+                      disabled={categoriesLoading}
+                      className='flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF9933] focus:border-transparent'
                     >
-                      <SelectTrigger
-                        className={errors.category ? "border-red-500" : ""}
-                      >
-                        <SelectValue placeholder='Select a category' />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.value} value={cat.value}>
-                            {cat.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.category && (
-                      <p className='text-sm text-red-600'>{errors.category}</p>
-                    )}
+                      <option value=''>Select Category</option>
+                      {categories.map((category) => (
+                        <option key={category._id} value={category._id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type='button'
+                      onClick={() => setShowAddCategory(!showAddCategory)}
+                      className='px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1'
+                      title='Add new category'
+                    >
+                      <Plus className='w-4 h-4' />
+                    </button>
                   </div>
 
-                  {/* Date */}
-                  <div className='space-y-2'>
-                    <Label
-                      htmlFor='date'
-                      className='text-sm font-medium flex items-center gap-2'
-                    >
-                      <Calendar className='w-4 h-4' />
-                      Date
-                    </Label>
-                    <Input
-                      id='date'
-                      type='date'
-                      value={formData.date}
-                      onChange={(e) =>
-                        handleInputChange("date", e.target.value)
-                      }
-                    />
-                  </div>
+                  {/* Add Category Input */}
+                  {showAddCategory && (
+                    <div className='mt-2 p-3 bg-gray-50 rounded-lg border'>
+                      <div className='flex gap-2'>
+                        <input
+                          type='text'
+                          value={newCategoryName}
+                          onChange={(e) => setNewCategoryName(e.target.value)}
+                          placeholder='Enter category name'
+                          className='flex-1 px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-green-500'
+                          onKeyPress={(e) =>
+                            e.key === "Enter" && handleCreateCategory()
+                          }
+                        />
+                        <button
+                          type='button'
+                          onClick={handleCreateCategory}
+                          disabled={creatingCategory}
+                          className='px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center gap-1'
+                        >
+                          {creatingCategory ? (
+                            <Loader2 className='w-4 h-4 animate-spin' />
+                          ) : (
+                            <Check className='w-4 h-4' />
+                          )}
+                        </button>
+                        <button
+                          type='button'
+                          onClick={() => {
+                            setShowAddCategory(false);
+                            setNewCategoryName("");
+                          }}
+                          className='px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors'
+                        >
+                          <X className='w-4 h-4' />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-                  {/* Location */}
-                  <div className='space-y-2'>
-                    <Label
-                      htmlFor='location'
-                      className='text-sm font-medium flex items-center gap-2'
-                    >
-                      <MapPin className='w-4 h-4' />
-                      Location
-                    </Label>
-                    <Input
-                      id='location'
-                      type='text'
-                      value={formData.location}
-                      onChange={(e) =>
-                        handleInputChange("location", e.target.value)
-                      }
-                      placeholder='Where was this photo taken?'
-                      className={errors.location ? "border-red-500" : ""}
-                    />
-                    {errors.location && (
-                      <p className='text-sm text-red-600'>{errors.location}</p>
-                    )}
-                  </div>
+                {/* Date */}
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                    <Calendar className='w-4 h-4 inline mr-1' />
+                    Date
+                  </label>
+                  <input
+                    type='date'
+                    name='date'
+                    value={formData.date}
+                    onChange={handleInputChange}
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF9933] focus:border-transparent'
+                  />
+                </div>
 
-                  {/* Description */}
-                  <div className='space-y-2'>
-                    <Label
-                      htmlFor='description'
-                      className='text-sm font-medium'
-                    >
-                      Description
-                    </Label>
-                    <Textarea
-                      id='description'
-                      value={formData.description}
-                      onChange={(e) =>
-                        handleInputChange("description", e.target.value)
-                      }
-                      placeholder="Describe what's happening in this photo"
-                      rows={3}
-                      className={errors.description ? "border-red-500" : ""}
-                    />
-                    {errors.description && (
-                      <p className='text-sm text-red-600'>
-                        {errors.description}
-                      </p>
-                    )}
-                  </div>
+                {/* Location */}
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                    <MapPin className='w-4 h-4 inline mr-1' />
+                    Location
+                  </label>
+                  <input
+                    type='text'
+                    name='location'
+                    value={formData.location}
+                    onChange={handleInputChange}
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF9933] focus:border-transparent'
+                    placeholder='Enter location'
+                  />
+                </div>
 
-                  {/* Submit Button */}
-                  <Button
-                    type='submit'
-                    disabled={isUploading}
-                    className='w-full'
-                  >
-                    {isUploading ? (
-                      <>
-                        <Loader2 className='w-4 h-4 mr-2 animate-spin' />
-                        Uploading Photo...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className='w-4 h-4 mr-2' />
-                        Upload Photo
-                      </>
-                    )}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </motion.div>
+                {/* Description */}
+                <div className='md:col-span-2'>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                    Description
+                  </label>
+                  <textarea
+                    name='description'
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    rows={3}
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF9933] focus:border-transparent'
+                    placeholder='Enter description (optional)'
+                  />
+                </div>
+              </div>
+
+              {/* Submit Buttons */}
+              <div className='flex flex-col sm:flex-row gap-3 pt-6 border-t'>
+                <button
+                  type='submit'
+                  disabled={isUploading || selectedFiles.length === 0}
+                  className='flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#FF9933] to-[#138808] text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed'
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className='w-5 h-5 animate-spin' />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className='w-5 h-5' />
+                      Upload {uploadMode === "multiple" ? "Photos" : "Photo"}
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type='button'
+                  onClick={() => navigate("/admin/photoDashboard")}
+                  className='px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors'
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </>

@@ -4,16 +4,35 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, Calendar, MapPin } from "lucide-react";
-import { Photo } from "@/redux-store/services/photoApi";
+import { Edit, Trash2, Calendar, MapPin, Loader2 } from "lucide-react";
+import { useDeletePhotoMutation } from "@/redux-store/services/photoApi";
+import { toast } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+
+// Updated Photo interface to match API response
+export interface Photo {
+  _id: string;
+  title: string;
+  description?: string;
+  src: string;
+  alt: string;
+  date: string;
+  location?: string;
+  category: {
+    _id: string;
+    name: string;
+    type: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
 
 interface PhotoCardProps {
   photo: Photo;
   viewMode: "grid" | "list";
   onView: (photo: Photo) => void;
-  onEdit: (photo: Photo) => void;
-  onDelete: (photoId: string) => void;
-  isDeleting?: boolean;
+  onEdit?: (photo: Photo) => void;
+  showEditButton?: boolean;
 }
 
 const PhotoCard: React.FC<PhotoCardProps> = ({
@@ -21,11 +40,31 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
   viewMode,
   onView,
   onEdit,
-  onDelete,
-  isDeleting = false,
+  showEditButton = false,
 }) => {
+  // Use the delete mutation hook
+  const [deletePhoto, { isLoading: isDeleting }] = useDeletePhotoMutation();
+  const navigate = useNavigate();
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete this photo?")) {
+      return;
+    }
+
+    try {
+      await deletePhoto(photo._id).unwrap();
+      toast.success("Photo deleted successfully");
+    } catch (error) {
+      console.error("Error deleting photo:", error);
+      toast.error("Failed to delete photo");
+    }
+  };
+
+  const handleEdit = () => {
+    navigate(`/admin/edit/${photo._id}`);
   };
 
   return (
@@ -46,6 +85,7 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
                 src={photo.src}
                 alt={photo.alt}
                 className='w-full h-full object-cover transition-transform duration-500 group-hover:scale-110'
+                loading='lazy'
               />
 
               {/* Gradient Overlay */}
@@ -58,6 +98,11 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
                 <h3 className='font-bold text-lg text-gray-900 line-clamp-1'>
                   {photo.title}
                 </h3>
+
+                {/* Category Badge */}
+                <Badge variant='outline' className='text-xs'>
+                  {photo.category.name.toUpperCase()}
+                </Badge>
               </div>
 
               {photo.description && (
@@ -78,6 +123,7 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
                   </div>
                 )}
               </div>
+
               <div className='flex gap-3'>
                 <Button
                   size='sm'
@@ -85,18 +131,35 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
                   className='bg-white/90 hover:bg-white backdrop-blur-sm border-0 shadow-lg'
                   onClick={() => onView(photo)}
                 >
-                  <h2 className='w-22 h-4'> View Photo</h2>
+                  <span className='text-sm'>View Photo</span>
                 </Button>
 
-                <Button
-                  size='sm'
-                  variant='destructive'
-                  className='bg-red-500/90 hover:bg-red-500 backdrop-blur-sm border-0 shadow-lg'
-                  onClick={() => onDelete(photo._id)}
-                  disabled={isDeleting}
-                >
-                  <Trash2 className='w-4 h-4' />
-                </Button>
+                {showEditButton && onEdit && (
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    className='bg-white/90 hover:bg-white backdrop-blur-sm border-0 shadow-lg'
+                    onClick={handleEdit}
+                  >
+                    <Edit className='w-4 h-4' />
+                  </Button>
+                )}
+
+                {showEditButton && (
+                  <Button
+                    size='sm'
+                    variant='destructive'
+                    className='bg-red-500/90 hover:bg-red-500 backdrop-blur-sm border-0 shadow-lg'
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? (
+                      <Loader2 className='w-4 h-4 animate-spin' />
+                    ) : (
+                      <Trash2 className='w-4 h-4' />
+                    )}
+                  </Button>
+                )}
               </div>
             </CardContent>
           </>
@@ -108,6 +171,7 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
                 src={photo.src}
                 alt={photo.alt}
                 className='w-full h-full object-cover'
+                loading='lazy'
               />
               <div className='absolute inset-0 bg-gradient-to-t from-black/40 to-transparent' />
             </div>
@@ -119,7 +183,7 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
                     {photo.title}
                   </h3>
                   <Badge variant='outline' className='text-xs'>
-                    {photo.category.replace("-", " ").toUpperCase()}
+                    {photo.category.name.toUpperCase()}
                   </Badge>
                 </div>
               </div>
@@ -150,23 +214,29 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
                     variant='outline'
                     onClick={() => onView(photo)}
                   >
-                    <h2 className='w-22 h-4'> View Photo</h2>
+                    <span className='text-sm'>View Photo</span>
                   </Button>
-                  <Button
-                    size='sm'
-                    variant='outline'
-                    onClick={() => onEdit(photo)}
-                  >
-                    <Edit className='w-4 h-4' />
-                  </Button>
-                  <Button
-                    size='sm'
-                    variant='destructive'
-                    onClick={() => onDelete(photo._id)}
-                    disabled={isDeleting}
-                  >
-                    <Trash2 className='w-4 h-4' />
-                  </Button>
+
+                  {showEditButton && onEdit && (
+                    <Button size='sm' variant='outline' onClick={handleEdit}>
+                      <Edit className='w-4 h-4' />
+                    </Button>
+                  )}
+
+                  {showEditButton && (
+                    <Button
+                      size='sm'
+                      variant='destructive'
+                      onClick={handleDelete}
+                      disabled={isDeleting}
+                    >
+                      {isDeleting ? (
+                        <Loader2 className='w-4 h-4 animate-spin' />
+                      ) : (
+                        <Trash2 className='w-4 h-4' />
+                      )}
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
