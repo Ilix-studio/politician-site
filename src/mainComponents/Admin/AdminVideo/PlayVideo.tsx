@@ -1,54 +1,33 @@
-import { useEffect, useRef } from "react";
+import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Card, CardContent,} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Calendar,
   Clock,
-  Eye,
-  Star,
-  Loader2,
+  ArrowLeft,
   AlertCircle,
-  Tag,
-} from "lucide-react";
-import { useSelector } from "react-redux";
-import { selectAuth, selectIsAdmin } from "@/redux-store/slices/authSlice";
-import { Navigate } from "react-router-dom";
-import { useGetVideoQuery } from "@/redux-store/services/videoApi";
-import { BackNavigation } from "@/config/navigation/BackNavigation";
+  Share2,
+  Download,
+  Edit,
+  Star,
 
-const PlayVideo = () => {
+} from "lucide-react";
+import { useGetVideoQuery } from "@/redux-store/services/videoApi";
+import {  getVideoCategoryName } from "@/types/video.types";
+import { useSelector } from "react-redux";
+import { selectIsAdmin } from "@/redux-store/slices/authSlice";
+
+const PlayVideo: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated } = useSelector(selectAuth);
   const isAdmin = useSelector(selectIsAdmin);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Redirect if not authenticated or not admin
-  if (!isAuthenticated || !isAdmin) {
-    return <Navigate to='/admin/login' />;
-  }
-
-  // Redirect if no ID provided
-  if (!id) {
-    return <Navigate to='/admin/videoDashboard' />;
-  }
-
-  const { data: videoData, isLoading, error, refetch } = useGetVideoQuery(id);
-
-  const video = videoData?.data?.video;
-
-  useEffect(() => {
-    // Auto-play video when component mounts
-    if (videoRef.current && video) {
-      videoRef.current.play().catch((error) => {
-        console.log("Auto-play prevented:", error);
-      });
-    }
-  }, [video]);
+  const { data: videoData, isLoading, error } = useGetVideoQuery(id!);
 
   const formatDate = (dateString: string | Date) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -58,259 +37,272 @@ const PlayVideo = () => {
     });
   };
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "speech":
-        return "bg-blue-100 text-blue-800";
-      case "event":
-        return "bg-green-100 text-green-800";
-      case "interview":
-        return "bg-purple-100 text-purple-800";
-      case "initiative":
-        return "bg-orange-100 text-orange-800";
-      default:
-        return "bg-gray-100 text-gray-800";
+  const handleBack = () => {
+    navigate(-1);
+  };
+
+  const handleEdit = () => {
+    if (videoData?.success) {
+      navigate(`/admin/editVideo/${videoData.data.video._id}`);
     }
   };
 
-  const handleBackToVideos = () => {
-    navigate("/admin/videos");
+  const handleShare = async () => {
+    if (!videoData?.success) return;
+
+    const video = videoData.data.video;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: video.title,
+          text: video.description,
+          url: window.location.href,
+        });
+      } catch (error) {
+        console.log("Error sharing:", error);
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert("Link copied to clipboard!");
+    }
   };
 
-  // Loading state
+  const handleDownload = () => {
+    if (!videoData?.success) return;
+
+    const video = videoData.data.video;
+    const link = document.createElement("a");
+    link.href = video.videoUrl;
+    link.download = `${video.title}.mp4`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  if (!id) {
+    return (
+      <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white flex items-center justify-center p-4'>
+        <Alert variant='destructive' className='max-w-md'>
+          <AlertCircle className='h-4 w-4' />
+          <AlertDescription>Video ID not found</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
-      <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white'>
-        <div className='container py-6 px-4 sm:px-6 max-w-6xl mx-auto'>
-          <div className='flex items-center justify-center py-12'>
-            <Loader2 className='w-8 h-8 animate-spin text-slate-600' />
-            <span className='ml-2 text-slate-600'>Loading video...</span>
+      <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white p-4'>
+        <div className='max-w-6xl mx-auto space-y-6'>
+          <div className='flex items-center justify-between'>
+            <Skeleton className='h-10 w-20' />
+            <div className='flex gap-2'>
+              <Skeleton className='h-10 w-10' />
+              <Skeleton className='h-10 w-10' />
+            </div>
           </div>
+          <Card>
+            <CardContent className='p-0'>
+              <Skeleton className='w-full aspect-video' />
+              <div className='p-6 space-y-4'>
+                <Skeleton className='h-8 w-3/4' />
+                <div className='flex gap-2'>
+                  <Skeleton className='h-6 w-20' />
+                  <Skeleton className='h-6 w-16' />
+                </div>
+                <Skeleton className='h-20 w-full' />
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
   }
 
-  // Error state
-  if (error || !video) {
+  if (error || !videoData?.success) {
     return (
-      <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white'>
-        <div className='container py-6 px-4 sm:px-6 max-w-6xl mx-auto'>
-          <div className='flex items-center justify-center py-12'>
-            <Card className='w-full max-w-md'>
-              <CardContent className='p-6 text-center'>
-                <AlertCircle className='w-12 h-12 text-red-500 mx-auto mb-4' />
-                <h3 className='text-lg font-semibold text-red-700 mb-2'>
-                  Video Not Found
-                </h3>
-                <p className='text-slate-600 mb-4'>
-                  The video you're looking for doesn't exist or has been
-                  removed.
-                </p>
-                <div className='flex gap-2 justify-center'>
-                  <Button onClick={handleBackToVideos} variant='outline'>
-                    Back to Videos
-                  </Button>
-                  <Button onClick={refetch}>Try Again</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+      <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white flex items-center justify-center p-4'>
+        <Alert variant='destructive' className='max-w-md'>
+          <AlertCircle className='h-4 w-4' />
+          <AlertDescription>
+            Failed to load video. Please try again later.
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
+
+  const video = videoData.data.video;
+  const categoryName = getVideoCategoryName(video.category);
 
   return (
-    <>
-      <BackNavigation />
+    <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white'>
+      {/* Header */}
+      <div className='sticky top-0 z-40 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60'>
+        <div className='container flex h-16 items-center justify-between px-4'>
+          <Button variant='ghost' onClick={handleBack}>
+            <ArrowLeft className='w-4 h-4 mr-2' />
+            Back
+          </Button>
 
-      <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white'>
-        <div className='container py-6 px-4 sm:px-6 max-w-6xl mx-auto'>
-          <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
-            {/* Video Player */}
-            <motion.div
-              className='lg:col-span-2'
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2, duration: 0.6 }}
-            >
-              <Card className='overflow-hidden'>
-                <div className='relative aspect-video bg-black'>
-                  <video
-                    ref={videoRef}
-                    controls
-                    className='w-full h-full'
-                    poster={video.thumbnail}
-                  >
-                    <source src={video.videoUrl} type='video/mp4' />
-                    Your browser does not support the video tag.
-                  </video>
-
-                  {video.featured && (
-                    <div className='absolute top-4 right-4'>
-                      <Badge className='bg-yellow-500 text-white'>
-                        <Star className='w-3 h-3 mr-1 fill-current' />
-                        Featured
-                      </Badge>
-                    </div>
-                  )}
-                </div>
-
-                <CardContent className='p-6'>
-                  <div className='mb-4'>
-                    <Badge className={getCategoryColor(video.category)}>
-                      {video.category.charAt(0).toUpperCase() +
-                        video.category.slice(1)}
-                    </Badge>
-                  </div>
-
-                  <h1 className='text-2xl font-bold text-slate-900 mb-3'>
-                    {video.title}
-                  </h1>
-
-                  <div className='flex items-center gap-6 text-sm text-slate-600 mb-4'>
-                    <div className='flex items-center gap-1'>
-                      <Calendar className='w-4 h-4' />
-                      {formatDate(video.date)}
-                    </div>
-
-                    <div className='flex items-center gap-1'>
-                      <Clock className='w-4 h-4' />
-                      {video.duration}
-                    </div>
-
-                    {video.views !== undefined && (
-                      <div className='flex items-center gap-1'>
-                        <Eye className='w-4 h-4' />
-                        {video.views} views
-                      </div>
-                    )}
-                  </div>
-
-                  <Separator className='my-4' />
-
-                  <div>
-                    <h3 className='font-semibold text-slate-900 mb-2'>
-                      Description
-                    </h3>
-                    <p className='text-slate-700 leading-relaxed whitespace-pre-wrap'>
-                      {video.description}
-                    </p>
-                  </div>
-
-                  {/* Tags */}
-                  {video.tags && video.tags.length > 0 && (
-                    <>
-                      <Separator className='my-4' />
-                      <div>
-                        <h3 className='font-semibold text-slate-900 mb-2 flex items-center gap-2'>
-                          <Tag className='w-4 h-4' />
-                          Tags
-                        </h3>
-                        <div className='flex flex-wrap gap-2'>
-                          {video.tags.map((tag, index) => (
-                            <Badge key={index} variant='secondary'>
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Video Details Sidebar */}
-            <motion.div
-              className='space-y-6'
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4, duration: 0.6 }}
-            >
-              {/* Video Stats */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className='text-lg'>Video Statistics</CardTitle>
-                </CardHeader>
-                <CardContent className='space-y-4'>
-                  <div className='flex items-center justify-between'>
-                    <span className='text-sm text-slate-600'>Status</span>
-                    <Badge
-                      className={
-                        video.isActive
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }
-                    >
-                      {video.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                  </div>
-
-                  <div className='flex items-center justify-between'>
-                    <span className='text-sm text-slate-600'>Created</span>
-                    <span className='text-sm text-slate-700'>
-                      {formatDate(video.createdAt)}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Technical Details */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className='text-lg'>Technical Details</CardTitle>
-                </CardHeader>
-                <CardContent className='space-y-4'>
-                  <div className='pt-2'>
-                    <span className='text-sm text-slate-600 block mb-2'>
-                      Video URL
-                    </span>
-                    <a
-                      href={video.videoUrl}
-                      target='_blank'
-                      rel='noopener noreferrer'
-                      className='text-sm text-blue-600 hover:text-blue-800 break-all'
-                    >
-                      {video.videoUrl}
-                    </a>
-                  </div>
-
-                  <div className='pt-2'>
-                    <span className='text-sm text-slate-600 block mb-2'>
-                      Thumbnail URL
-                    </span>
-                    <a
-                      href={video.thumbnail}
-                      target='_blank'
-                      rel='noopener noreferrer'
-                      className='text-sm text-blue-600 hover:text-blue-800 break-all'
-                    >
-                      {video.thumbnail}
-                    </a>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Thumbnail Preview */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className='text-lg'>Thumbnail</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <img
-                    src={video.thumbnail}
-                    alt={video.title}
-                    className='w-full rounded-lg shadow-sm'
-                  />
-                </CardContent>
-              </Card>
-            </motion.div>
+          <div className='flex items-center gap-2'>
+            {isAdmin && (
+              <Button variant='outline' size='sm' onClick={handleEdit}>
+                <Edit className='w-4 h-4 mr-2' />
+                Edit
+              </Button>
+            )}
+            <Button variant='outline' size='sm' onClick={handleShare}>
+              <Share2 className='w-4 h-4' />
+            </Button>
+            <Button variant='outline' size='sm' onClick={handleDownload}>
+              <Download className='w-4 h-4' />
+            </Button>
           </div>
         </div>
       </div>
-    </>
+
+      <div className='container mx-auto p-4 pt-8'>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className='max-w-6xl mx-auto'
+        >
+          <Card className='overflow-hidden shadow-xl'>
+            <CardContent className='p-0'>
+              {/* Video Player */}
+              <div className='relative aspect-video bg-black'>
+                <video
+                  className='w-full h-full'
+                  controls
+                  poster={video.thumbnail}
+                  preload='metadata'
+                >
+                  <source src={video.videoUrl} type='video/mp4' />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+
+              {/* Video Information */}
+              <div className='p-6'>
+                {/* Header */}
+                <div className='flex items-start justify-between mb-4'>
+                  <div className='space-y-2 flex-1'>
+                    <div className='flex items-center gap-3'>
+                      <h1 className='text-3xl font-bold text-gray-900'>
+                        {video.title}
+                      </h1>
+                      {video.featured && (
+                        <div className='bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full'>
+                          <Star className='w-4 h-4' />
+                        </div>
+                      )}
+                    </div>
+                    <div className='flex items-center gap-4 text-sm text-gray-600'>
+                      <Badge variant='outline' className='text-sm'>
+                        {categoryName.toUpperCase()}
+                      </Badge>
+                      <div className='flex items-center gap-1'>
+                        <Calendar className='w-4 h-4' />
+                        {formatDate(video.date)}
+                      </div>
+                      <div className='flex items-center gap-1'>
+                        <Clock className='w-4 h-4' />
+                        {video.duration}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div className='mb-6'>
+                  <h3 className='text-lg font-semibold mb-2'>Description</h3>
+                  <p className='text-gray-700 leading-relaxed whitespace-pre-wrap'>
+                    {video.description}
+                  </p>
+                </div>
+
+                {/* Tags */}
+                {video.tags && video.tags.length > 0 && (
+                  <div className='mb-6'>
+                    <h3 className='text-lg font-semibold mb-2'>Tags</h3>
+                    <div className='flex flex-wrap gap-2'>
+                      {video.tags.map((tag, index) => (
+                        <Badge
+                          key={index}
+                          variant='secondary'
+                          className='text-sm'
+                        >
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Video Details Grid */}
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6'>
+                  <Card className='bg-gray-50'>
+                    <CardContent className='p-4'>
+                      <div className='flex items-center gap-2 mb-2'>
+                        <Calendar className='w-5 h-5 text-blue-600' />
+                        <h4 className='font-medium'>Date</h4>
+                      </div>
+                      <p className='text-gray-700'>{formatDate(video.date)}</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className='bg-gray-50'>
+                    <CardContent className='p-4'>
+                      <div className='flex items-center gap-2 mb-2'>
+                        <Clock className='w-5 h-5 text-green-600' />
+                        <h4 className='font-medium'>Duration</h4>
+                      </div>
+                      <p className='text-gray-700'>{video.duration}</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className='bg-gray-50'>
+                    <CardContent className='p-4'>
+                      <div className='flex items-center gap-2 mb-2'>
+                        <Star className='w-5 h-5 text-yellow-600' />
+                        <h4 className='font-medium'>Status</h4>
+                      </div>
+                      <p className='text-gray-700'>
+                        {video.featured ? "Featured Video" : "Regular Video"}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Additional Information */}
+                <div className='pt-4 border-t border-gray-200'>
+                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-gray-500'>
+                    <div>
+                      <span className='font-medium'>Created:</span>{" "}
+                      {formatDate(video.createdAt)}
+                    </div>
+                    <div>
+                      <span className='font-medium'>Last Updated:</span>{" "}
+                      {formatDate(video.updatedAt)}
+                    </div>
+                    <div>
+                      <span className='font-medium'>Video ID:</span> {video._id}
+                    </div>
+                    <div>
+                      <span className='font-medium'>Public ID:</span>{" "}
+                      {video.publicId}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    </div>
   );
 };
 

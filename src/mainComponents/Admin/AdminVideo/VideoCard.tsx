@@ -10,15 +10,17 @@ import {
   Calendar,
   Clock,
   Loader2,
+  Star,
 } from "lucide-react";
-import { VideoDocument } from "@/types/video.types";
+import { Video, getVideoCategoryName } from "@/types/video.types";
+import { useNavigate } from "react-router-dom";
 
 interface VideoCardProps {
-  video: VideoDocument;
-  onEdit?: (video: VideoDocument) => void;
+  video: Video;
+  onEdit?: (video: Video) => void;
   onDelete?: (videoId: string) => void;
-  onView?: (video: VideoDocument) => void;
-  onToggleFeatured?: (videoId: string) => void;
+  onView?: (video: Video) => void;
+
   showActions?: boolean;
   viewMode?: "grid" | "list";
   isDeleting?: boolean;
@@ -30,11 +32,9 @@ const VideoCard = ({
   onEdit,
   onDelete,
   onView,
-  onToggleFeatured,
   showActions = false,
   viewMode = "grid",
   isDeleting = false,
-  isToggling = false,
 }: VideoCardProps) => {
   const formatDate = (dateString: string | Date) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -44,8 +44,11 @@ const VideoCard = ({
     });
   };
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
+  const navigate = useNavigate();
+
+  const getCategoryColor = (categoryName: string) => {
+    const lowerName = categoryName.toLowerCase();
+    switch (lowerName) {
       case "speech":
         return "bg-blue-100 text-blue-800";
       case "event":
@@ -54,10 +57,16 @@ const VideoCard = ({
         return "bg-purple-100 text-purple-800";
       case "initiative":
         return "bg-orange-100 text-orange-800";
+      case "campaign":
+        return "bg-red-100 text-red-800";
+      case "press conference":
+        return "bg-indigo-100 text-indigo-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
   };
+
+  const categoryName = getVideoCategoryName(video.category);
 
   if (viewMode === "list") {
     return (
@@ -77,9 +86,17 @@ const VideoCard = ({
                   alt={video.title}
                   className='w-full h-full object-cover rounded-lg'
                 />
-                <div className='absolute inset-0 bg-black bg-opacity-20 rounded-lg flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity'>
+                <div className='absolute inset-0 bg-black bg-opacity-20 rounded-lg flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer'>
                   <Play className='w-6 h-6 text-white' />
                 </div>
+                <div className='absolute bottom-1 right-1 bg-black bg-opacity-75 text-white text-xs px-1 py-0.5 rounded'>
+                  {video.duration}
+                </div>
+                {video.featured && (
+                  <div className='absolute top-1 left-1 bg-yellow-500 text-white p-1 rounded'>
+                    <Star className='w-3 h-3' />
+                  </div>
+                )}
               </div>
 
               {/* Content */}
@@ -110,13 +127,7 @@ const VideoCard = ({
                       >
                         <Edit2 className='w-4 h-4' />
                       </Button>
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        onClick={() => onToggleFeatured?.(video._id)}
-                        disabled={isToggling}
-                        className={video.featured ? "bg-yellow-50" : ""}
-                      ></Button>
+
                       <Button
                         variant='outline'
                         size='sm'
@@ -136,8 +147,8 @@ const VideoCard = ({
 
                 {/* Meta information */}
                 <div className='flex items-center gap-4 mt-3'>
-                  <Badge className={getCategoryColor(video.category)}>
-                    {video.category}
+                  <Badge className={getCategoryColor(categoryName)}>
+                    {categoryName}
                   </Badge>
 
                   <div className='flex items-center gap-1 text-sm text-slate-500'>
@@ -150,10 +161,22 @@ const VideoCard = ({
                     {video.duration}
                   </div>
 
-                  {video.views !== undefined && (
-                    <div className='flex items-center gap-1 text-sm text-slate-500'>
-                      <Eye className='w-4 h-4' />
-                      {video.views} views
+                  {video.tags && video.tags.length > 0 && (
+                    <div className='flex items-center gap-1'>
+                      {video.tags.slice(0, 2).map((tag, index) => (
+                        <Badge
+                          key={index}
+                          variant='secondary'
+                          className='text-xs'
+                        >
+                          {tag}
+                        </Badge>
+                      ))}
+                      {video.tags.length > 2 && (
+                        <span className='text-xs text-slate-500'>
+                          +{video.tags.length - 2} more
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
@@ -181,19 +204,25 @@ const VideoCard = ({
             alt={video.title}
             className='w-full h-full object-cover rounded-t-lg'
           />
-          <div className='absolute inset-0 bg-black bg-opacity-20 rounded-t-lg flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity'>
+          <div className='absolute inset-0 bg-black bg-opacity-20 rounded-t-lg flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer'>
             <Play className='w-8 h-8 text-white' />
           </div>
 
           <div className='absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded'>
             {video.duration}
           </div>
+
+          {video.featured && (
+            <div className='absolute top-2 left-2 bg-yellow-500 text-white p-1.5 rounded'>
+              <Star className='w-4 h-4' />
+            </div>
+          )}
         </div>
 
         <CardContent className='p-4 flex-1 flex flex-col'>
           {/* Category Badge */}
-          <Badge className={`${getCategoryColor(video.category)} w-fit mb-2`}>
-            {video.category}
+          <Badge className={`${getCategoryColor(categoryName)} w-fit mb-2`}>
+            {categoryName}
           </Badge>
 
           {/* Title */}
@@ -206,19 +235,28 @@ const VideoCard = ({
             {video.description}
           </p>
 
+          {/* Tags */}
+          {video.tags && video.tags.length > 0 && (
+            <div className='flex flex-wrap gap-1 mb-3'>
+              {video.tags.slice(0, 3).map((tag, index) => (
+                <Badge key={index} variant='secondary' className='text-xs'>
+                  {tag}
+                </Badge>
+              ))}
+              {video.tags.length > 3 && (
+                <Badge variant='secondary' className='text-xs'>
+                  +{video.tags.length - 3}
+                </Badge>
+              )}
+            </div>
+          )}
+
           {/* Meta information */}
           <div className='space-y-2 mb-4'>
             <div className='flex items-center gap-1 text-sm text-slate-500'>
               <Calendar className='w-4 h-4' />
               {formatDate(video.date)}
             </div>
-
-            {video.views !== undefined && (
-              <div className='flex items-center gap-1 text-sm text-slate-500'>
-                <Eye className='w-4 h-4' />
-                {video.views} views
-              </div>
-            )}
           </div>
 
           {/* Actions */}
@@ -236,7 +274,7 @@ const VideoCard = ({
               <Button
                 variant='outline'
                 size='sm'
-                onClick={() => onEdit?.(video)}
+                onClick={() => navigate(`/admin/editVideo/${video._id}`)}
               >
                 <Edit2 className='w-4 h-4' />
               </Button>

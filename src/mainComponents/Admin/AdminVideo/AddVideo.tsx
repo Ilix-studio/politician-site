@@ -5,13 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 import {
   Upload,
@@ -28,7 +21,8 @@ import { useSelector } from "react-redux";
 import { selectAuth, selectIsAdmin } from "@/redux-store/slices/authSlice";
 import { Navigate } from "react-router-dom";
 import { useUploadVideoMutation } from "@/redux-store/services/videoApi";
-import { VideoUploadData, VIDEO_CATEGORIES } from "@/types/video.types";
+import { useGetCategoriesByTypeQuery } from "@/redux-store/services/categoryApi";
+import { VideoUploadData } from "@/types/video.types";
 import { BackNavigation } from "@/config/navigation/BackNavigation";
 
 const AddVideo = () => {
@@ -39,11 +33,18 @@ const AddVideo = () => {
   const videoFileRef = useRef<HTMLInputElement>(null);
   const thumbnailFileRef = useRef<HTMLInputElement>(null);
 
+  // Fetch video categories
+  const {
+    data: categories = [],
+    isLoading: categoriesLoading,
+    error: categoriesError,
+  } = useGetCategoriesByTypeQuery("video");
+
   // Form state
   const [formData, setFormData] = useState<VideoUploadData>({
     title: "",
     description: "",
-    category: "speech",
+    category: "",
     date: "",
     duration: "",
     featured: false,
@@ -113,6 +114,10 @@ const AddVideo = () => {
 
     if (!formData.description.trim()) {
       newErrors.description = "Description is required";
+    }
+
+    if (!formData.category) {
+      newErrors.category = "Category is required";
     }
 
     if (!formData.date) {
@@ -232,24 +237,44 @@ const AddVideo = () => {
                     <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                       <div>
                         <Label htmlFor='category'>Category *</Label>
-                        <Select
+                        <select
+                          id='category'
                           value={formData.category}
-                          onValueChange={(value) =>
-                            handleInputChange("category", value)
+                          onChange={(e) =>
+                            handleInputChange("category", e.target.value)
                           }
+                          className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+                            errors.category ? "border-red-500" : ""
+                          }`}
                         >
-                          <SelectTrigger>
-                            <SelectValue placeholder='Select category' />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {VIDEO_CATEGORIES.map((category) => (
-                              <SelectItem key={category} value={category}>
-                                {category.charAt(0).toUpperCase() +
-                                  category.slice(1)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          <option value='' disabled>
+                            Select category
+                          </option>
+                          {categoriesLoading ? (
+                            <option value='' disabled>
+                              Loading categories...
+                            </option>
+                          ) : categoriesError ? (
+                            <option value='' disabled>
+                              Error loading categories
+                            </option>
+                          ) : categories.length === 0 ? (
+                            <option value='' disabled>
+                              No categories available
+                            </option>
+                          ) : (
+                            categories.map((category) => (
+                              <option key={category._id} value={category._id}>
+                                {category.name}
+                              </option>
+                            ))
+                          )}
+                        </select>
+                        {errors.category && (
+                          <p className='text-sm text-red-600 mt-1'>
+                            {errors.category}
+                          </p>
+                        )}
                       </div>
 
                       <div>

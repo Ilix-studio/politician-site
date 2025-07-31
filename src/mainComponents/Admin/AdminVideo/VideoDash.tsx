@@ -1,9 +1,8 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -11,160 +10,365 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
-  ArrowLeft,
-  Plus,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Search,
-  Filter,
-  Eye,
-  Play,
-  Loader2,
   AlertCircle,
-  Grid,
+  Grid3X3,
   List,
+  Plus,
+  RefreshCw,
+  Video as VideoIcon,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { selectAuth, selectIsAdmin } from "@/redux-store/slices/authSlice";
-import { Navigate } from "react-router-dom";
 import {
   useGetVideosQuery,
+  useUpdateVideoMutation,
   useDeleteVideoMutation,
 } from "@/redux-store/services/videoApi";
-import {
-  VideoDocument,
-  VideoQueryParams,
-  VideoSortBy,
-  VideoSortOrder,
-} from "@/types/video.types";
+import { useGetCategoriesByTypeQuery } from "@/redux-store/services/categoryApi";
+import { useSelector } from "react-redux";
+import { selectIsAdmin } from "@/redux-store/slices/authSlice";
+import { useNavigate } from "react-router-dom";
 import VideoCard from "./VideoCard";
+import { BackNavigation } from "@/config/navigation/BackNavigation";
+import { toast } from "react-hot-toast";
 
-const VideoDash = () => {
+import {
+  Video,
+  VideoQueryParams,
+  VideoUpdateData,
+  VIDEO_SORT_OPTIONS,
+} from "@/types/video.types";
+
+// Skeleton Components
+const VideoCardSkeleton: React.FC<{ viewMode: "grid" | "list" }> = ({
+  viewMode,
+}) => {
+  if (viewMode === "grid") {
+    return (
+      <Card className='overflow-hidden'>
+        <Skeleton className='aspect-video w-full' />
+        <CardContent className='p-4 space-y-2'>
+          <Skeleton className='h-5 w-3/4' />
+          <Skeleton className='h-4 w-1/2' />
+          <Skeleton className='h-3 w-1/3' />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <div className='flex p-4 gap-4'>
+        <Skeleton className='w-32 h-20 rounded flex-shrink-0' />
+        <div className='flex-1 space-y-2'>
+          <Skeleton className='h-5 w-3/4' />
+          <Skeleton className='h-4 w-1/2' />
+          <Skeleton className='h-4 w-full' />
+          <div className='flex gap-2 mt-2'>
+            <Skeleton className='h-6 w-16' />
+            <Skeleton className='h-6 w-20' />
+          </div>
+        </div>
+        <div className='flex gap-2'>
+          <Skeleton className='h-8 w-8' />
+          <Skeleton className='h-8 w-8' />
+          <Skeleton className='h-8 w-8' />
+          <Skeleton className='h-8 w-8' />
+        </div>
+      </div>
+    </Card>
+  );
+};
+
+const VideoGridSkeleton: React.FC<{ viewMode: "grid" | "list" }> = ({
+  viewMode,
+}) => {
+  return (
+    <div
+      className={`grid gap-6 ${
+        viewMode === "grid"
+          ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+          : "grid-cols-1"
+      }`}
+    >
+      {Array.from({ length: 12 }, (_, i) => (
+        <VideoCardSkeleton key={i} viewMode={viewMode} />
+      ))}
+    </div>
+  );
+};
+
+const VideoDash: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useSelector(selectAuth);
   const isAdmin = useSelector(selectIsAdmin);
+  const [editingVideo, setEditingVideo] = useState<Video | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [deletingVideoId, setDeletingVideoId] = useState<string | null>(null);
 
-  // State for filters and pagination
-  const [filters, setFilters] = useState<VideoQueryParams>({
+  // Query parameters
+  const [queryParams, setQueryParams] = useState<VideoQueryParams>({
     page: "1",
     limit: "12",
-    category: "all",
-    sortBy: "createdAt",
+    category: "",
+    search: "",
+    sortBy: "date",
     sortOrder: "desc",
   });
-  const [search, setSearch] = useState("");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   // API hooks
   const {
     data: videosData,
-    isLoading,
-    error,
-    refetch,
-  } = useGetVideosQuery({
-    ...filters,
-    search: search.trim(),
-  });
+    isLoading: isLoadingVideos,
+    error: videosError,
+    refetch: refetchVideos,
+  } = useGetVideosQuery(queryParams);
 
-  const [deleteVideo, { isLoading: deleting }] = useDeleteVideoMutation();
+  const { data: categories = [], isLoading: isLoadingCategories } =
+    useGetCategoriesByTypeQuery("video");
 
-  // Redirect if not authenticated or not admin
-  if (!isAuthenticated || !isAdmin) {
-    return <Navigate to='/admin/login' />;
+  const [updateVideo, { isLoading: isUpdating }] = useUpdateVideoMutation();
+  const [deleteVideo] = useDeleteVideoMutation();
+
+  if (!isAdmin) {
+    return (
+      <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white p-4'>
+        <BackNavigation />
+        <Alert className='max-w-md mx-auto mt-8'>
+          <AlertCircle className='h-4 w-4' />
+          <AlertDescription>Admin access required.</AlertDescription>
+        </Alert>
+      </div>
+    );
   }
 
-  const handleFilterChange = (newFilters: Partial<VideoQueryParams>) => {
-    setFilters((prev) => ({ ...prev, ...newFilters, page: "1" }));
-  };
-
-  const handlePageChange = (page: number) => {
-    setFilters((prev) => ({ ...prev, page: page.toString() }));
-  };
-
-  const handleSortByChange = (value: string) => {
-    handleFilterChange({ sortBy: value as VideoSortBy });
-  };
-
-  const handleSortOrderChange = (value: string) => {
-    handleFilterChange({ sortOrder: value as VideoSortOrder });
-  };
-
-  const handleSearch = (value: string) => {
-    setSearch(value);
-    setFilters((prev) => ({ ...prev, page: "1" }));
-  };
-
-  const handleEdit = (video: VideoDocument) => {
-    navigate(`/admin/editVideo/${video._id}`);
-  };
-
-  const handleView = (video: VideoDocument) => {
-    navigate(`/admin/play/${video._id}`);
-  };
-
-  const handleDelete = async (videoId: string) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this video? This action cannot be undone."
+  // Handle error state
+  if (videosError) {
+    return (
+      <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white p-4'>
+        <BackNavigation />
+        <Alert className='max-w-md mx-auto mt-8' variant='destructive'>
+          <AlertCircle className='h-4 w-4' />
+          <AlertDescription>
+            Failed to load videos. Please try again.
+          </AlertDescription>
+        </Alert>
+        <div className='flex justify-center mt-4'>
+          <Button onClick={() => refetchVideos()} variant='outline'>
+            <RefreshCw className='w-4 h-4 mr-2' />
+            Retry
+          </Button>
+        </div>
+      </div>
     );
+  }
 
-    if (confirmed) {
-      try {
-        await deleteVideo(videoId).unwrap();
-      } catch (error) {
-        console.error("Failed to delete video:", error);
-      }
+  const handleSearch = (search: string) => {
+    setQueryParams((prev) => ({ ...prev, search, page: "1" }));
+  };
+
+  const handleCategoryFilter = (categoryId: string) => {
+    setQueryParams((prev) => ({
+      ...prev,
+      category: categoryId === "all" ? "" : categoryId,
+      page: "1",
+    }));
+  };
+
+  const handleSortChange = (sortValue: string) => {
+    const sortOption = VIDEO_SORT_OPTIONS.find(
+      (opt) => opt.value === sortValue
+    );
+    if (sortOption) {
+      setQueryParams((prev) => ({
+        ...prev,
+        sortBy: sortOption.field,
+        sortOrder: sortOption.order,
+        page: "1",
+      }));
     }
   };
 
-  const videos = videosData?.data?.videos || [];
-  const pagination = videosData?.data?.pagination;
+  const handlePageChange = (page: number) => {
+    setQueryParams((prev) => ({ ...prev, page: page.toString() }));
+  };
+
+  const handleEditVideo = (video: Video) => {
+    setEditingVideo(video);
+  };
+
+  const handleUpdateVideo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingVideo) return;
+
+    try {
+      const updateData: VideoUpdateData = {
+        title: editingVideo.title,
+        description: editingVideo.description,
+        category:
+          typeof editingVideo.category === "string"
+            ? editingVideo.category
+            : editingVideo.category._id,
+        date: editingVideo.date.toString(),
+        duration: editingVideo.duration,
+        featured: editingVideo.featured,
+        tags: editingVideo.tags,
+      };
+
+      await updateVideo({
+        id: editingVideo._id,
+        data: updateData,
+      }).unwrap();
+
+      toast.success("Video updated successfully!");
+      setEditingVideo(null);
+    } catch (error: any) {
+      toast.error(error.data?.message || "Failed to update video");
+    }
+  };
+
+  const handleDeleteVideo = async (videoId: string) => {
+    if (!confirm("Are you sure you want to delete this video?")) return;
+
+    try {
+      setDeletingVideoId(videoId);
+      await deleteVideo(videoId).unwrap();
+      toast.success("Video deleted successfully!");
+    } catch (error: any) {
+      toast.error(error.data?.message || "Failed to delete video");
+    } finally {
+      setDeletingVideoId(null);
+    }
+  };
+
+  const handleViewVideo = (video: Video) => {
+    navigate(`/admin/play/${video._id}`);
+  };
+
+  const videos = videosData?.data.videos || [];
+  const pagination = videosData?.data.pagination;
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white'>
-      <div className='container py-6 px-4 sm:px-6 max-w-7xl mx-auto'>
-        {/* Header */}
-        <motion.div
-          className='mb-6'
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className='flex items-center justify-between mb-4'>
-            <Button
-              onClick={() => navigate("/admin/dashboard")}
-              variant='ghost'
-              className='flex items-center gap-2'
-            >
-              <ArrowLeft className='w-4 h-4' />
-              Back to Dashboard
-            </Button>
-
-            <Button
-              onClick={() => navigate("/admin/addVideo")}
-              className='flex items-center gap-2'
-            >
-              <Plus className='w-4 h-4' />
-              Add Video
-            </Button>
+    <>
+      <BackNavigation />
+      <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white'>
+        <div className='container py-6 px-4 sm:px-6 max-w-7xl mx-auto'>
+          {/* Header */}
+          <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-3'>
+            <div>
+              <h1 className='text-2xl font-bold text-slate-900 flex items-center gap-3'>
+                <VideoIcon className='w-8 h-8 text-blue-600' />
+                Video Dashboard
+              </h1>
+              <p className='text-slate-600 mt-1'>Manage your video content</p>
+            </div>
           </div>
 
-          <div className='flex items-center justify-between'>
-            <div>
-              <h1 className='text-3xl font-bold text-slate-900'>
-                Video Management
-              </h1>
-              <p className='text-slate-600 mt-1'>
-                Manage your video content, categories, and featured videos
-              </p>
-            </div>
+          {/* Filters and Controls */}
+          <Card className='mb-6'>
+            <CardContent className='p-4'>
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end'>
+                {/* Search */}
+                <div className='lg:col-span-2'>
+                  <label className='text-sm font-medium text-slate-700 mb-2 block'>
+                    Search Videos
+                  </label>
+                  <div className='relative'>
+                    <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4' />
+                    <Input
+                      placeholder='Search by title or description...'
+                      value={queryParams.search || ""}
+                      onChange={(e) => handleSearch(e.target.value)}
+                      className='pl-10'
+                    />
+                  </div>
+                </div>
 
+                {/* Category Filter */}
+                <div>
+                  <label className='text-sm font-medium text-slate-700 mb-2 block'>
+                    Category
+                  </label>
+                  <Select
+                    value={queryParams.category || "all"}
+                    onValueChange={handleCategoryFilter}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='all'>All Categories</SelectItem>
+                      {isLoadingCategories ? (
+                        <SelectItem value='loading' disabled>
+                          Loading...
+                        </SelectItem>
+                      ) : (
+                        categories.map((category) => (
+                          <SelectItem key={category._id} value={category._id}>
+                            {category.name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Sort */}
+                <div>
+                  <label className='text-sm font-medium text-slate-700 mb-2 block'>
+                    Sort By
+                  </label>
+                  <Select
+                    value={`${queryParams.sortBy}-${queryParams.sortOrder}`}
+                    onValueChange={handleSortChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {VIDEO_SORT_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* View Mode Toggle */}
+          <div className='flex justify-between items-center mb-6'>
+            <div className='text-sm text-slate-600'>
+              {pagination && (
+                <>
+                  Showing {videos.length} of {pagination.totalVideos} videos
+                  {queryParams.category && categories.length > 0 && (
+                    <span className='ml-2'>
+                      in{" "}
+                      {
+                        categories.find((c) => c._id === queryParams.category)
+                          ?.name
+                      }
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
             <div className='flex items-center gap-2'>
               <Button
                 variant={viewMode === "grid" ? "default" : "outline"}
                 size='sm'
                 onClick={() => setViewMode("grid")}
               >
-                <Grid className='w-4 h-4' />
+                <Grid3X3 className='w-4 h-4' />
               </Button>
               <Button
                 variant={viewMode === "list" ? "default" : "outline"}
@@ -175,264 +379,230 @@ const VideoDash = () => {
               </Button>
             </div>
           </div>
-        </motion.div>
 
-        {/* Filters and Search */}
-        <motion.div
-          className='mb-6'
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
-        >
-          <Card>
-            <CardContent className='p-4'>
-              <div className='grid grid-cols-1 md:grid-cols-5 gap-4'>
-                {/* Search */}
-                <div className='relative'>
-                  <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4' />
-                  <Input
-                    placeholder='Search videos...'
-                    value={search}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className='pl-10'
-                  />
-                </div>
-
-                {/* Category Filter */}
-                <Select
-                  value={filters.category}
-                  onValueChange={(value) =>
-                    handleFilterChange({ category: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder='Category' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='all'>All Categories</SelectItem>
-                    <SelectItem value='speech'>Speech</SelectItem>
-                    <SelectItem value='event'>Event</SelectItem>
-                    <SelectItem value='interview'>Interview</SelectItem>
-                    <SelectItem value='initiative'>Initiative</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* Sort By */}
-                <Select
-                  value={filters.sortBy}
-                  onValueChange={handleSortByChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder='Sort By' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='createdAt'>Created Date</SelectItem>
-                    <SelectItem value='date'>Video Date</SelectItem>
-                    <SelectItem value='title'>Title</SelectItem>
-                    <SelectItem value='views'>Views</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* Sort Order */}
-                <Select
-                  value={filters.sortOrder}
-                  onValueChange={handleSortOrderChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder='Order' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='desc'>Descending</SelectItem>
-                    <SelectItem value='asc'>Ascending</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Statistics */}
-        <motion.div
-          className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-6'
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
-        >
-          <Card>
-            <CardContent className='p-4'>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <p className='text-sm text-slate-600'>Total Videos</p>
-                  <p className='text-2xl font-bold'>
-                    {pagination?.totalVideos || 0}
-                  </p>
-                </div>
-                <Play className='w-8 h-8 text-blue-600' />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className='p-4'>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <p className='text-sm text-slate-600'>This Page</p>
-                  <p className='text-2xl font-bold'>{videos.length}</p>
-                </div>
-                <Eye className='w-8 h-8 text-green-600' />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className='p-4'>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <p className='text-sm text-slate-600'>Page</p>
-                  <p className='text-2xl font-bold'>
-                    {pagination?.currentPage || 1} of{" "}
-                    {pagination?.totalPages || 1}
-                  </p>
-                </div>
-                <Filter className='w-8 h-8 text-purple-600' />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Loading State */}
-        {isLoading && (
-          <div className='flex items-center justify-center py-12'>
-            <Loader2 className='w-8 h-8 animate-spin text-slate-600' />
-            <span className='ml-2 text-slate-600'>Loading videos...</span>
-          </div>
-        )}
-
-        {/* Error State */}
-        {error && (
-          <Card className='mb-6'>
-            <CardContent className='p-6 text-center'>
-              <AlertCircle className='w-12 h-12 text-red-500 mx-auto mb-4' />
-              <h3 className='text-lg font-semibold text-red-700 mb-2'>
-                Error Loading Videos
+          {/* Content */}
+          {isLoadingVideos ? (
+            <VideoGridSkeleton viewMode={viewMode} />
+          ) : videos.length === 0 ? (
+            <Card className='p-12 text-center'>
+              <VideoIcon className='w-12 h-12 text-slate-400 mx-auto mb-4' />
+              <h3 className='text-lg font-semibold text-slate-900 mb-2'>
+                No videos found
               </h3>
               <p className='text-slate-600 mb-4'>
-                Failed to load videos. Please try again.
+                {queryParams.search || queryParams.category
+                  ? "Try adjusting your filters or search terms."
+                  : "Get started by uploading your first video."}
               </p>
-              <Button onClick={() => refetch()}>Try Again</Button>
-            </CardContent>
-          </Card>
-        )}
+              <Button
+                onClick={() => navigate("/admin/addVideo")}
+                className='bg-blue-600 hover:bg-blue-700'
+              >
+                <Plus className='w-4 h-4 mr-2' />
+                Add Video
+              </Button>
+            </Card>
+          ) : (
+            <div
+              className={`grid gap-6 ${
+                viewMode === "grid"
+                  ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                  : "grid-cols-1"
+              }`}
+            >
+              {videos.map((video) => (
+                <VideoCard
+                  key={video._id}
+                  video={video}
+                  showActions={true}
+                  viewMode={viewMode}
+                  onEdit={handleEditVideo}
+                  onDelete={handleDeleteVideo}
+                  onView={handleViewVideo}
+                  isDeleting={deletingVideoId === video._id}
+                />
+              ))}
+            </div>
+          )}
 
-        {/* Videos Grid/List */}
-        {!isLoading && !error && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.6 }}
-          >
-            {videos.length === 0 ? (
-              <Card>
-                <CardContent className='p-12 text-center'>
-                  <Play className='w-16 h-16 text-slate-300 mx-auto mb-4' />
-                  <h3 className='text-xl font-semibold text-slate-700 mb-2'>
-                    No Videos Found
-                  </h3>
-                  <p className='text-slate-500 mb-6'>
-                    {search || filters.category !== "all"
-                      ? "No videos match your current filters."
-                      : "You haven't uploaded any videos yet."}
-                  </p>
-                  <Button onClick={() => navigate("/admin/addVideo")}>
-                    <Plus className='w-4 h-4 mr-2' />
-                    Add Your First Video
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <>
-                <div
-                  className={
-                    viewMode === "grid"
-                      ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-                      : "space-y-4"
-                  }
+          {/* Pagination */}
+          {pagination && pagination.totalPages > 1 && (
+            <div className='flex justify-center mt-8'>
+              <div className='flex items-center gap-2'>
+                <Button
+                  variant='outline'
+                  onClick={() => handlePageChange(pagination.currentPage - 1)}
+                  disabled={!pagination.hasPrevPage}
                 >
-                  {videos.map((video) => (
-                    <VideoCard
-                      key={video._id}
-                      video={video}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      onView={handleView}
-                      showActions={true}
-                      viewMode={viewMode}
-                      isDeleting={deleting}
-                    />
-                  ))}
-                </div>
+                  Previous
+                </Button>
+                <span className='text-sm text-slate-600 px-4'>
+                  Page {pagination.currentPage} of {pagination.totalPages}
+                </span>
+                <Button
+                  variant='outline'
+                  onClick={() => handlePageChange(pagination.currentPage + 1)}
+                  disabled={!pagination.hasNextPage}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
 
-                {/* Pagination */}
-                {pagination && pagination.totalPages > 1 && (
-                  <div className='flex items-center justify-center gap-2 mt-8'>
-                    <Button
-                      variant='outline'
-                      onClick={() =>
-                        handlePageChange(pagination.currentPage - 1)
-                      }
-                      disabled={!pagination.hasPrevPage}
-                    >
-                      Previous
-                    </Button>
-
-                    {/* Page Numbers */}
-                    {Array.from({ length: pagination.totalPages }, (_, i) => {
-                      const page = i + 1;
-                      const isCurrentPage = page === pagination.currentPage;
-                      const showPage =
-                        page === 1 ||
-                        page === pagination.totalPages ||
-                        Math.abs(page - pagination.currentPage) <= 2;
-
-                      if (!showPage) {
-                        if (
-                          page === pagination.currentPage - 3 ||
-                          page === pagination.currentPage + 3
-                        ) {
-                          return <span key={page}>...</span>;
+          {/* Edit Dialog */}
+          <Dialog
+            open={editingVideo !== null}
+            onOpenChange={() => setEditingVideo(null)}
+          >
+            <DialogContent className='max-w-2xl'>
+              <DialogHeader>
+                <DialogTitle>Edit Video</DialogTitle>
+              </DialogHeader>
+              {editingVideo && (
+                <>
+                  <form onSubmit={handleUpdateVideo} className='space-y-4'>
+                    <div>
+                      <label className='text-sm font-medium'>Title</label>
+                      <Input
+                        value={editingVideo.title}
+                        onChange={(e) =>
+                          setEditingVideo((prev) =>
+                            prev ? { ...prev, title: e.target.value } : null
+                          )
                         }
-                        return null;
-                      }
+                      />
+                    </div>
 
-                      return (
-                        <Button
-                          key={page}
-                          variant={isCurrentPage ? "default" : "outline"}
-                          onClick={() => handlePageChange(page)}
-                          className='w-10'
+                    <div>
+                      <label className='text-sm font-medium'>Description</label>
+                      <textarea
+                        className='w-full p-2 border rounded-md'
+                        rows={3}
+                        value={editingVideo.description}
+                        onChange={(e) =>
+                          setEditingVideo((prev) =>
+                            prev
+                              ? { ...prev, description: e.target.value }
+                              : null
+                          )
+                        }
+                      />
+                    </div>
+
+                    <div className='grid grid-cols-2 gap-4'>
+                      <div>
+                        <label className='text-sm font-medium'>Category</label>
+                        <Select
+                          value={
+                            typeof editingVideo.category === "string"
+                              ? editingVideo.category
+                              : editingVideo.category._id
+                          }
+                          onValueChange={(value) =>
+                            setEditingVideo((prev) =>
+                              prev ? { ...prev, category: value } : null
+                            )
+                          }
                         >
-                          {page}
-                        </Button>
-                      );
-                    })}
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categories.map((category) => (
+                              <SelectItem
+                                key={category._id}
+                                value={category._id}
+                              >
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className='text-sm font-medium'>Duration</label>
+                        <Input
+                          value={editingVideo.duration}
+                          onChange={(e) =>
+                            setEditingVideo((prev) =>
+                              prev
+                                ? { ...prev, duration: e.target.value }
+                                : null
+                            )
+                          }
+                          placeholder='e.g., 5:30'
+                        />
+                      </div>
+                    </div>
 
-                    <Button
-                      variant='outline'
-                      onClick={() =>
-                        handlePageChange(pagination.currentPage + 1)
-                      }
-                      disabled={!pagination.hasNextPage}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                )}
-              </>
-            )}
-          </motion.div>
-        )}
+                    <div>
+                      <label className='text-sm font-medium'>Date</label>
+                      <Input
+                        type='date'
+                        value={
+                          editingVideo.date instanceof Date
+                            ? editingVideo.date.toISOString().split("T")[0]
+                            : new Date(editingVideo.date)
+                                .toISOString()
+                                .split("T")[0]
+                        }
+                        onChange={(e) =>
+                          setEditingVideo((prev) =>
+                            prev
+                              ? { ...prev, date: new Date(e.target.value) }
+                              : null
+                          )
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className='text-sm font-medium'>Tags</label>
+                      <Input
+                        value={editingVideo.tags?.join(", ") || ""}
+                        onChange={(e) =>
+                          setEditingVideo((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  tags: e.target.value
+                                    .split(",")
+                                    .map((tag) => tag.trim())
+                                    .filter(Boolean),
+                                }
+                              : null
+                          )
+                        }
+                        placeholder='Enter tags separated by commas'
+                      />
+                    </div>
+
+                    <div className='flex gap-3'>
+                      <Button
+                        type='button'
+                        variant='outline'
+                        onClick={() => setEditingVideo(null)}
+                        className='flex-1'
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type='submit'
+                        disabled={isUpdating}
+                        className='flex-1'
+                      >
+                        {isUpdating ? "Updating..." : "Update Video"}
+                      </Button>
+                    </div>
+                  </form>
+                </>
+              )}
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

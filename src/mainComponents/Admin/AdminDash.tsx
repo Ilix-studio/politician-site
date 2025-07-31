@@ -15,7 +15,6 @@ import {
   TrendingUp,
   MessageCircle,
   Upload,
-  Edit,
   Loader2,
   Delete,
   RefreshCw,
@@ -123,6 +122,7 @@ const AdminDash = () => {
       color: "text-green-600",
       loading: messagesLoading,
       error: messagesError,
+      action: () => navigate("/admin/messages"),
     },
     {
       title: "Total Gallery Photos",
@@ -130,20 +130,21 @@ const AdminDash = () => {
       change: "+8",
       icon: Image,
       color: "text-purple-600",
+      action: () => navigate("/admin/photoDashboard"),
     },
     {
       title: "Total Gallery Videos",
       value: videosData?.data?.pagination?.totalVideos?.toString() || "0",
-
       icon: Video,
       color: "text-orange-600",
+      action: () => navigate("/admin/videoDashboard"),
     },
     {
       title: "Total Press Articles",
       value: pressData?.data?.pagination?.totalPress?.toString(),
-
       icon: Users,
       color: "text-blue-600",
+      action: () => navigate("/admin/pressDashboard"),
     },
   ];
 
@@ -190,16 +191,6 @@ const AdminDash = () => {
     }
   };
 
-  const navigateToPhotoDash = () => {
-    navigate("/admin/photoDashboard");
-  };
-  const navigateToVideoDash = () => {
-    navigate("/admin/videoDashboard");
-  };
-  const navigateToPressDash = () => {
-    navigate("/admin/pressDashboard");
-  };
-
   return (
     <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white'>
       {/* Header */}
@@ -244,7 +235,7 @@ const AdminDash = () => {
         </div>
       </header>
 
-      <div className='container py-6 px-4 sm:px-6'>
+      <div className='container py-3 px-4 sm:px-6'>
         {/* Welcome Section */}
         <motion.div
           className='mb-8'
@@ -252,7 +243,7 @@ const AdminDash = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className='text-3xl font-bold text-slate-800 mb-2'>
+          <h2 className='text-2xl font-bold text-slate-800 mb-2'>
             Welcome back, Admin
           </h2>
           <p className='text-slate-600'>
@@ -268,7 +259,11 @@ const AdminDash = () => {
           transition={{ delay: 0.2, duration: 0.6 }}
         >
           {stats.map((stat, index) => (
-            <Card key={index} className='hover:shadow-lg transition-shadow'>
+            <Card
+              key={index}
+              className='hover:shadow-lg transition-shadow cursor-pointer'
+              onClick={stat.action}
+            >
               <CardContent className='p-6'>
                 <div className='flex items-center justify-between'>
                   <div>
@@ -300,7 +295,6 @@ const AdminDash = () => {
             </Card>
           ))}
         </motion.div>
-
         {/* Visitor Analytics Section */}
         {visitorStatsData?.data && (
           <motion.div
@@ -517,93 +511,6 @@ const AdminDash = () => {
             </Card>
           </motion.div>
         </div>
-
-        {/* Content Management */}
-        <motion.div
-          className='mt-8'
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.6 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className='flex items-center gap-2'>
-                <FileText className='w-5 h-5 text-purple-600' />
-                Content Management
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                <div
-                  className='p-4 border rounded-lg hover:bg-slate-50 transition-colors cursor-pointer'
-                  onClick={navigateToPhotoDash}
-                >
-                  <div className='flex items-center justify-between mb-2'>
-                    <h3 className='font-medium'>Gallery Photos</h3>
-                    <Badge>{photosData?.data?.pagination?.total || 0}</Badge>
-                  </div>
-                  <p className='text-sm text-muted-foreground mb-3'>
-                    Manage photo gallery
-                  </p>
-                  <div className='flex gap-2'>
-                    <Button size='sm' variant='outline'>
-                      <Eye className='w-4 h-4' />
-                    </Button>
-                    <Button size='sm' variant='outline'>
-                      <Upload className='w-4 h-4' />
-                    </Button>
-                  </div>
-                </div>
-
-                <div
-                  className='p-4 border rounded-lg hover:bg-slate-50 transition-colors cursor-pointer'
-                  onClick={navigateToVideoDash}
-                >
-                  <div className='flex items-center justify-between mb-2'>
-                    <h3 className='font-medium'>Videos</h3>
-                    <Badge>
-                      {videosData?.data?.pagination?.totalVideos || 0}
-                    </Badge>
-                  </div>
-                  <p className='text-sm text-muted-foreground mb-3'>
-                    Manage video content
-                  </p>
-                  <div className='flex gap-2'>
-                    <Button size='sm' variant='outline'>
-                      <Eye className='w-4 h-4' />
-                    </Button>
-                    <Button size='sm' variant='outline'>
-                      <Upload className='w-4 h-4' />
-                    </Button>
-                  </div>
-                </div>
-
-                <div
-                  className='p-4 border rounded-lg hover:bg-slate-50 transition-colors cursor-pointer'
-                  onClick={navigateToPressDash}
-                >
-                  <div className='flex items-center justify-between mb-2'>
-                    <h3 className='font-medium'>Press Articles</h3>
-                    <Badge>
-                      {pressData?.data?.pagination?.totalPress || 0}
-                    </Badge>
-                  </div>
-                  <p className='text-sm text-muted-foreground mb-3'>
-                    Manage press releases
-                  </p>
-                  <div className='flex gap-2'>
-                    <Button size='sm' variant='outline'>
-                      <Eye className='w-4 h-4' />
-                    </Button>
-                    <Button size='sm' variant='outline'>
-                      <Edit className='w-4 h-4' />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
       </div>
     </div>
   );
