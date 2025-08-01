@@ -1,80 +1,24 @@
+// Base Video interface (matching your videoModel)
 export interface Video {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   thumbnail: string;
   videoUrl: string;
-  date: string;
-  category: "speech" | "event" | "interview" | "initiative";
+  date: Date;
+  category: string | { _id: string; name: string; type: string }; // Can be populated or not
   duration: string;
-}
-
-// Extended Video interface for database operations
-export interface VideoDocument extends Video {
-  _id: string;
-  publicId: string; // Cloudinary public ID
+  publicId: string;
   thumbnailPublicId?: string;
   featured?: boolean;
   tags?: string[];
-  views?: number;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
-// Video upload data interface
-export interface VideoUploadData {
-  title: string;
-  description: string;
-  category: "speech" | "event" | "interview" | "initiative";
-  date: string;
-  duration: string;
-  featured?: boolean;
-  tags?: string[] | string; // Can be array or comma-separated string
-}
-
-// Video create data interface (for existing Cloudinary URLs)
-export interface VideoCreateData {
-  title: string;
-  description: string;
-  thumbnail: string;
-  videoUrl: string;
-  date: string;
-  category: "speech" | "event" | "interview" | "initiative";
-  duration: string;
-  publicId: string;
-  thumbnailPublicId?: string;
-  featured?: boolean;
-  tags?: string[] | string;
-}
-
-// Video update data interface
-export interface VideoUpdateData {
-  title?: string;
-  description?: string;
-  thumbnail?: string;
-  videoUrl?: string;
-  date?: string;
-  category?: "speech" | "event" | "interview" | "initiative";
-  duration?: string;
-  featured?: boolean;
-  tags?: string[] | string;
-  isActive?: boolean;
-}
-
-// Video query parameters interface
-export interface VideoQueryParams {
-  page?: string;
-  limit?: string;
-  category?: string | "all";
-  featured?: string;
-  search?: string;
-  sortBy?: "date" | "title" | "views" | "createdAt" | "updatedAt";
-  sortOrder?: "asc" | "desc";
-}
-
-// Pagination info interface
-export interface PaginationInfo {
+// Pagination interface for videos
+export interface VideoPagination {
   currentPage: number;
   totalPages: number;
   totalVideos: number;
@@ -83,139 +27,177 @@ export interface PaginationInfo {
   limit: number;
 }
 
-// API Response interfaces
+// Query parameters for getting videos
+export interface VideoQueryParams {
+  page?: string;
+  limit?: string;
+  category?: string;
+  featured?: string;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: string;
+}
+
+// Video upload data interface (for file upload)
+export interface VideoUploadData {
+  title: string;
+  description: string;
+  category: string;
+  date: string;
+  duration: string;
+  featured?: boolean;
+  tags?: string[];
+}
+
+// Create video data interface (for creating with existing URLs)
+export interface VideoCreateData {
+  title: string;
+  description: string;
+  thumbnail: string;
+  videoUrl: string;
+  date: string;
+  category: string;
+  duration: string;
+  publicId: string;
+  thumbnailPublicId?: string;
+  featured?: boolean;
+  tags?: string[];
+}
+
+// Update video data interface
+export interface VideoUpdateData {
+  title?: string;
+  description?: string;
+  thumbnail?: string;
+  videoUrl?: string;
+  date?: string;
+  category?: string;
+  duration?: string;
+  publicId?: string;
+  thumbnailPublicId?: string;
+  featured?: boolean;
+  tags?: string[];
+  isActive?: boolean;
+}
+
+// API Response for single video
 export interface VideoResponse {
   success: boolean;
   message?: string;
   data: {
-    video: VideoDocument;
+    video: Video;
   };
 }
 
+// API Response for multiple videos
 export interface VideosResponse {
   success: boolean;
   data: {
-    videos: VideoDocument[];
-    pagination: PaginationInfo;
+    videos: Video[];
+    pagination: VideoPagination;
   };
 }
 
-export interface CategoriesResponse {
-  success: boolean;
-  data: {
-    categories: string[];
-  };
-}
-
+// Delete video response
 export interface DeleteVideoResponse {
   success: boolean;
   message: string;
 }
 
-// Cloudinary upload response for videos
-export interface CloudinaryVideoUploadResponse {
-  public_id: string;
-  version: number;
-  signature: string;
-  width: number;
-  height: number;
-  format: string;
-  resource_type: "video";
-  created_at: string;
-  tags: string[];
-  bytes: number;
-  type: string;
-  etag: string;
-  placeholder: boolean;
-  url: string;
-  secure_url: string;
-  audio?: {
-    codec: string;
-    bit_rate: string;
-    frequency: number;
-    channels: number;
-    channel_layout: string;
-  };
-  video?: {
-    pix_format: string;
-    codec: string;
-    level: number;
-    bit_rate: string;
-    profile: string;
-  };
-  duration?: number; // Video duration in seconds
-  nb_frames?: string;
+// Video category interfaces
+export interface VideoCategory {
+  _id: string;
+  name: string;
+  type: "video";
+  count?: number;
+  createdAt?: Date;
 }
 
-// Error interfaces
+// Video category create data
+export interface VideoCategoryCreateData {
+  name: string;
+}
+
+// Video category update data
+export interface VideoCategoryUpdateData {
+  name: string;
+}
+
+// API Response for video categories
+export interface VideoCategoriesResponse {
+  success: boolean;
+  data: VideoCategory[];
+}
+
+// API Response for single category
+export interface CategoryResponse {
+  success: boolean;
+  message?: string;
+  data: VideoCategory;
+}
+
+// Video category with counts (for dashboard/stats)
+export interface VideoCategoryWithCount extends VideoCategory {
+  count: number;
+}
+
+// Error interface for video operations
 export interface VideoError {
   success: false;
   message: string;
   error?: string;
-  errors?: Array<{
-    type: string;
-    value: any;
-    msg: string;
-    path: string;
-    location: string;
-  }>;
 }
 
-// Frontend component props interfaces
-export interface VideoCardProps {
-  video: Video;
-  onEdit?: (video: Video) => void;
-  onDelete?: (videoId: string) => void;
-  onToggleFeatured?: (videoId: string) => void;
-  showActions?: boolean;
+// Form data interface for video upload component
+export interface VideoFormData {
+  title: string;
+  description: string;
+  category: string;
+  date: string;
+  duration: string;
+  featured: boolean;
+  tags: string;
 }
 
-export interface VideoPlayerProps {
-  video: Video;
-  autoplay?: boolean;
-  controls?: boolean;
-  muted?: boolean;
-  onViewIncrement?: () => void;
+// File preview interface for video upload
+export interface VideoFilePreview {
+  videoFile: File | null;
+  thumbnailFile: File | null;
+  videoPreview: string | null;
+  thumbnailPreview: string | null;
 }
 
-export interface VideoFormProps {
-  video?: Video;
-  onSubmit: (data: VideoUploadData) => void;
-  onCancel?: () => void;
-  isLoading?: boolean;
-  mode: "create" | "edit";
+// Video upload mode type
+export type VideoUploadMode = "upload" | "url";
+
+// Video sort options
+export interface VideoSortOption {
+  value: string;
+  label: string;
+  field: string;
+  order: "asc" | "desc";
 }
 
-export interface VideoFilterProps {
-  categories: string[];
-  onFilterChange: (filters: VideoQueryParams) => void;
-  currentFilters: VideoQueryParams;
-}
+// Default sort options for videos
+export const VIDEO_SORT_OPTIONS: VideoSortOption[] = [
+  { value: "date-desc", label: "Newest First", field: "date", order: "desc" },
+  { value: "date-asc", label: "Oldest First", field: "date", order: "asc" },
+  { value: "title-asc", label: "Title A-Z", field: "title", order: "asc" },
+  { value: "title-desc", label: "Title Z-A", field: "title", order: "desc" },
+];
 
-// Constants
-export const VIDEO_CATEGORIES = [
-  "speech",
-  "event",
-  "interview",
-  "initiative",
-] as const;
+// Helper function to get category name
+export const getVideoCategoryName = (category: Video["category"]): string => {
+  if (typeof category === "string") {
+    return category;
+  }
+  return category.name;
+};
 
-export const VIDEO_SORT_OPTIONS = [
-  { value: "date", label: "Date" },
-  { value: "title", label: "Title" },
-  { value: "views", label: "Views" },
-  { value: "createdAt", label: "Created" },
-  { value: "updatedAt", label: "Updated" },
-] as const;
-
-export const VIDEO_SORT_ORDERS = [
-  { value: "desc", label: "Descending" },
-  { value: "asc", label: "Ascending" },
-] as const;
-
-// Utility type for video category
-export type VideoCategory = (typeof VIDEO_CATEGORIES)[number];
-
-// Utility type for sort options
-export type VideoSortBy = (typeof VIDEO_SORT_OPTIONS)[number]["value"];
-export type VideoSortOrder = (typeof VIDEO_SORT_ORDERS)[number]["value"];
+// Helper function to get category ID
+export const getVideoCategoryId = (category: Video["category"]): string => {
+  if (typeof category === "string") {
+    return category;
+  }
+  return category._id;
+};

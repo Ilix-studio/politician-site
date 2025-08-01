@@ -4,16 +4,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Search,
-  Filter,
   Eye,
   Edit,
   Trash2,
-  Calendar,
   FileText,
-  ExternalLink,
   Loader2,
+  Plus,
+  AlertCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -21,22 +28,21 @@ import { selectAuth, selectIsAdmin } from "@/redux-store/slices/authSlice";
 import { Navigate } from "react-router-dom";
 import {
   useGetPressQuery,
-  useGetPressCategoriesQuery,
-  useDeletePressArticleMutation,
+  useDeletePressMutation,
 } from "@/redux-store/services/pressApi";
-import { PressQueryParams, PressDocument } from "@/types/press.types";
+import { useGetCategoriesByTypeQuery } from "@/redux-store/services/categoryApi";
+import { PressQueryParams, Press } from "@/types/press.types";
 import { BackNavigation } from "@/config/navigation/BackNavigation";
 
 const PressDash = () => {
   const navigate = useNavigate();
-
   const { isAuthenticated } = useSelector(selectAuth);
   const isAdmin = useSelector(selectIsAdmin);
 
   const [queryParams, setQueryParams] = useState<PressQueryParams>({
-    page: "1",
-    limit: "10",
-    category: "all",
+    page: 1,
+    limit: 10,
+    category: "",
     search: "",
     sortBy: "date",
     sortOrder: "desc",
@@ -50,13 +56,33 @@ const PressDash = () => {
     refetch,
   } = useGetPressQuery(queryParams);
 
-  const { data: categoriesData } = useGetPressCategoriesQuery();
+  const { data: categories = [], isLoading: categoriesLoading } =
+    useGetCategoriesByTypeQuery("press");
 
-  const [deletePress, { isLoading: deleting }] =
-    useDeletePressArticleMutation();
+  const [deletePress, { isLoading: deleting }] = useDeletePressMutation();
 
   if (!isAuthenticated || !isAdmin) {
     return <Navigate to='/admin/login' />;
+  }
+
+  // Handle error state
+  if (error) {
+    return (
+      <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white p-4'>
+        <BackNavigation />
+        <Alert className='max-w-md mx-auto mt-8' variant='destructive'>
+          <AlertCircle className='h-4 w-4' />
+          <AlertDescription>
+            Failed to load press articles. Please try again.
+          </AlertDescription>
+        </Alert>
+        <div className='flex justify-center mt-4'>
+          <Button onClick={() => refetch()} variant='outline'>
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   const handleDelete = async (id: string) => {
@@ -70,24 +96,42 @@ const PressDash = () => {
     }
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setQueryParams((prev) => ({ ...prev, page: "1" }));
+  const handleSearch = (search: string) => {
+    setQueryParams((prev) => ({ ...prev, search, page: 1 }));
   };
 
-  const handleCategoryFilter = (category: string) => {
-    setQueryParams((prev) => ({ ...prev, category, page: "1" }));
+  const handleCategoryFilter = (categoryId: string) => {
+    setQueryParams((prev) => ({
+      ...prev,
+      category: categoryId === "all" ? "" : categoryId,
+      page: 1,
+    }));
   };
 
   const handlePageChange = (page: number) => {
-    setQueryParams((prev) => ({ ...prev, page: page.toString() }));
+    setQueryParams((prev) => ({ ...prev, page }));
   };
 
-  // const formatDate = (date: string) => {
-  //   return new Date(date).toLocaleDateString();
-  // };
+  const handleAddPress = () => {
+    navigate("/admin/addPress");
+  };
 
-  const getCategoryColor = (category: string) => {
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const getCategoryName = (category: Press["category"]): string => {
+    if (typeof category === "string") {
+      return category;
+    }
+    return category.name;
+  };
+
+  const getCategoryColor = (categoryName: string) => {
     const colors: Record<string, string> = {
       politics: "bg-red-100 text-red-800",
       economy: "bg-green-100 text-green-800",
@@ -99,7 +143,7 @@ const PressDash = () => {
       infrastructure: "bg-gray-100 text-gray-800",
       other: "bg-orange-100 text-orange-800",
     };
-    return colors[category] || colors.other;
+    return colors[categoryName.toLowerCase()] || colors.other;
   };
 
   return (
@@ -111,7 +155,7 @@ const PressDash = () => {
           {/* Page Header */}
           <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
             <div>
-              <h1 className='text-3xl font-bold text-slate-800'>
+              <h1 className='text-2xl font-bold text-slate-800'>
                 Press Dashboard
               </h1>
               <p className='text-slate-600 mt-1'>
@@ -120,121 +164,91 @@ const PressDash = () => {
             </div>
           </div>
 
-          {/* Filters */}
+          {/* Stats Card */}
           <Card>
-            <CardContent className='p-6'>
-              <div className='flex flex-col lg:flex-row gap-4'>
-                {/* Search */}
-                <form onSubmit={handleSearch} className='flex-1'>
-                  <div className='relative'>
-                    <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
-                    <Input
-                      placeholder='Search press articles...'
-                      value={queryParams.search || ""}
-                      onChange={(e) =>
-                        setQueryParams((prev) => ({
-                          ...prev,
-                          search: e.target.value,
-                        }))
-                      }
-                      className='pl-10'
-                    />
-                  </div>
-                </form>
-
-                {/* Category Filter */}
-                <div className='flex flex-wrap gap-2'>
-                  <Button
-                    variant={
-                      queryParams.category === "all" ? "default" : "outline"
-                    }
-                    size='sm'
-                    onClick={() => handleCategoryFilter("all")}
-                  >
-                    All
-                  </Button>
-                  {categoriesData?.data.categories.map((category) => (
-                    <Button
-                      key={category}
-                      variant={
-                        queryParams.category === category
-                          ? "default"
-                          : "outline"
-                      }
-                      size='sm'
-                      onClick={() => handleCategoryFilter(category)}
-                      className='capitalize'
-                    >
-                      {category}
-                    </Button>
-                  ))}
+            <CardContent className='pt-6'>
+              <div className='grid grid-cols-1 md:grid-cols-3 gap-4 text-center'>
+                <div>
+                  <h3 className='text-2xl font-bold text-blue-600'>
+                    {pressData?.data.pagination.total || 0}
+                  </h3>
+                  <p className='text-sm text-gray-600'>Total Articles</p>
+                </div>
+                <div>
+                  <h3 className='text-2xl font-bold text-green-600'>
+                    {categories.length}
+                  </h3>
+                  <p className='text-sm text-gray-600'>Categories</p>
+                </div>
+                <div>
+                  <h3 className='text-2xl font-bold text-purple-600'>
+                    {pressData?.data.press.filter(
+                      (p) =>
+                        new Date(p.date).getMonth() === new Date().getMonth()
+                    ).length || 0}
+                  </h3>
+                  <p className='text-sm text-gray-600'>This Month</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Stats */}
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-            <Card>
-              <CardContent className='p-6'>
-                <div className='flex items-center gap-3'>
-                  <FileText className='w-8 h-8 text-blue-600' />
-                  <div>
-                    <p className='text-sm text-slate-600'>Total Articles</p>
-                    <p className='text-2xl font-bold'>
-                      {pressData?.data.pagination.totalPress || 0}
-                    </p>
+          {/* Filters */}
+          <Card>
+            <CardContent className='pt-6'>
+              <div className='flex flex-col sm:flex-row gap-4'>
+                <div className='flex-1'>
+                  <div className='relative'>
+                    <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
+                    <Input
+                      placeholder='Search press articles...'
+                      value={queryParams.search || ""}
+                      onChange={(e) => handleSearch(e.target.value)}
+                      className='pl-10'
+                      disabled={isLoading}
+                    />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className='p-6'>
-                <div className='flex items-center gap-3'>
-                  <Calendar className='w-8 h-8 text-green-600' />
-                  <div>
-                    <p className='text-sm text-slate-600'>This Month</p>
-                    <p className='text-2xl font-bold'>
-                      {pressData?.data.press.filter(
-                        (p) =>
-                          new Date(p.date).getMonth() === new Date().getMonth()
-                      ).length || 0}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className='p-6'>
-                <div className='flex items-center gap-3'>
-                  <Filter className='w-8 h-8 text-purple-600' />
-                  <div>
-                    <p className='text-sm text-slate-600'>Categories</p>
-                    <p className='text-2xl font-bold'>
-                      {categoriesData?.data.categories.length || 0}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                <Select
+                  value={queryParams.category || "all"}
+                  onValueChange={handleCategoryFilter}
+                  disabled={isLoading || categoriesLoading}
+                >
+                  <SelectTrigger className='w-48'>
+                    <SelectValue placeholder='Filter by category' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='all'>All Categories</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat._id} value={cat._id}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Press Articles */}
           {isLoading ? (
             <div className='flex justify-center items-center py-8'>
               <Loader2 className='w-8 h-8 animate-spin' />
             </div>
-          ) : error ? (
+          ) : pressData?.data.press.length === 0 ? (
             <Card>
-              <CardContent className='p-6 text-center'>
-                <p className='text-red-600'>Error loading press articles</p>
+              <CardContent className='text-center py-12'>
+                <FileText className='w-12 h-12 text-gray-400 mx-auto mb-4' />
+                <p className='text-gray-500 mb-4'>No press articles found.</p>
+                <Button onClick={handleAddPress} variant='outline'>
+                  <Plus className='w-4 h-4 mr-2' />
+                  Add Your First Press Article
+                </Button>
               </CardContent>
             </Card>
           ) : (
             <div className='grid gap-6'>
-              {pressData?.data.press.map((press: PressDocument) => (
+              {pressData?.data.press.map((press: Press) => (
                 <motion.div
                   key={press._id}
                   initial={{ opacity: 0, y: 20 }}
@@ -245,11 +259,13 @@ const PressDash = () => {
                     <div className='flex flex-col lg:flex-row gap-6'>
                       {/* Image */}
                       <div className='lg:w-48 h-32 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0'>
-                        <img
-                          src={press.image}
-                          alt={press.title}
-                          className='w-full h-full object-cover'
-                        />
+                        {press.images?.[0] && (
+                          <img
+                            src={press.images[0].src}
+                            alt={press.images[0].alt}
+                            className='w-full h-full object-cover'
+                          />
+                        )}
                       </div>
 
                       {/* Content */}
@@ -258,8 +274,12 @@ const PressDash = () => {
                           <h3 className='text-lg font-semibold text-slate-800 line-clamp-2'>
                             {press.title}
                           </h3>
-                          <Badge className={getCategoryColor(press.category)}>
-                            {press.category}
+                          <Badge
+                            className={getCategoryColor(
+                              getCategoryName(press.category)
+                            )}
+                          >
+                            {getCategoryName(press.category)}
                           </Badge>
                         </div>
 
@@ -272,7 +292,7 @@ const PressDash = () => {
                           <span>•</span>
                           <span>{press.source}</span>
                           <span>•</span>
-                          {/* <span>{formatDate(press.date)}</span> */}
+                          <span>{formatDate(press.date)}</span>
                           <span>•</span>
                           <span>{press.readTime}</span>
                         </div>
@@ -300,14 +320,6 @@ const PressDash = () => {
                           <Button
                             variant='outline'
                             size='sm'
-                            onClick={() => window.open(press.link, "_blank")}
-                          >
-                            <ExternalLink className='w-4 h-4 mr-1' />
-                            Original
-                          </Button>
-                          <Button
-                            variant='outline'
-                            size='sm'
                             onClick={() => handleDelete(press._id)}
                             disabled={deleting}
                             className='text-red-600 hover:text-red-700'
@@ -325,42 +337,43 @@ const PressDash = () => {
           )}
 
           {/* Pagination */}
-          {pressData?.data.pagination &&
-            pressData.data.pagination.totalPages > 1 && (
-              <div className='flex justify-center gap-2'>
+          {!isLoading &&
+            pressData?.data.pagination &&
+            pressData.data.pagination.pages > 1 && (
+              <div className='flex justify-center space-x-2'>
                 <Button
                   variant='outline'
-                  disabled={!pressData.data.pagination.hasPrevPage}
-                  onClick={() =>
-                    handlePageChange(pressData.data.pagination.currentPage - 1)
-                  }
+                  size='sm'
+                  onClick={() => handlePageChange(queryParams.page! - 1)}
+                  disabled={!pressData.data.pagination.hasPrev}
                 >
                   Previous
                 </Button>
 
                 {Array.from(
-                  { length: pressData.data.pagination.totalPages },
-                  (_, i) => (
-                    <Button
-                      key={i + 1}
-                      variant={
-                        pressData.data.pagination.currentPage === i + 1
-                          ? "default"
-                          : "outline"
-                      }
-                      onClick={() => handlePageChange(i + 1)}
-                    >
-                      {i + 1}
-                    </Button>
-                  )
+                  { length: Math.min(pressData.data.pagination.pages, 5) },
+                  (_, i) => {
+                    const page = i + 1;
+                    return (
+                      <Button
+                        key={page}
+                        variant={
+                          queryParams.page === page ? "default" : "outline"
+                        }
+                        size='sm'
+                        onClick={() => handlePageChange(page)}
+                      >
+                        {page}
+                      </Button>
+                    );
+                  }
                 )}
 
                 <Button
                   variant='outline'
-                  disabled={!pressData.data.pagination.hasNextPage}
-                  onClick={() =>
-                    handlePageChange(pressData.data.pagination.currentPage + 1)
-                  }
+                  size='sm'
+                  onClick={() => handlePageChange(queryParams.page! + 1)}
+                  disabled={!pressData.data.pagination.hasNext}
                 >
                   Next
                 </Button>

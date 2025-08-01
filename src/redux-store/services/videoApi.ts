@@ -1,60 +1,62 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { baseQuery, handleApiError } from "../../lib/apiConfig";
+import { baseQuery } from "../../lib/apiConfig";
 import {
+  VideoQueryParams,
+  VideosResponse,
+  VideoResponse,
   VideoUploadData,
   VideoCreateData,
   VideoUpdateData,
-  VideoQueryParams,
-  VideoResponse,
-  VideosResponse,
-  CategoriesResponse,
   DeleteVideoResponse,
-} from "../../types/video.types";
+  VideoCategory,
+  VideoCategoriesResponse,
+  VideoCategoryCreateData,
+  VideoCategoryUpdateData,
+  CategoryResponse,
+} from "@/types/video.types";
 
-// Create the Video API slice
 export const videoApi = createApi({
   reducerPath: "videoApi",
   baseQuery,
-  tagTypes: ["Video", "Category"],
+  tagTypes: ["Video", "VideoCategory"],
   endpoints: (builder) => ({
-    // Get all videos with filtering and pagination
+    // Get videos with filtering, pagination, and search (Public)
     getVideos: builder.query<VideosResponse, VideoQueryParams>({
-      query: (params) => {
-        const queryString = new URLSearchParams();
+      query: (params = {}) => {
+        const searchParams = new URLSearchParams();
 
-        // Add all non-undefined parameters to query string
         Object.entries(params).forEach(([key, value]) => {
           if (value !== undefined && value !== null && value !== "") {
-            queryString.append(key, value.toString());
+            searchParams.append(key, value.toString());
           }
         });
 
-        return `/videos${queryString.toString() ? `?${queryString}` : ""}`;
+        return `/videos?${searchParams.toString()}`;
       },
-      providesTags: (result) =>
-        result
-          ? [
-              ...result.data.videos.map(({ _id }) => ({
-                type: "Video" as const,
-                id: _id,
-              })),
-              { type: "Video", id: "LIST" },
-            ]
-          : [{ type: "Video", id: "LIST" }],
-      transformErrorResponse: (response) => handleApiError(response),
+      providesTags: (result) => [
+        "Video",
+        ...(result?.data.videos || []).map(({ _id }) => ({
+          type: "Video" as const,
+          id: _id,
+        })),
+      ],
     }),
 
-    // Get single video
+    // Get single video by ID (Public)
     getVideo: builder.query<VideoResponse, string>({
       query: (id) => `/videos/${id}`,
-      providesTags: (_, __, id) => [{ type: "Video", id }],
-      transformErrorResponse: (response) => handleApiError(response),
+      transformResponse: (response: VideoResponse) => response,
+      providesTags: (_result, _error, id) => [{ type: "Video", id }],
     }),
 
-    // Upload video with file
+    // Upload video with file to Cloudinary (Admin only)
     uploadVideo: builder.mutation<
       VideoResponse,
-      { videoFile: File; thumbnailFile?: File; data: VideoUploadData }
+      {
+        videoFile: File;
+        thumbnailFile?: File;
+        data: VideoUploadData;
+      }
     >({
       query: ({ videoFile, thumbnailFile, data }) => {
         const formData = new FormData();
@@ -64,14 +66,9 @@ export const videoApi = createApi({
           formData.append("thumbnail", thumbnailFile);
         }
 
-        // Append other data
         Object.entries(data).forEach(([key, value]) => {
           if (value !== undefined && value !== null) {
-            if (Array.isArray(value)) {
-              formData.append(key, value.join(","));
-            } else {
-              formData.append(key, value.toString());
-            }
+            formData.append(key, value.toString());
           }
         });
 
@@ -81,22 +78,22 @@ export const videoApi = createApi({
           body: formData,
         };
       },
-      invalidatesTags: ["Video", "Category"],
-      transformErrorResponse: (response) => handleApiError(response),
+      transformResponse: (response: VideoResponse) => response,
+      invalidatesTags: ["Video"],
     }),
 
-    // Create video (with existing Cloudinary URLs)
+    // Create video with existing Cloudinary URLs (Admin only)
     createVideo: builder.mutation<VideoResponse, VideoCreateData>({
       query: (data) => ({
         url: "/videos",
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["Video", "Category"],
-      transformErrorResponse: (response) => handleApiError(response),
+      transformResponse: (response: VideoResponse) => response,
+      invalidatesTags: ["Video"],
     }),
 
-    // Update video
+    // Update video (Admin only)
     updateVideo: builder.mutation<
       VideoResponse,
       { id: string; data: VideoUpdateData }
@@ -106,34 +103,101 @@ export const videoApi = createApi({
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: (_, __, { id }) => [
+      transformResponse: (response: VideoResponse) => response,
+      invalidatesTags: (_result, _error, { id }) => [
         { type: "Video", id },
         "Video",
-        "Category",
       ],
-      transformErrorResponse: (response) => handleApiError(response),
     }),
 
-    // Delete video
+    // Delete video (Admin only)
     deleteVideo: builder.mutation<DeleteVideoResponse, string>({
       query: (id) => ({
         url: `/videos/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Video", "Category"],
-      transformErrorResponse: (response) => handleApiError(response),
+      invalidatesTags: (_result, _error, id) => [
+        { type: "Video", id },
+        "Video",
+      ],
     }),
 
-    // Get video categories
-    getVideoCategories: builder.query<CategoriesResponse, void>({
+    // ============ VIDEO CATEGORY ENDPOINTS ============
+
+    // Get video categories (Public)
+    getVideoCategories: builder.query<VideoCategory[], void>({
       query: () => "/videos/categories",
-      providesTags: ["Category"],
-      transformErrorResponse: (response) => handleApiError(response),
+      transformResponse: (response: VideoCategoriesResponse) => response.data,
+      providesTags: (result) => [
+        "VideoCategory",
+        ...(result || []).map(({ _id }) => ({
+          type: "VideoCategory" as const,
+          id: _id,
+        })),
+      ],
+    }),
+
+    // Get video categories with counts (Public)
+    getVideoCategoriesWithCounts: builder.query<VideoCategory[], void>({
+      query: () => "/videos/categories/counts",
+      transformResponse: (response: VideoCategoriesResponse) => response.data,
+      providesTags: (result) => [
+        "VideoCategory",
+        ...(result || []).map(({ _id }) => ({
+          type: "VideoCategory" as const,
+          id: _id,
+        })),
+      ],
+    }),
+
+    // Create video category (Admin only)
+    createVideoCategory: builder.mutation<
+      VideoCategory,
+      VideoCategoryCreateData
+    >({
+      query: (data) => ({
+        url: "/videos/categories",
+        method: "POST",
+        body: data,
+      }),
+      transformResponse: (response: CategoryResponse) => response.data,
+      invalidatesTags: ["VideoCategory"],
+    }),
+
+    // Update video category (Admin only)
+    updateVideoCategory: builder.mutation<
+      VideoCategory,
+      { id: string; data: VideoCategoryUpdateData }
+    >({
+      query: ({ id, data }) => ({
+        url: `/videos/categories/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      transformResponse: (response: CategoryResponse) => response.data,
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: "VideoCategory", id },
+        "VideoCategory",
+      ],
+    }),
+
+    // Delete video category (Admin only)
+    deleteVideoCategory: builder.mutation<
+      { success: boolean; message: string },
+      string
+    >({
+      query: (id) => ({
+        url: `/videos/categories/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_result, _error, id) => [
+        { type: "VideoCategory", id },
+        "VideoCategory",
+      ],
     }),
   }),
 });
 
-// Export hooks for using the API endpoints
 export const {
   useGetVideosQuery,
   useGetVideoQuery,
@@ -142,4 +206,8 @@ export const {
   useUpdateVideoMutation,
   useDeleteVideoMutation,
   useGetVideoCategoriesQuery,
+  useGetVideoCategoriesWithCountsQuery,
+  useCreateVideoCategoryMutation,
+  useUpdateVideoCategoryMutation,
+  useDeleteVideoCategoryMutation,
 } = videoApi;

@@ -1,18 +1,11 @@
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Calendar,
-  Clock,
-  ExternalLink,
-  User,
-  Building,
-  Eye,
-} from "lucide-react";
-import { PressDocument } from "@/types/press.types";
+import { Calendar, Clock, User, Building, Eye } from "lucide-react";
+import { Press } from "@/types/press.types";
 
 interface PressCardProps {
-  press: PressDocument;
+  press: Press;
   onView?: (id: string) => void;
   showActions?: boolean;
   variant?: "default" | "compact" | "featured";
@@ -32,7 +25,14 @@ const PressCard = ({
     });
   };
 
-  const getCategoryColor = (category: string) => {
+  const getCategoryName = (category: Press["category"]): string => {
+    if (typeof category === "string") {
+      return category;
+    }
+    return category.name;
+  };
+
+  const getCategoryColor = (categoryName: string) => {
     const colors: Record<string, string> = {
       politics: "bg-red-100 text-red-800",
       economy: "bg-green-100 text-green-800",
@@ -44,7 +44,7 @@ const PressCard = ({
       infrastructure: "bg-gray-100 text-gray-800",
       other: "bg-orange-100 text-orange-800",
     };
-    return colors[category] || colors.other;
+    return colors[categoryName.toLowerCase()] || colors.other;
   };
 
   const handleViewClick = () => {
@@ -53,9 +53,9 @@ const PressCard = ({
     }
   };
 
-  const handleExternalLink = () => {
-    window.open(press.link, "_blank", "noopener,noreferrer");
-  };
+  // Get first image from images array
+  const primaryImage = press.images?.[0];
+  const categoryName = getCategoryName(press.category);
 
   if (variant === "compact") {
     return (
@@ -69,11 +69,13 @@ const PressCard = ({
         <div className='p-4'>
           <div className='flex gap-4'>
             <div className='w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0'>
-              <img
-                src={press.image}
-                alt={press.title}
-                className='w-full h-full object-cover'
-              />
+              {primaryImage && (
+                <img
+                  src={primaryImage.src}
+                  alt={primaryImage.alt}
+                  className='w-full h-full object-cover'
+                />
+              )}
             </div>
             <div className='flex-1 min-w-0'>
               <div className='flex items-start justify-between gap-2 mb-2'>
@@ -81,10 +83,10 @@ const PressCard = ({
                   {press.title}
                 </h3>
                 <Badge
-                  className={getCategoryColor(press.category)}
+                  className={getCategoryColor(categoryName)}
                   variant='secondary'
                 >
-                  {press.category}
+                  {categoryName}
                 </Badge>
               </div>
               <div className='flex items-center gap-2 text-xs text-slate-500'>
@@ -109,14 +111,16 @@ const PressCard = ({
       >
         {/* Featured Image */}
         <div className='relative h-48 bg-gray-100 overflow-hidden'>
-          <img
-            src={press.image}
-            alt={press.title}
-            className='w-full h-full object-cover'
-          />
+          {primaryImage && (
+            <img
+              src={primaryImage.src}
+              alt={primaryImage.alt}
+              className='w-full h-full object-cover'
+            />
+          )}
           <div className='absolute top-4 left-4'>
-            <Badge className={getCategoryColor(press.category)}>
-              {press.category.charAt(0).toUpperCase() + press.category.slice(1)}
+            <Badge className={getCategoryColor(categoryName)}>
+              {categoryName.charAt(0).toUpperCase() + categoryName.slice(1)}
             </Badge>
           </div>
         </div>
@@ -155,9 +159,6 @@ const PressCard = ({
                 <Eye className='w-4 h-4 mr-2' />
                 Read Article
               </Button>
-              <Button variant='outline' onClick={handleExternalLink}>
-                <ExternalLink className='w-4 h-4' />
-              </Button>
             </div>
           )}
         </div>
@@ -177,11 +178,13 @@ const PressCard = ({
         <div className='flex flex-col lg:flex-row gap-6'>
           {/* Image */}
           <div className='lg:w-48 h-32 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0'>
-            <img
-              src={press.image}
-              alt={press.title}
-              className='w-full h-full object-cover'
-            />
+            {primaryImage && (
+              <img
+                src={primaryImage.src}
+                alt={primaryImage.alt}
+                className='w-full h-full object-cover'
+              />
+            )}
           </div>
 
           {/* Content */}
@@ -190,9 +193,8 @@ const PressCard = ({
               <h3 className='text-lg font-semibold text-slate-800 line-clamp-2'>
                 {press.title}
               </h3>
-              <Badge className={getCategoryColor(press.category)}>
-                {press.category.charAt(0).toUpperCase() +
-                  press.category.slice(1)}
+              <Badge className={getCategoryColor(categoryName)}>
+                {categoryName.charAt(0).toUpperCase() + categoryName.slice(1)}
               </Badge>
             </div>
 
@@ -227,14 +229,6 @@ const PressCard = ({
                 <Button variant='outline' size='sm' onClick={handleViewClick}>
                   <Eye className='w-4 h-4 mr-1' />
                   Read
-                </Button>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={handleExternalLink}
-                >
-                  <ExternalLink className='w-4 h-4 mr-1' />
-                  Source
                 </Button>
               </div>
             )}

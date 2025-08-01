@@ -3,28 +3,30 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Calendar,
-  ExternalLink,
   Share2,
   Clock,
   User,
   Building,
   Loader2,
   AlertCircle,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 import {
   useGetPressByIdQuery,
   useGetPressQuery,
 } from "@/redux-store/services/pressApi";
-import { PressDocument } from "@/types/press.types";
+import { Press as PressType } from "@/types/press.types";
 import { BackNavigation } from "@/config/navigation/BackNavigation";
 
 const ShowPressById = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const [relatedPress, setRelatedPress] = useState<PressDocument[]>([]);
+  const [relatedPress, setRelatedPress] = useState<PressType[]>([]);
   const [isSharing, setIsSharing] = useState<boolean>(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // API hooks
   const {
@@ -34,18 +36,37 @@ const ShowPressById = () => {
   } = useGetPressByIdQuery(id || "", { skip: !id });
 
   const { data: allPressData, isLoading: loadingAllPress } = useGetPressQuery({
-    page: "1",
-    limit: "50",
+    page: 1,
+    limit: 50,
     sortBy: "date",
     sortOrder: "desc",
   });
 
-  const press = pressData?.data?.press;
+  const press = pressData?.data;
+
+  // Helper functions
+  const getCategoryName = (category: PressType["category"]): string => {
+    if (typeof category === "string") {
+      return category;
+    }
+    return category.name;
+  };
+
+  const getCategoryId = (category: PressType["category"]): string => {
+    if (typeof category === "string") {
+      return category;
+    }
+    return category._id;
+  };
 
   useEffect(() => {
     if (press && allPressData?.data?.press) {
+      const pressCategory = getCategoryId(press.category);
       const related = allPressData.data.press
-        .filter((p) => p.category === press.category && p._id !== press._id)
+        .filter(
+          (p) =>
+            getCategoryId(p.category) === pressCategory && p._id !== press._id
+        )
         .slice(0, 3);
       setRelatedPress(related);
     }
@@ -59,7 +80,7 @@ const ShowPressById = () => {
     });
   };
 
-  const getCategoryColor = (category: string) => {
+  const getCategoryColor = (categoryName: string) => {
     const colors: Record<string, string> = {
       politics: "bg-red-100 text-red-800",
       economy: "bg-green-100 text-green-800",
@@ -71,7 +92,7 @@ const ShowPressById = () => {
       infrastructure: "bg-gray-100 text-gray-800",
       other: "bg-orange-100 text-orange-800",
     };
-    return colors[category] || colors.other;
+    return colors[categoryName.toLowerCase()] || colors.other;
   };
 
   const handleShare = async () => {
@@ -101,6 +122,18 @@ const ShowPressById = () => {
       }
     } finally {
       setIsSharing(false);
+    }
+  };
+
+  const handlePrevImage = () => {
+    if (press?.images && currentImageIndex > 0) {
+      setCurrentImageIndex(currentImageIndex - 1);
+    }
+  };
+
+  const handleNextImage = () => {
+    if (press?.images && currentImageIndex < press.images.length - 1) {
+      setCurrentImageIndex(currentImageIndex + 1);
     }
   };
 
@@ -146,6 +179,9 @@ const ShowPressById = () => {
     );
   }
 
+  const categoryName = getCategoryName(press.category);
+  const currentImage = press.images?.[currentImageIndex];
+
   return (
     <>
       <BackNavigation />
@@ -158,11 +194,10 @@ const ShowPressById = () => {
             <div className='flex flex-wrap items-center gap-2 mb-4'>
               <span
                 className={`px-3 py-1 rounded-full text-sm font-medium ${getCategoryColor(
-                  press.category
+                  categoryName
                 )}`}
               >
-                {press.category.charAt(0).toUpperCase() +
-                  press.category.slice(1)}
+                {categoryName.charAt(0).toUpperCase() + categoryName.slice(1)}
               </span>
               {!press.isActive && (
                 <span className='px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm font-medium'>
@@ -211,27 +246,70 @@ const ShowPressById = () => {
                 <Share2 className='mr-2 h-4 w-4' />
                 {isSharing ? "Sharing..." : "Share Article"}
               </button>
-              <a
-                href={press.link}
-                target='_blank'
-                rel='noopener noreferrer'
-                className='flex items-center justify-center px-4 py-2 text-sm border border-input bg-background hover:bg-accent rounded-md transition-colors'
-              >
-                <ExternalLink className='mr-2 h-4 w-4' />
-                View Original Source
-              </a>
             </div>
           </header>
 
-          {/* Featured Image */}
-          <div className='mb-8'>
-            <img
-              src={press.image}
-              alt={press.title}
-              className='w-full h-64 md:h-80 lg:h-96 object-cover rounded-lg shadow-lg'
-              loading='lazy'
-            />
-          </div>
+          {/* Images Section */}
+          {press.images && press.images.length > 0 && (
+            <div className='mb-8'>
+              <div className='relative'>
+                <img
+                  src={currentImage?.src}
+                  alt={currentImage?.alt}
+                  className='w-full h-64 md:h-80 lg:h-96 object-cover rounded-lg shadow-lg'
+                  loading='lazy'
+                />
+
+                {/* Image Navigation */}
+                {press.images.length > 1 && (
+                  <>
+                    <button
+                      onClick={handlePrevImage}
+                      disabled={currentImageIndex === 0}
+                      className='absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-white transition-colors disabled:opacity-50'
+                    >
+                      <ChevronLeft className='w-5 h-5' />
+                    </button>
+                    <button
+                      onClick={handleNextImage}
+                      disabled={currentImageIndex === press.images.length - 1}
+                      className='absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-white transition-colors disabled:opacity-50'
+                    >
+                      <ChevronRight className='w-5 h-5' />
+                    </button>
+
+                    {/* Image Counter */}
+                    <div className='absolute bottom-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm'>
+                      {currentImageIndex + 1} / {press.images.length}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Thumbnail Navigation */}
+              {press.images.length > 1 && (
+                <div className='flex gap-2 mt-4 overflow-x-auto'>
+                  {press.images.map((image, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
+                        index === currentImageIndex
+                          ? "border-[#FF9933]"
+                          : "border-gray-300"
+                      }`}
+                    >
+                      <img
+                        src={image.src}
+                        alt={image.alt}
+                        className='w-full h-full object-cover'
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Press Article Content */}
           <article className='prose prose-lg max-w-none mb-12'>
@@ -251,53 +329,60 @@ const ShowPressById = () => {
                 Related Press Articles
               </h2>
               <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
-                {relatedPress.map((relatedPressArticle) => (
-                  <div
-                    key={relatedPressArticle._id}
-                    className='bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer'
-                  >
-                    <button
-                      onClick={() => goToPress(relatedPressArticle._id)}
-                      className='w-full text-left'
+                {relatedPress.map((relatedPressArticle) => {
+                  const relatedCategoryName = getCategoryName(
+                    relatedPressArticle.category
+                  );
+                  const relatedPrimaryImage = relatedPressArticle.images?.[0];
+
+                  return (
+                    <div
+                      key={relatedPressArticle._id}
+                      className='bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer'
                     >
-                      <img
-                        src={relatedPressArticle.image}
-                        alt={relatedPressArticle.title}
-                        className='w-full h-48 object-cover'
-                        loading='lazy'
-                      />
-                      <div className='p-4'>
-                        <div className='flex items-center gap-2 mb-2'>
-                          <span
-                            className={`px-2 py-1 rounded text-xs font-medium ${getCategoryColor(
-                              relatedPressArticle.category
-                            )}`}
-                          >
-                            {relatedPressArticle.category
-                              .charAt(0)
-                              .toUpperCase() +
-                              relatedPressArticle.category.slice(1)}
-                          </span>
+                      <button
+                        onClick={() => goToPress(relatedPressArticle._id)}
+                        className='w-full text-left'
+                      >
+                        {relatedPrimaryImage && (
+                          <img
+                            src={relatedPrimaryImage.src}
+                            alt={relatedPrimaryImage.alt}
+                            className='w-full h-48 object-cover'
+                            loading='lazy'
+                          />
+                        )}
+                        <div className='p-4'>
+                          <div className='flex items-center gap-2 mb-2'>
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-medium ${getCategoryColor(
+                                relatedCategoryName
+                              )}`}
+                            >
+                              {relatedCategoryName.charAt(0).toUpperCase() +
+                                relatedCategoryName.slice(1)}
+                            </span>
+                          </div>
+                          <h3 className='font-semibold mb-2 line-clamp-2 hover:text-[#FF9933] transition-colors'>
+                            {relatedPressArticle.title}
+                          </h3>
+                          <p className='text-sm text-muted-foreground mb-3 line-clamp-2'>
+                            {relatedPressArticle.excerpt}
+                          </p>
+                          <div className='flex items-center gap-1 text-xs text-muted-foreground'>
+                            <span>{formatDate(relatedPressArticle.date)}</span>
+                            <span>•</span>
+                            <span>{relatedPressArticle.readTime}</span>
+                            <span className='hidden sm:inline'>•</span>
+                            <span className='hidden sm:inline'>
+                              {relatedPressArticle.source}
+                            </span>
+                          </div>
                         </div>
-                        <h3 className='font-semibold mb-2 line-clamp-2 hover:text-[#FF9933] transition-colors'>
-                          {relatedPressArticle.title}
-                        </h3>
-                        <p className='text-sm text-muted-foreground mb-3 line-clamp-2'>
-                          {relatedPressArticle.excerpt}
-                        </p>
-                        <div className='flex items-center gap-1 text-xs text-muted-foreground'>
-                          <span>{formatDate(relatedPressArticle.date)}</span>
-                          <span>•</span>
-                          <span>{relatedPressArticle.readTime}</span>
-                          <span className='hidden sm:inline'>•</span>
-                          <span className='hidden sm:inline'>
-                            {relatedPressArticle.source}
-                          </span>
-                        </div>
-                      </div>
-                    </button>
-                  </div>
-                ))}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </section>
           )}
@@ -320,50 +405,56 @@ const ShowPressById = () => {
                 ) : (
                   allPressData.data.press
                     .filter((p) => p.isActive)
-                    .map((pressArticle) => (
-                      <button
-                        key={pressArticle._id}
-                        onClick={() => goToPress(pressArticle._id)}
-                        className={`p-4 rounded-lg border text-left transition-all hover:shadow-md ${
-                          press._id === pressArticle._id
-                            ? "border-[#FF9933] bg-[#FF9933]/5"
-                            : "border-border hover:border-[#FF9933]/50"
-                        }`}
-                      >
-                        <div className='flex items-center gap-2 mb-2'>
-                          <span
-                            className={`px-2 py-1 rounded text-xs font-medium ${getCategoryColor(
-                              pressArticle.category
-                            )}`}
-                          >
-                            {pressArticle.category.charAt(0).toUpperCase() +
-                              pressArticle.category.slice(1)}
-                          </span>
-                          {press._id === pressArticle._id && (
-                            <span className='px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium'>
-                              Current
+                    .map((pressArticle) => {
+                      const articleCategoryName = getCategoryName(
+                        pressArticle.category
+                      );
+
+                      return (
+                        <button
+                          key={pressArticle._id}
+                          onClick={() => goToPress(pressArticle._id)}
+                          className={`p-4 rounded-lg border text-left transition-all hover:shadow-md ${
+                            press._id === pressArticle._id
+                              ? "border-[#FF9933] bg-[#FF9933]/5"
+                              : "border-border hover:border-[#FF9933]/50"
+                          }`}
+                        >
+                          <div className='flex items-center gap-2 mb-2'>
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-medium ${getCategoryColor(
+                                articleCategoryName
+                              )}`}
+                            >
+                              {articleCategoryName.charAt(0).toUpperCase() +
+                                articleCategoryName.slice(1)}
                             </span>
-                          )}
-                        </div>
-                        <h4 className='font-medium mb-1 line-clamp-2'>
-                          {pressArticle.title}
-                        </h4>
-                        <p className='text-sm text-muted-foreground mb-2 line-clamp-1'>
-                          {pressArticle.excerpt}
-                        </p>
-                        <div className='flex items-center gap-1 text-xs text-muted-foreground'>
-                          <span>{formatDate(pressArticle.date)}</span>
-                          <span>•</span>
-                          <span className='truncate'>
-                            {pressArticle.source}
-                          </span>
-                          <span className='hidden sm:inline'>•</span>
-                          <span className='hidden sm:inline'>
-                            {pressArticle.readTime}
-                          </span>
-                        </div>
-                      </button>
-                    ))
+                            {press._id === pressArticle._id && (
+                              <span className='px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium'>
+                                Current
+                              </span>
+                            )}
+                          </div>
+                          <h4 className='font-medium mb-1 line-clamp-2'>
+                            {pressArticle.title}
+                          </h4>
+                          <p className='text-sm text-muted-foreground mb-2 line-clamp-1'>
+                            {pressArticle.excerpt}
+                          </p>
+                          <div className='flex items-center gap-1 text-xs text-muted-foreground'>
+                            <span>{formatDate(pressArticle.date)}</span>
+                            <span>•</span>
+                            <span className='truncate'>
+                              {pressArticle.source}
+                            </span>
+                            <span className='hidden sm:inline'>•</span>
+                            <span className='hidden sm:inline'>
+                              {pressArticle.readTime}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })
                 )}
               </div>
             </section>

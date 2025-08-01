@@ -5,13 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import {
   Upload,
   Save,
@@ -25,10 +19,10 @@ import { useSelector } from "react-redux";
 import { selectAuth, selectIsAdmin } from "@/redux-store/slices/authSlice";
 import { Navigate } from "react-router-dom";
 import {
-  useCreatePressArticleMutation,
-  useUploadPressArticleMutation,
-  useGetPressCategoriesQuery,
+  useCreatePressMutation,
+  useUploadPressMutation,
 } from "@/redux-store/services/pressApi";
+import { useGetCategoriesByTypeQuery } from "@/redux-store/services/categoryApi";
 import { PressCreateData } from "@/types/press.types";
 import { BackNavigation } from "@/config/navigation/BackNavigation";
 
@@ -37,17 +31,22 @@ const AddPress = () => {
   const { isAuthenticated } = useSelector(selectAuth);
   const isAdmin = useSelector(selectIsAdmin);
 
-  const [formData, setFormData] = useState<PressCreateData>({
+  const [formData, setFormData] = useState<
+    Omit<PressCreateData, "images"> & { images?: any }
+  >({
     title: "",
     source: "",
     date: new Date().toISOString().split("T")[0],
-    image: "",
-    link: "",
-    category: "other",
+    category: "",
     author: "",
     readTime: "",
     content: "",
     excerpt: "",
+  });
+
+  const [urlFormData, setUrlFormData] = useState({
+    imageUrl: "",
+    alt: "",
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -55,17 +54,24 @@ const AddPress = () => {
   const [uploadMethod, setUploadMethod] = useState<"upload" | "url">("upload");
 
   // API hooks
-  const { data: categoriesData } = useGetPressCategoriesQuery();
-  const [createPress, { isLoading: creating }] =
-    useCreatePressArticleMutation();
-  const [uploadPress, { isLoading: uploading }] =
-    useUploadPressArticleMutation();
+  const {
+    data: pressCategories,
+    isLoading: categoriesLoading,
+    error: categoriesError,
+  } = useGetCategoriesByTypeQuery("press");
+  const [createPress, { isLoading: creating }] = useCreatePressMutation();
+  const [uploadPress, { isLoading: uploading }] = useUploadPressMutation();
+
+  // Debug logging
+  console.log("Press categories:", pressCategories);
+  console.log("Categories loading:", categoriesLoading);
+  console.log("Categories error:", categoriesError);
 
   if (!isAuthenticated || !isAdmin) {
     return <Navigate to='/admin/login' />;
   }
 
-  const handleInputChange = (field: keyof PressCreateData, value: string) => {
+  const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -84,28 +90,54 @@ const AddPress = () => {
   };
 
   const handleImageUrlChange = (url: string) => {
-    setFormData((prev) => ({ ...prev, image: url }));
+    setUrlFormData((prev) => ({ ...prev, imageUrl: url }));
     setImagePreview(url);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validation
+    if (!formData.title.trim()) {
+      alert("Please enter a title");
+      return;
+    }
+
+    if (!formData.category) {
+      alert("Please select a category");
+      return;
+    }
+
     try {
       if (uploadMethod === "upload" && selectedFile) {
-        // Upload with file
-        const uploadFormData = new FormData();
-        Object.entries(formData).forEach(([key, value]) => {
-          if (key !== "image") {
-            uploadFormData.append(key, value);
-          }
-        });
-        uploadFormData.append("image", selectedFile);
+        // Upload with file - using correct field structure
+        const uploadData = {
+          title: formData.title,
+          source: formData.source,
+          date: formData.date,
+          category: formData.category,
+          author: formData.author,
+          readTime: formData.readTime,
+          content: formData.content,
+          excerpt: formData.excerpt,
+          alt: urlFormData.alt || formData.title,
+        };
 
-        await uploadPress({ formData: uploadFormData }).unwrap();
-      } else if (uploadMethod === "url" && formData.image) {
+        await uploadPress({ file: selectedFile, data: uploadData }).unwrap();
+      } else if (uploadMethod === "url" && urlFormData.imageUrl) {
         // Create with URL
-        await createPress(formData).unwrap();
+        const createData: PressCreateData = {
+          ...formData,
+          images: [
+            {
+              src: urlFormData.imageUrl,
+              alt: urlFormData.alt || formData.title,
+              cloudinaryPublicId: "", // Will be empty for URL method
+            },
+          ],
+        };
+
+        await createPress(createData).unwrap();
       } else {
         alert(
           "Please provide an image either by uploading a file or entering a URL"
@@ -219,40 +251,40 @@ const AddPress = () => {
                     </div>
                   </div>
 
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <div className='grid grid-cols-1 md:grid-cols-1 gap-4'>
                     <div>
                       <Label htmlFor='category'>Category *</Label>
-                      <Select
+                      <select
+                        id='category'
+                        name='category'
                         value={formData.category}
-                        onValueChange={(value) =>
-                          handleInputChange("category", value)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder='Select category' />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categoriesData?.data.categories.map((category) => (
-                            <SelectItem key={category} value={category}>
-                              {category.charAt(0).toUpperCase() +
-                                category.slice(1)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor='link'>Original Article Link *</Label>
-                      <Input
-                        id='link'
-                        type='url'
-                        value={formData.link}
                         onChange={(e) =>
-                          handleInputChange("link", e.target.value)
+                          handleInputChange("category", e.target.value)
                         }
-                        placeholder='https://...'
+                        className='w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                         required
-                      />
+                      >
+                        <option value=''>
+                          {categoriesLoading
+                            ? "Loading categories..."
+                            : pressCategories?.length === 0
+                            ? "No categories available"
+                            : "Select category"}
+                        </option>
+                        {!categoriesLoading &&
+                          !categoriesError &&
+                          pressCategories?.map((category) => (
+                            <option key={category._id} value={category.name}>
+                              {category.name}
+                            </option>
+                          ))}
+                      </select>
+                      {categoriesError && (
+                        <p className='text-sm text-red-500 mt-1'>
+                          Failed to load categories. Please refresh and try
+                          again.
+                        </p>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -303,15 +335,31 @@ const AddPress = () => {
                       />
                     </div>
                   ) : (
-                    <div>
-                      <Label htmlFor='imageUrl'>Image URL</Label>
-                      <Input
-                        id='imageUrl'
-                        type='url'
-                        value={formData.image}
-                        onChange={(e) => handleImageUrlChange(e.target.value)}
-                        placeholder='https://example.com/image.jpg'
-                      />
+                    <div className='space-y-4'>
+                      <div>
+                        <Label htmlFor='imageUrl'>Image URL</Label>
+                        <Input
+                          id='imageUrl'
+                          type='url'
+                          value={urlFormData.imageUrl}
+                          onChange={(e) => handleImageUrlChange(e.target.value)}
+                          placeholder='https://example.com/image.jpg'
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor='alt'>Image Alt Text</Label>
+                        <Input
+                          id='alt'
+                          value={urlFormData.alt}
+                          onChange={(e) =>
+                            setUrlFormData((prev) => ({
+                              ...prev,
+                              alt: e.target.value,
+                            }))
+                          }
+                          placeholder='Describe the image (optional)'
+                        />
+                      </div>
                     </div>
                   )}
 
