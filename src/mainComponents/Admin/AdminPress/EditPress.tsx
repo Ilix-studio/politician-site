@@ -8,13 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Save,
   Loader2,
   Image as ImageIcon,
@@ -27,10 +20,10 @@ import { selectAuth, selectIsAdmin } from "@/redux-store/slices/authSlice";
 import { Navigate } from "react-router-dom";
 import {
   useGetPressByIdQuery,
-  useUpdatePressArticleMutation,
-  useGetPressCategoriesQuery,
+  useUpdatePressMutation,
 } from "@/redux-store/services/pressApi";
-import { PressUpdateData } from "@/types/press.types";
+import { useGetCategoriesByTypeQuery } from "@/redux-store/services/categoryApi";
+import { PressUpdateData, Press } from "@/types/press.types";
 import { BackNavigation } from "@/config/navigation/BackNavigation";
 
 const EditPress = () => {
@@ -43,9 +36,7 @@ const EditPress = () => {
     title: "",
     source: "",
     date: "",
-    image: "",
-    link: "",
-    category: "other",
+    category: "",
     author: "",
     readTime: "",
     content: "",
@@ -53,7 +44,6 @@ const EditPress = () => {
     isActive: true,
   });
 
-  const [imagePreview, setImagePreview] = useState<string>("");
   const [hasChanges, setHasChanges] = useState(false);
 
   // API hooks
@@ -63,9 +53,10 @@ const EditPress = () => {
     error: pressError,
   } = useGetPressByIdQuery(id || "", { skip: !id });
 
-  const { data: categoriesData } = useGetPressCategoriesQuery();
-  const [updatePress, { isLoading: updating }] =
-    useUpdatePressArticleMutation();
+  const { data: categories = [], isLoading: categoriesLoading } =
+    useGetCategoriesByTypeQuery("press");
+
+  const [updatePress, { isLoading: updating }] = useUpdatePressMutation();
 
   if (!isAuthenticated || !isAdmin) {
     return <Navigate to='/admin/login' />;
@@ -75,25 +66,38 @@ const EditPress = () => {
     return <Navigate to='/admin/dashboard' />;
   }
 
+  // Helper functions
+  const getCategoryId = (category: Press["category"]): string => {
+    if (typeof category === "string") {
+      return category;
+    }
+    return category._id;
+  };
+
+  const getCategoryName = (category: Press["category"]): string => {
+    if (typeof category === "string") {
+      return category;
+    }
+    return category.name;
+  };
+
   // Populate form when press data loads
   useEffect(() => {
-    if (pressData?.data?.press) {
-      const press = pressData.data.press;
+    if (pressData?.data) {
+      const press = pressData.data;
       const formattedDate = new Date(press.date).toISOString().split("T")[0];
 
       setFormData({
         title: press.title,
         source: press.source,
         date: formattedDate,
-        image: press.image,
-        link: press.link,
+        category: getCategoryId(press.category),
         author: press.author,
         readTime: press.readTime,
         content: press.content,
         excerpt: press.excerpt,
         isActive: press.isActive,
       });
-      setImagePreview(press.image);
     }
   }, [pressData]);
 
@@ -103,11 +107,6 @@ const EditPress = () => {
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
-
-    // Update image preview if image URL changes
-    if (field === "image" && typeof value === "string") {
-      setImagePreview(value);
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -154,7 +153,7 @@ const EditPress = () => {
     );
   }
 
-  if (pressError || !pressData?.data?.press) {
+  if (pressError || !pressData?.data) {
     return (
       <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white flex items-center justify-center'>
         <Card className='max-w-md'>
@@ -176,7 +175,7 @@ const EditPress = () => {
     );
   }
 
-  const press = pressData.data.press;
+  const press = pressData.data;
 
   return (
     <>
@@ -289,93 +288,65 @@ const EditPress = () => {
                     </div>
                   </div>
 
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <div className='grid grid-cols-1 gap-4'>
                     <div>
                       <Label htmlFor='category'>Category *</Label>
-                      <Select
-                        value={formData.category || "other"}
-                        onValueChange={(value) =>
-                          handleInputChange("category", value)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder='Select category' />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categoriesData?.data.categories.map((category) => (
-                            <SelectItem key={category} value={category}>
-                              {category.charAt(0).toUpperCase() +
-                                category.slice(1)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor='link'>Original Article Link *</Label>
-                      <Input
-                        id='link'
-                        type='url'
-                        value={formData.link || ""}
+                      <select
+                        id='category'
+                        name='category'
+                        value={formData.category || ""}
                         onChange={(e) =>
-                          handleInputChange("link", e.target.value)
+                          handleInputChange("category", e.target.value)
                         }
-                        placeholder='https://...'
+                        className='w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                         required
-                      />
+                        disabled={categoriesLoading}
+                      >
+                        <option value=''>
+                          {categoriesLoading
+                            ? "Loading categories..."
+                            : "Select category"}
+                        </option>
+                        {categories.map((category) => (
+                          <option key={category._id} value={category._id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Image */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className='flex items-center gap-2'>
-                    <ImageIcon className='w-5 h-5' />
-                    Article Image
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className='space-y-4'>
-                  <div>
-                    <Label htmlFor='imageUrl'>Image URL</Label>
-                    <Input
-                      id='imageUrl'
-                      type='url'
-                      value={formData.image || ""}
-                      onChange={(e) =>
-                        handleInputChange("image", e.target.value)
-                      }
-                      placeholder='https://example.com/image.jpg'
-                    />
-                  </div>
-
-                  {/* Current Image Preview */}
-                  {imagePreview && (
-                    <div className='space-y-2'>
-                      <Label>Current Image</Label>
-                      <div className='w-full h-48 bg-gray-100 rounded-lg overflow-hidden'>
-                        <img
-                          src={imagePreview}
-                          alt='Article preview'
-                          className='w-full h-full object-cover'
-                          onError={() => setImagePreview("")}
-                        />
-                      </div>
+              {/* Images Display */}
+              {press.images && press.images.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className='flex items-center gap-2'>
+                      <ImageIcon className='w-5 h-5' />
+                      Article Images ({press.images.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className='space-y-4'>
+                    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+                      {press.images.map((image, index) => (
+                        <div key={index} className='space-y-2'>
+                          <div className='w-full h-32 bg-gray-100 rounded-lg overflow-hidden'>
+                            <img
+                              src={image.src}
+                              alt={image.alt}
+                              className='w-full h-full object-cover'
+                            />
+                          </div>
+                          <p className='text-xs text-gray-600 truncate'>
+                            {image.alt}
+                          </p>
+                        </div>
+                      ))}
                     </div>
-                  )}
-
-                  {/* Image Info */}
-                  {press.imagePublicId && (
-                    <div className='text-sm text-slate-600'>
-                      <span className='font-medium'>Image ID:</span>
-                      <span className='ml-2 font-mono'>
-                        {press.imagePublicId}
-                      </span>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Content */}
               <Card>
@@ -434,6 +405,22 @@ const EditPress = () => {
                       </span>
                       <span className='ml-2 text-slate-800 font-mono'>
                         {press._id}
+                      </span>
+                    </div>
+                    <div>
+                      <span className='font-medium text-slate-600'>
+                        Category:
+                      </span>
+                      <span className='ml-2 text-slate-800'>
+                        {getCategoryName(press.category)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className='font-medium text-slate-600'>
+                        Images:
+                      </span>
+                      <span className='ml-2 text-slate-800'>
+                        {press.images?.length || 0}
                       </span>
                     </div>
                     <div>

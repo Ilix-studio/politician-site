@@ -74,8 +74,8 @@ const AdminDash = () => {
   });
 
   const { data: pressData } = useGetPressQuery({
-    page: "1",
-    limit: "1", // We only need the count
+    page: 1,
+    limit: 1, // We only need the count
   });
 
   // Visitor API hooks
@@ -141,7 +141,7 @@ const AdminDash = () => {
     },
     {
       title: "Total Press Articles",
-      value: pressData?.data?.pagination?.totalPress?.toString(),
+      value: pressData?.data?.pagination?.total?.toString(),
       icon: Users,
       color: "text-blue-600",
       action: () => navigate("/admin/pressDashboard"),

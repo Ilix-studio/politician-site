@@ -1,11 +1,85 @@
-// Main Press interface (matches your provided structure)
+// Interfaces based on your backend model and controllers
+export interface PressImage {
+  src: string;
+  alt: string;
+  cloudinaryPublicId: string;
+}
+
 export interface Press {
-  id: number;
+  _id: string;
   title: string;
   source: string;
   date: string;
-  image: string;
-  link: string;
+  images: PressImage[];
+  category:
+    | {
+        _id: string;
+        name: string;
+        type: string;
+      }
+    | string;
+  author: string;
+  readTime: string;
+  content: string;
+  excerpt: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PaginationData {
+  current: number;
+  pages: number;
+  total: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+// Query parameters for getPress
+export interface PressQueryParams {
+  page?: number;
+  limit?: number;
+  category?: string;
+  search?: string;
+  sortBy?: "date" | "title" | "author" | "readTime";
+  sortOrder?: "asc" | "desc";
+}
+
+// Response types
+export interface PressListResponse {
+  success: boolean;
+  data: {
+    press: Press[];
+    pagination: PaginationData;
+  };
+}
+
+export interface PressResponse {
+  success: boolean;
+  data: Press;
+  message?: string;
+}
+
+export interface PressUploadResponse {
+  success: boolean;
+  message: string;
+  data: {
+    press: Press;
+    imagesCount?: number;
+  };
+}
+
+export interface PressDeleteResponse {
+  success: boolean;
+  message: string;
+}
+
+// Create/Update data types
+export interface PressCreateData {
+  title: string;
+  source: string;
+  date?: string;
+  images: PressImage[];
   category: string;
   author: string;
   readTime: string;
@@ -13,79 +87,12 @@ export interface Press {
   excerpt: string;
 }
 
-// Extended Press interface for database operations
-export interface PressDocument extends Omit<Press, "id" | "date"> {
-  _id: string;
-  date: Date;
-  imagePublicId?: string; // Cloudinary public ID
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-// Press upload data interface
-export interface PressUploadData {
-  title: string;
-  source: string;
-  date: string;
-  link: string;
-  category:
-    | "politics"
-    | "economy"
-    | "development"
-    | "social"
-    | "environment"
-    | "education"
-    | "healthcare"
-    | "infrastructure"
-    | "other";
-  author: string;
-  readTime: string;
-  content: string;
-  excerpt: string;
-}
-
-// Press create data interface (for existing Cloudinary URLs)
-export interface PressCreateData {
-  title: string;
-  source: string;
-  date: string;
-  image: string;
-  link: string;
-  category:
-    | "politics"
-    | "economy"
-    | "development"
-    | "social"
-    | "environment"
-    | "education"
-    | "healthcare"
-    | "infrastructure"
-    | "other";
-  author: string;
-  readTime: string;
-  content: string;
-  excerpt: string;
-  imagePublicId?: string;
-}
-
-// Press update data interface
 export interface PressUpdateData {
   title?: string;
   source?: string;
   date?: string;
-  image?: string;
-  link?: string;
-  category?:
-    | "politics"
-    | "economy"
-    | "development"
-    | "social"
-    | "environment"
-    | "education"
-    | "healthcare"
-    | "infrastructure"
-    | "other";
+  images?: PressImage[];
+  category?: string;
   author?: string;
   readTime?: string;
   content?: string;
@@ -93,52 +100,26 @@ export interface PressUpdateData {
   isActive?: boolean;
 }
 
-// Press query parameters interface
-export interface PressQueryParams {
-  page?: string;
-  limit?: string;
-  category?: string | "all";
-  search?: string;
-  sortBy?: "date" | "title" | "author" | "createdAt" | "updatedAt";
-  sortOrder?: "asc" | "desc";
-  isActive?: string;
+export interface PressUploadData {
+  title: string;
+  source: string;
+  date?: string;
+  category: string;
+  author: string;
+  readTime: string;
+  content: string;
+  excerpt: string;
+  alt?: string;
 }
 
-// Pagination info interface
-export interface PaginationInfo {
-  currentPage: number;
-  totalPages: number;
-  totalPress: number;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
-  limit: number;
-}
-
-// API Response interfaces
-export interface PressResponse {
-  success: boolean;
-  message?: string;
-  data: {
-    press: PressDocument;
-  };
-}
-
-export interface PressListResponse {
-  success: boolean;
-  data: {
-    press: PressDocument[];
-    pagination: PaginationInfo;
-  };
-}
-
-export interface PressCategoriesResponse {
-  success: boolean;
-  data: {
-    categories: string[];
-  };
-}
-
-export interface DeletePressResponse {
-  success: boolean;
-  message: string;
+export interface PressMultipleUploadData {
+  title: string;
+  source: string;
+  date?: string;
+  category: string;
+  author: string;
+  readTime: string;
+  content: string;
+  excerpt: string;
+  altTexts?: string | string[];
 }
