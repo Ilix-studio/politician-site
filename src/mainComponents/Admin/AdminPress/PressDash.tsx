@@ -155,20 +155,13 @@ const PressDash = () => {
           {/* Page Header */}
           <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
             <div>
-              <h1 className='text-3xl font-bold text-slate-800'>
+              <h1 className='text-2xl font-bold text-slate-800'>
                 Press Dashboard
               </h1>
               <p className='text-slate-600 mt-1'>
                 Manage press articles and media coverage
               </p>
             </div>
-            <Button
-              onClick={handleAddPress}
-              className='bg-gradient-to-r from-[#FF9933] to-[#138808] hover:from-[#FF9933]/90 hover:to-[#138808]/90'
-            >
-              <Plus className='w-4 h-4 mr-2' />
-              Add Press Article
-            </Button>
           </div>
 
           {/* Stats Card */}

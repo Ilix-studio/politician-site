@@ -1,8 +1,8 @@
-import { Share2, Loader2, AlertCircle, ExternalLink } from "lucide-react";
+import { Share2, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useGetPressQuery } from "@/redux-store/services/pressApi";
-import { PressDocument } from "@/types/press.types";
+import { Press as PressType } from "@/types/press.types";
 
 const Press = () => {
   const navigate = useNavigate();
@@ -13,11 +13,10 @@ const Press = () => {
     isLoading,
     error,
   } = useGetPressQuery({
-    page: "1",
-    limit: "6", // Show only 6 articles in the preview
+    page: 1,
+    limit: 6, // Show only 6 articles in the preview
     sortBy: "date",
     sortOrder: "desc",
-    isActive: "true", // Only show active articles
   });
 
   const formatDate = (date: string | Date) => {
@@ -28,7 +27,14 @@ const Press = () => {
     });
   };
 
-  const getCategoryColor = (category: string) => {
+  const getCategoryName = (category: PressType["category"]): string => {
+    if (typeof category === "string") {
+      return category;
+    }
+    return category.name;
+  };
+
+  const getCategoryColor = (categoryName: string) => {
     const colors: Record<string, string> = {
       politics: "bg-red-100 text-red-800",
       economy: "bg-green-100 text-green-800",
@@ -40,10 +46,10 @@ const Press = () => {
       infrastructure: "bg-gray-100 text-gray-800",
       other: "bg-orange-100 text-orange-800",
     };
-    return colors[category] || colors.other;
+    return colors[categoryName.toLowerCase()] || colors.other;
   };
 
-  const handleShare = async (press: PressDocument, e: React.MouseEvent) => {
+  const handleShare = async (press: PressType, e: React.MouseEvent) => {
     e.preventDefault();
 
     const shareData = {
@@ -173,90 +179,82 @@ const Press = () => {
         ) : (
           <>
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-              {pressArticles.map((press: PressDocument) => (
-                <div
-                  key={press._id}
-                  className='bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 group'
-                >
-                  <div
-                    className='block cursor-pointer'
-                    onClick={() => handlePressClick(press._id)}
-                  >
-                    <div className='relative'>
-                      <img
-                        src={press.image}
-                        alt={press.title}
-                        className='w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300'
-                      />
-                      <div className='absolute top-2 left-2 bg-white py-1 px-2 text-xs rounded font-medium shadow-sm'>
-                        {press.source}
-                      </div>
-                      <div className='absolute top-2 right-2'>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(
-                            press.category
-                          )}`}
-                        >
-                          {press.category.charAt(0).toUpperCase() +
-                            press.category.slice(1)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+              {pressArticles.map((press: PressType) => {
+                const categoryName = getCategoryName(press.category);
+                const primaryImage = press.images?.[0];
 
-                  <div className='p-4'>
+                return (
+                  <div
+                    key={press._id}
+                    className='bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 group'
+                  >
                     <div
-                      className='block hover:text-[#FF9933] transition-colors cursor-pointer'
+                      className='block cursor-pointer'
                       onClick={() => handlePressClick(press._id)}
                     >
-                      <h3 className='font-semibold text-lg mb-2 line-clamp-2 leading-tight'>
-                        {press.title}
-                      </h3>
+                      <div className='relative'>
+                        {primaryImage && (
+                          <img
+                            src={primaryImage.src}
+                            alt={primaryImage.alt}
+                            className='w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300'
+                          />
+                        )}
+                        <div className='absolute top-2 left-2 bg-white py-1 px-2 text-xs rounded font-medium shadow-sm'>
+                          {press.source}
+                        </div>
+                        <div className='absolute top-2 right-2'>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(
+                              categoryName
+                            )}`}
+                          >
+                            {categoryName.charAt(0).toUpperCase() +
+                              categoryName.slice(1)}
+                          </span>
+                        </div>
+                      </div>
                     </div>
 
-                    <p className='text-gray-600 text-sm mb-3 line-clamp-2'>
-                      {press.excerpt}
-                    </p>
+                    <div className='p-4'>
+                      <div
+                        className='block hover:text-[#FF9933] transition-colors cursor-pointer'
+                        onClick={() => handlePressClick(press._id)}
+                      >
+                        <h3 className='font-semibold text-lg mb-2 line-clamp-2 leading-tight'>
+                          {press.title}
+                        </h3>
+                      </div>
 
-                    <div className='flex items-center gap-2 text-xs text-gray-500 mb-4'>
-                      <span>{press.author}</span>
-                      <span>•</span>
-                      <span>{press.readTime}</span>
-                    </div>
+                      <p className='text-gray-600 text-sm mb-3 line-clamp-2'>
+                        {press.excerpt}
+                      </p>
 
-                    <div className='flex justify-between items-center'>
-                      <span className='text-gray-500 text-sm'>
-                        {formatDate(press.date)}
-                      </span>
+                      <div className='flex items-center gap-2 text-xs text-gray-500 mb-4'>
+                        <span>{press.author}</span>
+                        <span>•</span>
+                        <span>{press.readTime}</span>
+                      </div>
 
-                      <div className='flex items-center gap-2'>
-                        <button
-                          className='text-gray-500 hover:text-[#FF9933] transition-colors p-1'
-                          aria-label='View original source'
-                          onClick={(e) => {
-                            e.preventDefault();
-                            window.open(
-                              press.link,
-                              "_blank",
-                              "noopener,noreferrer"
-                            );
-                          }}
-                        >
-                          <ExternalLink size={16} />
-                        </button>
+                      <div className='flex justify-between items-center'>
+                        <span className='text-gray-500 text-sm'>
+                          {formatDate(press.date)}
+                        </span>
 
-                        <button
-                          className='text-gray-500 hover:text-[#FF9933] transition-colors p-1'
-                          aria-label='Share article'
-                          onClick={(e) => handleShare(press, e)}
-                        >
-                          <Share2 size={16} />
-                        </button>
+                        <div className='flex items-center gap-2'>
+                          <button
+                            className='text-gray-500 hover:text-[#FF9933] transition-colors p-1'
+                            aria-label='Share article'
+                            onClick={(e) => handleShare(press, e)}
+                          >
+                            <Share2 size={16} />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className='text-center mt-10'>
@@ -270,10 +268,10 @@ const Press = () => {
               </Button>
 
               {pressData?.data?.pagination &&
-                pressData.data.pagination.totalPress > 6 && (
+                pressData.data.pagination.total > 6 && (
                   <p className='text-sm text-muted-foreground mt-2'>
                     Showing {pressArticles.length} of{" "}
-                    {pressData.data.pagination.totalPress} articles
+                    {pressData.data.pagination.total} articles
                   </p>
                 )}
             </div>

@@ -152,25 +152,25 @@ const AdminDash = () => {
     {
       title: "Upload Photo",
       icon: Upload,
-      color: "bg-blue-500",
+      color: "bg-blue-800",
       action: () => navigate("/admin/addPhoto"),
     },
     {
       title: "Add Video",
       icon: Video,
-      color: "bg-pink-500",
+      color: "bg-pink-800",
       action: () => navigate("/admin/addVideo"),
     },
     {
       title: "Write Article",
       icon: FileText,
-      color: "bg-purple-500",
+      color: "bg-purple-800",
       action: () => navigate("/admin/addPress"),
     },
     {
       title: "Create Category",
       icon: FileText,
-      color: "bg-green-500",
+      color: "bg-green-800",
       action: () => navigate("/admin/categories"),
     },
   ];
@@ -496,7 +496,7 @@ const AdminDash = () => {
               <CardContent>
                 <div className='space-y-3'>
                   <div className='flex items-center justify-between'>
-                    <span className='text-sm'>Website Status</span>
+                    <span className='text-sm'>Web-App Status</span>
                     <Badge className='bg-green-100 text-green-800'>
                       Online
                     </Badge>

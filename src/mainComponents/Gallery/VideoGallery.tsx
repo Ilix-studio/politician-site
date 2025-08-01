@@ -7,17 +7,19 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Search, Calendar, Clock, Eye, Play } from "lucide-react";
+  Search,
+  Calendar,
+  Clock,
+  Play,
+  AlertCircle,
+  RefreshCw,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGetVideosQuery } from "@/redux-store/services/videoApi";
-import { VideoQueryParams } from "@/types/video.types";
+import { useGetCategoriesByTypeQuery } from "@/redux-store/services/categoryApi";
+import { VideoQueryParams, getVideoCategoryName } from "@/types/video.types";
 import { BackNavigation } from "@/config/navigation/BackNavigation";
 
 const VideoGallery: React.FC = () => {
@@ -32,21 +34,45 @@ const VideoGallery: React.FC = () => {
     sortOrder: "desc",
   });
 
-  const { data: videosData, isLoading, error } = useGetVideosQuery(queryParams);
+  // API hooks
+  const {
+    data: videosData,
+    isLoading,
+    error,
+    refetch,
+  } = useGetVideosQuery(queryParams);
+  const {
+    data: categories = [],
+    isLoading: categoriesLoading,
+    error: categoriesError,
+  } = useGetCategoriesByTypeQuery("video");
 
-  const categories = [
-    { value: "speech", label: "Speeches" },
-    { value: "event", label: "Events" },
-    { value: "interview", label: "Interviews" },
-    { value: "initiative", label: "Initiatives" },
-  ];
-
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | Date) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
     });
+  };
+
+  const getCategoryColor = (categoryName: string) => {
+    const lowerName = categoryName.toLowerCase();
+    switch (lowerName) {
+      case "speech":
+        return "bg-blue-100 text-blue-800";
+      case "event":
+        return "bg-green-100 text-green-800";
+      case "interview":
+        return "bg-purple-100 text-purple-800";
+      case "initiative":
+        return "bg-orange-100 text-orange-800";
+      case "campaign":
+        return "bg-red-100 text-red-800";
+      case "press conference":
+        return "bg-indigo-100 text-indigo-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
   };
 
   const handleVideoClick = (videoId: string) => {
@@ -84,11 +110,24 @@ const VideoGallery: React.FC = () => {
     </Card>
   );
 
-  if (error) {
+  // Error state
+  if (error && !isLoading) {
     return (
       <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white p-4'>
-        <div className='container mx-auto text-center py-12'>
-          <p className='text-red-600'>Failed to load videos.</p>
+        <BackNavigation />
+        <div className='container mx-auto'>
+          <Alert variant='destructive' className='max-w-md mx-auto mt-8'>
+            <AlertCircle className='h-4 w-4' />
+            <AlertDescription>
+              Failed to load videos. Please try again.
+            </AlertDescription>
+          </Alert>
+          <div className='flex justify-center mt-4'>
+            <Button onClick={() => refetch()} variant='outline'>
+              <RefreshCw className='w-4 h-4 mr-2' />
+              Retry
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -105,6 +144,13 @@ const VideoGallery: React.FC = () => {
         {/* Header */}
         <div className='bg-white/95 backdrop-blur border-b'>
           <div className='container mx-auto px-4 py-6'>
+            <div className='mb-6'>
+              <h1 className='text-3xl font-bold text-gray-900 mb-2'>
+                Video Gallery
+              </h1>
+              <p className='text-gray-600'>Explore our collection of videos</p>
+            </div>
+
             {/* Filters */}
             <div className='flex flex-col sm:flex-row gap-4'>
               <div className='flex-1'>
@@ -118,22 +164,33 @@ const VideoGallery: React.FC = () => {
                   />
                 </div>
               </div>
-              <Select
+
+              <select
                 value={queryParams.category || "all"}
-                onValueChange={handleCategoryFilter}
+                onChange={(e) => handleCategoryFilter(e.target.value)}
+                className='w-48 flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
               >
-                <SelectTrigger className='w-48'>
-                  <SelectValue placeholder='Filter by category' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='all'>All Categories</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <option value='all'>All Categories</option>
+                {categoriesLoading ? (
+                  <option value='' disabled>
+                    Loading categories...
+                  </option>
+                ) : categoriesError ? (
+                  <option value='' disabled>
+                    Error loading categories
+                  </option>
+                ) : categories.length === 0 ? (
+                  <option value='' disabled>
+                    No categories available
+                  </option>
+                ) : (
+                  categories.map((category) => (
+                    <option key={category._id} value={category._id}>
+                      {category.name}
+                    </option>
+                  ))
+                )}
+              </select>
             </div>
           </div>
         </div>
@@ -148,7 +205,17 @@ const VideoGallery: React.FC = () => {
             </div>
           ) : videos.length === 0 ? (
             <div className='text-center py-12'>
-              <p className='text-gray-500 text-lg'>No videos found.</p>
+              <div className='max-w-md mx-auto'>
+                <Play className='w-16 h-16 text-gray-400 mx-auto mb-4' />
+                <h3 className='text-lg font-semibold text-gray-900 mb-2'>
+                  No videos found
+                </h3>
+                <p className='text-gray-500'>
+                  {queryParams.search || queryParams.category
+                    ? "Try adjusting your search or filter criteria."
+                    : "No videos are available at the moment."}
+                </p>
+              </div>
             </div>
           ) : (
             <>
@@ -156,123 +223,171 @@ const VideoGallery: React.FC = () => {
                 <p className='text-gray-600'>
                   Showing {videos.length} of {pagination?.totalVideos || 0}{" "}
                   videos
+                  {queryParams.category && categories.length > 0 && (
+                    <span className='ml-2'>
+                      in{" "}
+                      {
+                        categories.find((c) => c._id === queryParams.category)
+                          ?.name
+                      }
+                    </span>
+                  )}
                 </p>
               </div>
 
               <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
-                {videos.map((video, index) => (
-                  <motion.div
-                    key={video._id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    onMouseEnter={() => setHovered(index)}
-                    onMouseLeave={() => setHovered(null)}
-                    onClick={() => handleVideoClick(video._id)}
-                    className={cn(
-                      "cursor-pointer rounded-xl overflow-hidden bg-white shadow-lg hover:shadow-xl transition-all duration-300 group",
-                      hovered === index && "scale-105"
-                    )}
-                  >
-                    <div className='relative aspect-video overflow-hidden'>
-                      <img
-                        src={video.thumbnail}
-                        alt={video.title}
-                        className='w-full h-full object-cover'
-                      />
+                {videos.map((video, index) => {
+                  const categoryName = getVideoCategoryName(video.category);
 
-                      {/* Play Button Overlay */}
-                      <div className='absolute inset-0 flex items-center justify-center'>
-                        <div className='w-16 h-16 bg-white/90 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform'>
-                          <Play className='w-8 h-8 text-[#FF9933] ml-1' />
+                  return (
+                    <motion.div
+                      key={video._id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      onMouseEnter={() => setHovered(index)}
+                      onMouseLeave={() => setHovered(null)}
+                      onClick={() => handleVideoClick(video._id)}
+                      className={cn(
+                        "cursor-pointer rounded-xl overflow-hidden bg-white shadow-lg hover:shadow-xl transition-all duration-300 group",
+                        hovered === index && "scale-105"
+                      )}
+                    >
+                      <div className='relative aspect-video overflow-hidden'>
+                        <img
+                          src={video.thumbnail}
+                          alt={video.title}
+                          className='w-full h-full object-cover'
+                        />
+
+                        {/* Play Button Overlay */}
+                        <div className='absolute inset-0 flex items-center justify-center'>
+                          <div className='w-16 h-16 bg-white/90 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform'>
+                            <Play className='w-8 h-8 text-[#FF9933] ml-1' />
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Category Badge */}
-                      <div className='absolute top-3 right-3'>
-                        <Badge
-                          variant='secondary'
-                          className='bg-white/90 text-gray-800'
-                        >
-                          {video.category.charAt(0).toUpperCase() +
-                            video.category.slice(1)}
-                        </Badge>
-                      </div>
-
-                      {/* Featured Badge */}
-                      {video.featured && (
-                        <div className='absolute top-3 left-3'>
-                          <Badge className='bg-yellow-500 text-white'>
-                            Featured
+                        {/* Duration Badge */}
+                        <div className='absolute bottom-3 right-3'>
+                          <Badge className='bg-black/75 text-white'>
+                            {video.duration}
                           </Badge>
                         </div>
-                      )}
 
-                      {/* Hover Overlay */}
-                      <div className='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300'>
-                        <div className='absolute bottom-4 left-4 text-white'>
-                          <h3 className='font-bold text-lg mb-1 line-clamp-2'>
-                            {video.title}
-                          </h3>
-                          <div className='flex items-center gap-3 text-sm'>
-                            <div className='flex items-center gap-1'>
-                              <Calendar className='w-3 h-3' />
-                              {formatDate(video.date)}
-                            </div>
-                            <div className='flex items-center gap-1'>
-                              <Clock className='w-3 h-3' />
-                              {video.duration}
-                            </div>
-                          </div>
+                        {/* Category Badge */}
+                        <div className='absolute top-3 right-3'>
+                          <Badge
+                            variant='secondary'
+                            className={getCategoryColor(categoryName)}
+                          >
+                            {categoryName}
+                          </Badge>
                         </div>
-                      </div>
-                    </div>
 
-                    <CardContent className='p-4'>
-                      <h3 className='font-semibold text-gray-900 line-clamp-2 mb-2'>
-                        {video.title}
-                      </h3>
-
-                      <div className='flex items-center justify-between text-sm text-gray-600 mb-2'>
-                        <div className='flex items-center gap-1'>
-                          <Clock className='w-3 h-3' />
-                          {video.duration}
-                        </div>
-                        {video.views && (
-                          <div className='flex items-center gap-1'>
-                            <Eye className='w-3 h-3' />
-                            {video.views.toLocaleString()}
+                        {/* Featured Badge */}
+                        {video.featured && (
+                          <div className='absolute top-3 left-3'>
+                            <Badge className='bg-yellow-500 text-white'>
+                              Featured
+                            </Badge>
                           </div>
                         )}
+
+                        {/* Hover Overlay */}
+                        <div className='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
+                          <div className='absolute bottom-4 left-4 text-white'>
+                            <h3 className='font-bold text-lg mb-1 line-clamp-2'>
+                              {video.title}
+                            </h3>
+                            <div className='flex items-center gap-3 text-sm'>
+                              <div className='flex items-center gap-1'>
+                                <Calendar className='w-3 h-3' />
+                                {formatDate(video.date)}
+                              </div>
+                              <div className='flex items-center gap-1'>
+                                <Clock className='w-3 h-3' />
+                                {video.duration}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
 
-                      {video.description && (
-                        <p className='text-sm text-gray-500 line-clamp-2'>
-                          {video.description}
-                        </p>
-                      )}
-                    </CardContent>
-                  </motion.div>
-                ))}
+                      <CardContent className='p-4'>
+                        <h3 className='font-semibold text-gray-900 line-clamp-2 mb-2'>
+                          {video.title}
+                        </h3>
+
+                        <div className='flex items-center justify-between text-sm text-gray-600 mb-2'>
+                          <div className='flex items-center gap-1'>
+                            <Clock className='w-3 h-3' />
+                            {video.duration}
+                          </div>
+                          <div className='flex items-center gap-1'>
+                            <Calendar className='w-3 h-3' />
+                            {formatDate(video.date)}
+                          </div>
+                        </div>
+
+                        {video.description && (
+                          <p className='text-sm text-gray-500 line-clamp-2'>
+                            {video.description}
+                          </p>
+                        )}
+
+                        {/* Tags */}
+                        {video.tags && video.tags.length > 0 && (
+                          <div className='flex flex-wrap gap-1 mt-2'>
+                            {video.tags.slice(0, 2).map((tag, tagIndex) => (
+                              <Badge
+                                key={tagIndex}
+                                variant='outline'
+                                className='text-xs'
+                              >
+                                {tag}
+                              </Badge>
+                            ))}
+                            {video.tags.length > 2 && (
+                              <Badge variant='outline' className='text-xs'>
+                                +{video.tags.length - 2}
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </motion.div>
+                  );
+                })}
               </div>
 
               {/* Pagination */}
               {pagination && pagination.totalPages > 1 && (
-                <div className='flex justify-center mt-8 space-x-2'>
-                  {Array.from({ length: pagination.totalPages }, (_, i) => (
+                <div className='flex justify-center mt-8'>
+                  <div className='flex items-center gap-2'>
                     <Button
-                      key={i + 1}
-                      variant={
-                        parseInt(queryParams.page || "1") === i + 1
-                          ? "default"
-                          : "outline"
+                      variant='outline'
+                      onClick={() =>
+                        handlePageChange(pagination.currentPage - 1)
                       }
-                      size='sm'
-                      onClick={() => handlePageChange(i + 1)}
+                      disabled={!pagination.hasPrevPage}
                     >
-                      {i + 1}
+                      Previous
                     </Button>
-                  ))}
+
+                    <span className='text-sm text-gray-600 px-4'>
+                      Page {pagination.currentPage} of {pagination.totalPages}
+                    </span>
+
+                    <Button
+                      variant='outline'
+                      onClick={() =>
+                        handlePageChange(pagination.currentPage + 1)
+                      }
+                      disabled={!pagination.hasNextPage}
+                    >
+                      Next
+                    </Button>
+                  </div>
                 </div>
               )}
             </>
