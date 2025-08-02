@@ -384,7 +384,21 @@ const Gallery = () => {
               </div>
             )}
           </TabsContent>
-          <button>See More</button>
+          {/* See More Button */}
+          <div className='text-center mt-8'>
+            <button
+              onClick={() => {
+                if (activeTab === "photos") {
+                  navigate("/photo-gallery");
+                } else {
+                  navigate("/video-gallery");
+                }
+              }}
+              className='px-6 py-3 bg-gradient-to-r from-[#FF9933] to-[#138808] text-white font-medium rounded-lg hover:from-[#FF9933]/90 hover:to-[#138808]/90 transition-all duration-300 shadow-lg hover:shadow-xl'
+            >
+              See More {activeTab === "photos" ? "Photos" : "Videos"}
+            </button>
+          </div>
         </Tabs>
       </div>
     </section>

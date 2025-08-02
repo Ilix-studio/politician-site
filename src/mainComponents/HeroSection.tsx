@@ -229,7 +229,7 @@ const HeroSection = () => {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.8, delay: 0.6 }}
                   >
-                    <div className='backdrop-blur-md bg-white/10 p-4 rounded-2xl border border-white/20 shadow-2xl'>
+                    <div className='backdrop-blur-md bg-white/10 p-3 rounded-2xl border border-white/20 shadow-2xl'>
                       <h3 className='text-1xl md:text-4xl font-bold text-white mb-2'>
                         "{image.caption}"
                       </h3>
@@ -247,7 +247,7 @@ const HeroSection = () => {
       {/* Navigation Arrows */}
       <button
         onClick={prevSlide}
-        className='absolute left-1 top-1/2 -translate-y-1/2 z-20 p-1 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 transition-all duration-300 group'
+        className='absolute left-1 top-1/3 -translate-y-1/2 z-20 p-1 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 transition-all duration-300 group'
         aria-label='Previous slide'
       >
         <ChevronLeft className='w-4 h-4 group-hover:scale-110 transition-transform' />
@@ -255,14 +255,14 @@ const HeroSection = () => {
 
       <button
         onClick={nextSlide}
-        className='absolute right-1 top-1/2 -translate-y-1/2 z-20 p-1 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 transition-all duration-300 group'
+        className='absolute right-1 top-1/3 -translate-y-1/2 z-20 p-1 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 transition-all duration-300 group'
         aria-label='Next slide'
       >
         <ChevronRight className='w-4 h-4 group-hover:scale-110 transition-transform' />
       </button>
 
       {/* Main Content */}
-      <div className='container relative z-10 flex flex-col items-center justify-center min-h-screen text-center text-white px-4'>
+      <div className='container relative z-10 flex flex-col items-center justify-center min-h-screen text-center text-white px-4 -mt-12'>
         <motion.div
           className='max-w-4xl space-y-6'
           initial='hidden'

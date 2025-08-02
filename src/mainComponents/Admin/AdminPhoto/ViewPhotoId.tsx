@@ -13,7 +13,6 @@ import {
   ArrowLeft,
   AlertCircle,
   Share2,
-  Download,
   ChevronLeft,
   ChevronRight,
   X,
@@ -68,23 +67,6 @@ const ViewPhotoId: React.FC = () => {
     } else {
       navigator.clipboard.writeText(window.location.href);
       alert("Link copied to clipboard!");
-    }
-  };
-
-  const handleDownload = () => {
-    if (!photoData?.success) return;
-
-    const photo =
-      "photo" in photoData.data ? photoData.data.photo : photoData.data;
-    const currentImage = photo.images?.[currentImageIndex];
-
-    if (currentImage) {
-      const link = document.createElement("a");
-      link.href = currentImage.src;
-      link.download = `${photo.title}-${currentImageIndex + 1}.jpg`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
     }
   };
 
@@ -179,9 +161,6 @@ const ViewPhotoId: React.FC = () => {
           <div className='flex items-center gap-2'>
             <Button variant='outline' size='sm' onClick={handleShare}>
               <Share2 className='w-4 h-4' />
-            </Button>
-            <Button variant='outline' size='sm' onClick={handleDownload}>
-              <Download className='w-4 h-4' />
             </Button>
           </div>
         </div>
@@ -341,27 +320,6 @@ const ViewPhotoId: React.FC = () => {
                     </p>
                   </div>
                 )}
-
-                {/* Photo Metadata */}
-                <div className='pt-6 border-t border-gray-200'>
-                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-gray-500'>
-                    <div>
-                      <span className='font-medium'>Photo ID:</span> {photo._id}
-                    </div>
-                    <div>
-                      <span className='font-medium'>Published:</span>{" "}
-                      {formatDate(photo.createdAt)}
-                    </div>
-                    <div>
-                      <span className='font-medium'>Last Updated:</span>{" "}
-                      {formatDate(photo.updatedAt)}
-                    </div>
-                    <div>
-                      <span className='font-medium'>Images:</span>{" "}
-                      {photo.images?.length || 0}
-                    </div>
-                  </div>
-                </div>
               </div>
             </CardContent>
           </Card>

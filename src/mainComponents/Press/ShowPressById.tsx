@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Calendar,
-  Share2,
   Clock,
   User,
   Building,
@@ -25,7 +24,7 @@ const ShowPressById = () => {
   const navigate = useNavigate();
 
   const [relatedPress, setRelatedPress] = useState<PressType[]>([]);
-  const [isSharing, setIsSharing] = useState<boolean>(false);
+
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // API hooks
@@ -93,36 +92,6 @@ const ShowPressById = () => {
       other: "bg-orange-100 text-orange-800",
     };
     return colors[categoryName.toLowerCase()] || colors.other;
-  };
-
-  const handleShare = async () => {
-    if (!press) return;
-
-    setIsSharing(true);
-    const shareData = {
-      title: press.title,
-      text: press.excerpt,
-      url: window.location.href,
-    };
-
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard?.writeText(shareData.url);
-        alert("Press article link copied to clipboard!");
-      }
-    } catch (error) {
-      console.error("Error sharing:", error);
-      try {
-        await navigator.clipboard?.writeText(shareData.url);
-        alert("Press article link copied to clipboard!");
-      } catch (clipboardError) {
-        alert("Unable to share or copy link. Please copy the URL manually.");
-      }
-    } finally {
-      setIsSharing(false);
-    }
   };
 
   const handlePrevImage = () => {
@@ -237,16 +206,7 @@ const ShowPressById = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className='flex flex-col sm:flex-row gap-3'>
-              <button
-                onClick={handleShare}
-                disabled={isSharing}
-                className='flex items-center justify-center px-4 py-2 text-sm bg-[#FF9933] text-white rounded-md hover:bg-[#FF9933]/90 transition-colors disabled:opacity-50'
-              >
-                <Share2 className='mr-2 h-4 w-4' />
-                {isSharing ? "Sharing..." : "Share Article"}
-              </button>
-            </div>
+            <div className='flex flex-col sm:flex-row gap-3'></div>
           </header>
 
           {/* Images Section */}
@@ -266,16 +226,16 @@ const ShowPressById = () => {
                     <button
                       onClick={handlePrevImage}
                       disabled={currentImageIndex === 0}
-                      className='absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-white transition-colors disabled:opacity-50'
+                      className='absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-white transition-colors disabled:opacity-50'
                     >
-                      <ChevronLeft className='w-5 h-5' />
+                      <ChevronLeft className='w-4 h-4' />
                     </button>
                     <button
                       onClick={handleNextImage}
                       disabled={currentImageIndex === press.images.length - 1}
-                      className='absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-white transition-colors disabled:opacity-50'
+                      className='absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-white transition-colors disabled:opacity-50'
                     >
-                      <ChevronRight className='w-5 h-5' />
+                      <ChevronRight className='w-4 h-4' />
                     </button>
 
                     {/* Image Counter */}

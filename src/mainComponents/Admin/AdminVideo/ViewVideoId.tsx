@@ -12,7 +12,6 @@ import {
   ArrowLeft,
   AlertCircle,
   Share2,
-  Download,
   Play,
   Pause,
   Volume2,
@@ -81,18 +80,6 @@ const ViewVideoId: React.FC = () => {
       navigator.clipboard.writeText(window.location.href);
       alert("Link copied to clipboard!");
     }
-  };
-
-  const handleDownload = () => {
-    if (!videoData?.success) return;
-
-    const video = videoData.data.video;
-    const link = document.createElement("a");
-    link.href = video.videoUrl;
-    link.download = `${video.title}.mp4`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   const togglePlay = () => {
@@ -202,9 +189,6 @@ const ViewVideoId: React.FC = () => {
           <div className='flex items-center gap-2'>
             <Button variant='outline' size='sm' onClick={handleShare}>
               <Share2 className='w-4 h-4' />
-            </Button>
-            <Button variant='outline' size='sm' onClick={handleDownload}>
-              <Download className='w-4 h-4' />
             </Button>
           </div>
         </div>
@@ -368,28 +352,6 @@ const ViewVideoId: React.FC = () => {
                       </div>
                     </div>
                   )}
-
-                  {/* Video Metadata */}
-                  <div className='pt-4 border-t border-gray-200'>
-                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-gray-500'>
-                      <div>
-                        <span className='font-medium'>Created:</span>{" "}
-                        {formatDate(video.createdAt)}
-                      </div>
-                      <div>
-                        <span className='font-medium'>Last Updated:</span>{" "}
-                        {formatDate(video.updatedAt)}
-                      </div>
-                      <div>
-                        <span className='font-medium'>Video ID:</span>{" "}
-                        {video._id}
-                      </div>
-                      <div>
-                        <span className='font-medium'>Duration:</span>{" "}
-                        {video.duration}
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </CardContent>
