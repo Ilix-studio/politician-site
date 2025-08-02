@@ -12,7 +12,6 @@ import Marquee from "./mainComponents/Marquee";
 
 import Press from "./mainComponents/Press/Press";
 import Timeline from "./mainComponents/Timeline";
-import UnderConstruction from "./mainComponents/UnderConstruction";
 
 const Home = () => {
   return (
@@ -22,7 +21,7 @@ const Home = () => {
         <main className='flex-1'>
           <HeroSection />
           <About />
-          <UnderConstruction />
+
           <Timeline />
           <Achievement />
           <Initiatives />

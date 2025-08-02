@@ -6,14 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
+
 import {
   Save,
   Loader2,
   Image as ImageIcon,
   FileText,
   AlertCircle,
-  Eye,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { selectAuth, selectIsAdmin } from "@/redux-store/slices/authSlice";
@@ -190,7 +189,7 @@ const EditPress = () => {
           >
             {/* Page Header */}
             <div>
-              <h1 className='text-3xl font-bold text-slate-800'>
+              <h1 className='text-2xl font-bold text-slate-800'>
                 Edit Press Article
               </h1>
               <p className='text-slate-600 mt-1'>
@@ -207,18 +206,6 @@ const EditPress = () => {
                       <FileText className='w-5 h-5' />
                       Basic Information
                     </span>
-                    <div className='flex items-center gap-2'>
-                      <Label htmlFor='isActive' className='text-sm font-medium'>
-                        Active
-                      </Label>
-                      <Switch
-                        id='isActive'
-                        checked={formData.isActive}
-                        onCheckedChange={(checked) =>
-                          handleInputChange("isActive", checked)
-                        }
-                      />
-                    </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className='space-y-4'>
@@ -439,22 +426,6 @@ const EditPress = () => {
                         {formatDate(press.updatedAt)}
                       </span>
                     </div>
-                    <div>
-                      <span className='font-medium text-slate-600'>
-                        Status:
-                      </span>
-                      <span className='ml-2'>
-                        <span
-                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            formData.isActive
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {formData.isActive ? "Active" : "Inactive"}
-                        </span>
-                      </span>
-                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -467,17 +438,9 @@ const EditPress = () => {
 
                 <div className='flex gap-3'>
                   <Button
-                    type='button'
-                    variant='outline'
-                    onClick={() => navigate(`/admin/read/${id}`)}
-                  >
-                    <Eye className='w-4 h-4 mr-2' />
-                    Preview
-                  </Button>
-                  <Button
                     type='submit'
                     disabled={updating || !hasChanges}
-                    className='bg-gradient-to-r from-[#FF9933] to-[#138808] hover:from-[#FF9933]/90 hover:to-[#138808]/90'
+                    className='bg-orange-700'
                   >
                     {updating ? (
                       <>

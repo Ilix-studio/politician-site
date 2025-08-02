@@ -1,7 +1,7 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Card, CardContent,} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -12,20 +12,14 @@ import {
   ArrowLeft,
   AlertCircle,
   Share2,
-  Download,
-  Edit,
   Star,
-
 } from "lucide-react";
 import { useGetVideoQuery } from "@/redux-store/services/videoApi";
-import {  getVideoCategoryName } from "@/types/video.types";
-import { useSelector } from "react-redux";
-import { selectIsAdmin } from "@/redux-store/slices/authSlice";
+import { getVideoCategoryName } from "@/types/video.types";
 
 const PlayVideo: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const isAdmin = useSelector(selectIsAdmin);
 
   const { data: videoData, isLoading, error } = useGetVideoQuery(id!);
 
@@ -39,12 +33,6 @@ const PlayVideo: React.FC = () => {
 
   const handleBack = () => {
     navigate(-1);
-  };
-
-  const handleEdit = () => {
-    if (videoData?.success) {
-      navigate(`/admin/editVideo/${videoData.data.video._id}`);
-    }
   };
 
   const handleShare = async () => {
@@ -66,18 +54,6 @@ const PlayVideo: React.FC = () => {
       navigator.clipboard.writeText(window.location.href);
       alert("Link copied to clipboard!");
     }
-  };
-
-  const handleDownload = () => {
-    if (!videoData?.success) return;
-
-    const video = videoData.data.video;
-    const link = document.createElement("a");
-    link.href = video.videoUrl;
-    link.download = `${video.title}.mp4`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   if (!id) {
@@ -147,17 +123,8 @@ const PlayVideo: React.FC = () => {
           </Button>
 
           <div className='flex items-center gap-2'>
-            {isAdmin && (
-              <Button variant='outline' size='sm' onClick={handleEdit}>
-                <Edit className='w-4 h-4 mr-2' />
-                Edit
-              </Button>
-            )}
             <Button variant='outline' size='sm' onClick={handleShare}>
               <Share2 className='w-4 h-4' />
-            </Button>
-            <Button variant='outline' size='sm' onClick={handleDownload}>
-              <Download className='w-4 h-4' />
             </Button>
           </div>
         </div>
@@ -243,9 +210,9 @@ const PlayVideo: React.FC = () => {
                 )}
 
                 {/* Video Details Grid */}
-                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6'>
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-3'>
                   <Card className='bg-gray-50'>
-                    <CardContent className='p-4'>
+                    <CardContent className='p-3'>
                       <div className='flex items-center gap-2 mb-2'>
                         <Calendar className='w-5 h-5 text-blue-600' />
                         <h4 className='font-medium'>Date</h4>
@@ -261,18 +228,6 @@ const PlayVideo: React.FC = () => {
                         <h4 className='font-medium'>Duration</h4>
                       </div>
                       <p className='text-gray-700'>{video.duration}</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card className='bg-gray-50'>
-                    <CardContent className='p-4'>
-                      <div className='flex items-center gap-2 mb-2'>
-                        <Star className='w-5 h-5 text-yellow-600' />
-                        <h4 className='font-medium'>Status</h4>
-                      </div>
-                      <p className='text-gray-700'>
-                        {video.featured ? "Featured Video" : "Regular Video"}
-                      </p>
                     </CardContent>
                   </Card>
                 </div>

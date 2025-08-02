@@ -251,13 +251,6 @@ const PhotoView: React.FC<PhotoViewProps> = ({
                 <span>{photo.location}</span>
               </div>
             )}
-
-            <div className='flex items-center gap-2 text-sm'>
-              <span className='font-medium'>Status:</span>
-              <Badge variant={photo.isActive ? "default" : "secondary"}>
-                {photo.isActive ? "Active" : "Inactive"}
-              </Badge>
-            </div>
           </div>
 
           {/* Description */}

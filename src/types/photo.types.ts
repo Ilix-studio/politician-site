@@ -166,3 +166,20 @@ export interface PhotoCategory {
   type: "photo";
   count?: number;
 }
+// Define the PhotoCard-compatible interface
+export interface PhotoCardData {
+  _id: string;
+  title: string;
+  description?: string;
+  src: string;
+  alt: string;
+  date: string;
+  location?: string;
+  category: {
+    _id: string;
+    name: string;
+    type: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
