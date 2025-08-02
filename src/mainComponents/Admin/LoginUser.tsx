@@ -214,17 +214,6 @@ const LoginUser = () => {
                   <span>{errorMessage || error}</span>
                 </div>
               )}
-
-              {/* Demo Credentials */}
-              <div className='mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg'>
-                <p className='text-sm font-medium text-blue-800 mb-2'>
-                  Demo Credentials:
-                </p>
-                <p className='text-xs text-blue-600'>
-                  email: "politician@gmail.com",
-                </p>
-                <p className='text-xs text-blue-600'> password: "admin123",</p>
-              </div>
             </CardContent>
           </Card>
 

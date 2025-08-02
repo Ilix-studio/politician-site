@@ -6,7 +6,6 @@ import {
   ChevronRight,
   Play,
   Users,
-  ArrowDown,
   Eye,
   TrendingUp,
 } from "lucide-react";
@@ -177,7 +176,7 @@ const HeroSection = () => {
         animate='visible'
         variants={visitorVariants}
       >
-        <div className='backdrop-blur-md bg-white/10 p-3 rounded-full border border-white/20 shadow-xl'>
+        <div className='backdrop-blur-md bg-white/10 p-2 rounded-full border border-white/20 shadow-xl'>
           <div className='flex items-center gap-2 text-white'>
             <Eye className='w-4 h-4' />
             <span className='text-sm font-medium'>
@@ -221,17 +220,17 @@ const HeroSection = () => {
 
                   {/* Floating caption */}
                   <motion.div
-                    className={`absolute bottom-16 ${
+                    className={`absolute bottom-22 ${
                       !image.isEven
-                        ? "left-8 md:left-16"
-                        : "right-8 md:right-16"
+                        ? "left-3 md:left-16"
+                        : "right-3 md:right-16"
                     }`}
                     initial={{ opacity: 0, x: image.isEven ? 50 : -50 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.8, delay: 0.5 }}
+                    transition={{ duration: 0.8, delay: 0.6 }}
                   >
-                    <div className='backdrop-blur-md bg-white/10 p-6 rounded-2xl border border-white/20 shadow-2xl'>
-                      <h3 className='text-2xl md:text-4xl font-bold text-white mb-2'>
+                    <div className='backdrop-blur-md bg-white/10 p-4 rounded-2xl border border-white/20 shadow-2xl'>
+                      <h3 className='text-1xl md:text-4xl font-bold text-white mb-2'>
                         "{image.caption}"
                       </h3>
                       <p className='text-white/80 text-sm md:text-base'>
@@ -248,18 +247,18 @@ const HeroSection = () => {
       {/* Navigation Arrows */}
       <button
         onClick={prevSlide}
-        className='absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 transition-all duration-300 group'
+        className='absolute left-1 top-1/2 -translate-y-1/2 z-20 p-1 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 transition-all duration-300 group'
         aria-label='Previous slide'
       >
-        <ChevronLeft className='w-5 h-5 group-hover:scale-110 transition-transform' />
+        <ChevronLeft className='w-4 h-4 group-hover:scale-110 transition-transform' />
       </button>
 
       <button
         onClick={nextSlide}
-        className='absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 transition-all duration-300 group'
+        className='absolute right-1 top-1/2 -translate-y-1/2 z-20 p-1 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 transition-all duration-300 group'
         aria-label='Next slide'
       >
-        <ChevronRight className='w-5 h-5 group-hover:scale-110 transition-transform' />
+        <ChevronRight className='w-4 h-4 group-hover:scale-110 transition-transform' />
       </button>
 
       {/* Main Content */}
@@ -312,27 +311,9 @@ const HeroSection = () => {
               <div className='text-2xl md:text-3xl font-bold text-orange-300'>
                 1,07,090
               </div>
-              <div className='text-sm text-white/70'>Votes Received</div>
+              <div className='text-sm text-white/70'>Won by 100k</div>
             </div>
             <div className='w-px h-12 bg-white/30'></div>
-
-            {/* Live Website Visitors */}
-            <div className='text-center'>
-              <div className='text-2xl md:text-3xl font-bold text-orange-300'>
-                {visitorCountLoading || incrementLoading ? (
-                  <div className='animate-pulse'>...</div>
-                ) : (
-                  currentVisitorData?.count?.toLocaleString() || "0"
-                )}
-              </div>
-              <div className='text-sm text-white/70 flex items-center justify-center gap-1'>
-                <Eye className='w-3 h-3' />
-                Website Visitors
-                {!isReturningVisitor() && !visitorTracked && (
-                  <TrendingUp className='w-3 h-3 text-green-400 animate-pulse' />
-                )}
-              </div>
-            </div>
 
             <div className='w-px h-12 bg-white/30'></div>
             <div className='text-center'>
@@ -401,35 +382,11 @@ const HeroSection = () => {
             </motion.div>
           )}
         </motion.div>
-
-        {/* Scroll Indicator */}
-        <motion.div
-          className='absolute bottom-8 left-1/2 transform -translate-x-1/2'
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1, duration: 0.8 }}
-        >
-          <motion.div
-            className='flex flex-col items-center text-white/70 cursor-pointer'
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            onClick={() =>
-              document
-                .getElementById("about")
-                ?.scrollIntoView({ behavior: "smooth" })
-            }
-          >
-            <span className='text-sm mb-2 hidden md:block'>
-              Scroll to explore
-            </span>
-            <ArrowDown className='w-5 h-5' />
-          </motion.div>
-        </motion.div>
       </div>
 
       {/* Enhanced Carousel Navigation Dots */}
-      <div className='absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20'>
-        <div className='flex items-center space-x-4 bg-white/10 backdrop-blur-md rounded-full px-6 py-3 border border-white/20'>
+      <div className='absolute bottom-3 left-1/2 transform -translate-x-1/2 z-20'>
+        <div className='flex items-center space-x-4 bg-white/10 backdrop-blur-md rounded-full px-4 py-1 border border-white/20'>
           {/* Play/Pause Button */}
           <button
             onClick={() => setIsAutoPlaying(!isAutoPlaying)}
@@ -437,7 +394,7 @@ const HeroSection = () => {
             aria-label={isAutoPlaying ? "Pause slideshow" : "Play slideshow"}
           >
             <Play
-              className={`w-4 h-4 text-white ${
+              className={`w-3 h-3 text-white ${
                 isAutoPlaying ? "opacity-50" : "opacity-100"
               }`}
             />

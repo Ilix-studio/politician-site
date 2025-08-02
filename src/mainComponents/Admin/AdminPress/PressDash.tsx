@@ -167,7 +167,7 @@ const PressDash = () => {
           {/* Stats Card */}
           <Card>
             <CardContent className='pt-6'>
-              <div className='grid grid-cols-1 md:grid-cols-3 gap-4 text-center'>
+              <div className='grid grid-cols-3 md:grid-cols-3 gap-4 text-center'>
                 <div>
                   <h3 className='text-2xl font-bold text-blue-600'>
                     {pressData?.data.pagination.total || 0}

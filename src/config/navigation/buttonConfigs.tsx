@@ -287,7 +287,7 @@ export const getContextualButtonsForPage = (
       return [
         {
           icon: <Home className='w-4 h-4' />,
-          label: "Home",
+          label: "Home-Page",
           onClick: () => safeNavigate("/"),
           variant: "outline",
           priority: 1,

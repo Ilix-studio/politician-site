@@ -149,8 +149,8 @@ export const BackNavigation = () => {
   const previousRoute = getPreviousRoute();
   const backButtonLabel = previousRoute
     ? getRouteTitle(previousRoute.path)
-    : "Home";
-  const showBackButton = canGoBack && pageType !== "home";
+    : "Dash";
+  const showBackButton = canGoBack && pageType !== "home-page";
 
   // Safe back navigation
   const handleSafeGoBack = () => {

@@ -258,11 +258,11 @@ const VideoDash: React.FC = () => {
     <>
       <BackNavigation />
       <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white'>
-        <div className='container py-6 px-4 sm:px-6 max-w-7xl mx-auto'>
+        <div className='container py-3 px-4 sm:px-6 max-w-7xl mx-auto'>
           {/* Header */}
           <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-3'>
             <div>
-              <h1 className='text-2xl font-bold text-slate-900 flex items-center gap-3'>
+              <h1 className='text-2xl font-bold text-slate-900 flex items-center gap-2'>
                 <VideoIcon className='w-8 h-8 text-blue-600' />
                 Video Dashboard
               </h1>
@@ -271,9 +271,9 @@ const VideoDash: React.FC = () => {
           </div>
 
           {/* Filters and Controls */}
-          <Card className='mb-6'>
-            <CardContent className='p-4'>
-              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end'>
+          <Card className='mb-4'>
+            <CardContent className='p-3'>
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 items-end'>
                 {/* Search */}
                 <div className='lg:col-span-2'>
                   <label className='text-sm font-medium text-slate-700 mb-2 block'>

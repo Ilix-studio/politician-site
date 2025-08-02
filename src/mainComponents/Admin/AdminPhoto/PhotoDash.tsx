@@ -32,25 +32,12 @@ import { BackNavigation } from "@/config/navigation/BackNavigation";
 import { toast } from "react-hot-toast";
 
 // Import types from the correct location
-import { Photo, PhotosQueryParams, PhotoUpdateData } from "@/types/photo.types";
-
-// Define the PhotoCard-compatible interface
-interface PhotoCardData {
-  _id: string;
-  title: string;
-  description?: string;
-  src: string;
-  alt: string;
-  date: string;
-  location?: string;
-  category: {
-    _id: string;
-    name: string;
-    type: string;
-  };
-  createdAt: string;
-  updatedAt: string;
-}
+import {
+  Photo,
+  PhotoCardData,
+  PhotosQueryParams,
+  PhotoUpdateData,
+} from "@/types/photo.types";
 
 // Skeleton Components (unchanged)
 const PhotoCardSkeleton: React.FC<{ viewMode: "grid" | "list" }> = ({
@@ -106,14 +93,6 @@ const PhotoGridSkeleton: React.FC<{ viewMode: "grid" | "list" }> = ({
     </div>
   );
 };
-
-// Helper functions for category handling
-// const getCategoryName = (category: Photo["category"]): string => {
-//   if (typeof category === "string") {
-//     return category;
-//   }
-//   return category.name;
-// };
 
 const getCategoryId = (category: Photo["category"]): string => {
   if (typeof category === "string") {
@@ -239,25 +218,6 @@ const PhotoDash: React.FC = () => {
     }
   };
 
-  // const handleDeletePhoto = async (photoId: string) => {
-  //   if (
-  //     !confirm(
-  //       "Are you sure you want to delete this photo? This action cannot be undone."
-  //     )
-  //   )
-  //     return;
-
-  //   try {
-  //     await deletePhoto(photoId).unwrap();
-  //     toast.success("Photo deleted successfully");
-  //   } catch (error: any) {
-  //     const errorMessage =
-  //       error?.data?.message || error?.message || "Delete failed";
-  //     toast.error(`Delete failed: ${errorMessage}`);
-  //     console.error("Delete failed:", error);
-  //   }
-  // };
-
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingPhoto) return;
@@ -293,7 +253,6 @@ const PhotoDash: React.FC = () => {
   return (
     <>
       <BackNavigation />
-
       <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white p-4'>
         <div className='max-w-7xl mx-auto space-y-6'>
           <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
@@ -322,7 +281,7 @@ const PhotoDash: React.FC = () => {
           {/* Stats Card */}
           <Card>
             <CardContent className='pt-1'>
-              <div className='grid grid-cols-1 md:grid-cols-3 gap-4 text-center'>
+              <div className='grid grid-cols-3 md:grid-cols-3 gap-3 text-center'>
                 <div>
                   <h3 className='text-2xl font-bold text-blue-600'>
                     {photosData?.data.pagination.total || 0}

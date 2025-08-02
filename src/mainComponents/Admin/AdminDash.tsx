@@ -16,7 +16,6 @@ import {
   MessageCircle,
   Upload,
   Loader2,
-  Delete,
   RefreshCw,
   AlertTriangle,
 } from "lucide-react";
@@ -31,10 +30,7 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 
 // Import API hooks
-import {
-  useGetContactMessagesQuery,
-  useMarkMessageAsReadMutation,
-} from "@/redux-store/services/contactApi";
+import { useGetContactMessagesQuery } from "@/redux-store/services/contactApi";
 import { useGetPhotosQuery } from "@/redux-store/services/photoApi";
 import { useGetVideosQuery } from "@/redux-store/services/videoApi";
 import { useGetPressQuery } from "@/redux-store/services/pressApi";
@@ -58,9 +54,6 @@ const AdminDash = () => {
     page: 1,
     limit: 4, // Show 4 recent messages in dashboard
   });
-
-  const [markMessageAsRead, { isLoading: markingAsRead }] =
-    useMarkMessageAsReadMutation();
 
   // Get counts for photos, videos, and press articles
   const { data: photosData } = useGetPhotosQuery({
@@ -91,20 +84,6 @@ const AdminDash = () => {
 
   const handleLogout = () => {
     dispatch(logout());
-  };
-
-  const handleMarkAsRead = async (
-    messageId: string,
-    currentReadStatus: boolean
-  ) => {
-    try {
-      await markMessageAsRead({
-        id: messageId,
-        isRead: !currentReadStatus,
-      }).unwrap();
-    } catch (error) {
-      console.error("Failed to update message status:", error);
-    }
   };
 
   const handleViewMessage = (id: string) => {
@@ -420,20 +399,6 @@ const AdminDash = () => {
                             onClick={() => handleViewMessage(message._id)}
                           >
                             <Eye className='w-4 h-4' />
-                          </Button>
-                          <Button
-                            size='sm'
-                            variant='outline'
-                            onClick={() =>
-                              handleMarkAsRead(message._id, message.isRead)
-                            }
-                            disabled={markingAsRead}
-                          >
-                            {markingAsRead ? (
-                              <Loader2 className='w-4 h-4 animate-spin' />
-                            ) : (
-                              <Delete className='w-4 h-4' />
-                            )}
                           </Button>
                         </div>
                       </div>
