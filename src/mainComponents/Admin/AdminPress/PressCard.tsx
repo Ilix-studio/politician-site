@@ -130,8 +130,6 @@ const PressCard = ({
             {press.title}
           </h2>
 
-          <p className='text-slate-600 mb-4 line-clamp-3'>{press.excerpt}</p>
-
           {/* Meta Information */}
           <div className='flex flex-wrap items-center gap-4 text-sm text-slate-500 mb-4'>
             <div className='flex items-center gap-1'>
@@ -197,8 +195,6 @@ const PressCard = ({
                 {categoryName.charAt(0).toUpperCase() + categoryName.slice(1)}
               </Badge>
             </div>
-
-            <p className='text-slate-600 line-clamp-2'>{press.excerpt}</p>
 
             {/* Meta Information */}
             <div className='flex flex-wrap items-center gap-4 text-sm text-slate-500'>

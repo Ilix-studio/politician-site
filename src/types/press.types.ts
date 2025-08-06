@@ -21,7 +21,7 @@ export interface Press {
   author: string;
   readTime: string;
   content: string;
-  excerpt: string;
+
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -84,7 +84,6 @@ export interface PressCreateData {
   author: string;
   readTime: string;
   content: string;
-  excerpt: string;
 }
 
 export interface PressUpdateData {
@@ -96,7 +95,7 @@ export interface PressUpdateData {
   author?: string;
   readTime?: string;
   content?: string;
-  excerpt?: string;
+
   isActive?: boolean;
 }
 
@@ -108,7 +107,7 @@ export interface PressUploadData {
   author: string;
   readTime: string;
   content: string;
-  excerpt: string;
+
   alt?: string;
 }
 
@@ -120,6 +119,5 @@ export interface PressMultipleUploadData {
   author: string;
   readTime: string;
   content: string;
-  excerpt: string;
   altTexts?: string | string[];
 }

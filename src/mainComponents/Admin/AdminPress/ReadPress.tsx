@@ -155,10 +155,6 @@ const ReadPress = () => {
                 {press.title}
               </h1>
 
-              <p className='text-lg text-slate-600 leading-relaxed'>
-                {press.excerpt}
-              </p>
-
               {/* Meta Information */}
               <div className='flex flex-wrap items-center gap-6 text-sm text-slate-500'>
                 <div className='flex items-center gap-2'>

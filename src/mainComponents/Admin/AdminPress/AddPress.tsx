@@ -41,7 +41,6 @@ const AddPress = () => {
     author: "",
     readTime: "",
     content: "",
-    excerpt: "",
   });
 
   const [urlFormData, setUrlFormData] = useState({
@@ -119,7 +118,7 @@ const AddPress = () => {
           author: formData.author,
           readTime: formData.readTime,
           content: formData.content,
-          excerpt: formData.excerpt,
+
           alt: urlFormData.alt || formData.title,
         };
 
@@ -385,24 +384,6 @@ const AddPress = () => {
                   <CardTitle>Content</CardTitle>
                 </CardHeader>
                 <CardContent className='space-y-4'>
-                  <div>
-                    <Label htmlFor='excerpt'>Excerpt *</Label>
-                    <Textarea
-                      id='excerpt'
-                      value={formData.excerpt}
-                      onChange={(e) =>
-                        handleInputChange("excerpt", e.target.value)
-                      }
-                      placeholder='Brief summary of the article (max 500 characters)'
-                      maxLength={500}
-                      rows={3}
-                      required
-                    />
-                    <p className='text-sm text-slate-500 mt-1'>
-                      {formData.excerpt.length}/500 characters
-                    </p>
-                  </div>
-
                   <div>
                     <Label htmlFor='content'>Full Content *</Label>
                     <Textarea

@@ -180,11 +180,6 @@ const ShowPressById = () => {
               {press.title}
             </h1>
 
-            {/* Excerpt */}
-            <p className='text-lg text-muted-foreground mb-6 leading-relaxed'>
-              {press.excerpt}
-            </p>
-
             {/* Metadata */}
             <div className='grid grid-cols-2 md:flex md:flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6 pb-6 border-b'>
               <div className='flex items-center gap-1'>
@@ -326,9 +321,7 @@ const ShowPressById = () => {
                           <h3 className='font-semibold mb-2 line-clamp-2 hover:text-[#FF9933] transition-colors'>
                             {relatedPressArticle.title}
                           </h3>
-                          <p className='text-sm text-muted-foreground mb-3 line-clamp-2'>
-                            {relatedPressArticle.excerpt}
-                          </p>
+
                           <div className='flex items-center gap-1 text-xs text-muted-foreground'>
                             <span>{formatDate(relatedPressArticle.date)}</span>
                             <span>•</span>
@@ -398,9 +391,7 @@ const ShowPressById = () => {
                           <h4 className='font-medium mb-1 line-clamp-2'>
                             {pressArticle.title}
                           </h4>
-                          <p className='text-sm text-muted-foreground mb-2 line-clamp-1'>
-                            {pressArticle.excerpt}
-                          </p>
+
                           <div className='flex items-center gap-1 text-xs text-muted-foreground'>
                             <span>{formatDate(pressArticle.date)}</span>
                             <span>•</span>

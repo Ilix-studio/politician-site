@@ -243,6 +243,7 @@ const Gallery = () => {
                           {categoryName.charAt(0).toUpperCase() +
                             categoryName.slice(1)}
                         </span>
+                        <p>view All</p>
                       </div>
 
                       {/* Hover overlay */}

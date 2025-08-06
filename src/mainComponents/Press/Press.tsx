@@ -54,7 +54,7 @@ const Press = () => {
 
     const shareData = {
       title: press.title,
-      text: press.excerpt,
+
       url: `${window.location.origin}/press/${press._id}`,
     };
 
@@ -225,10 +225,6 @@ const Press = () => {
                           {press.title}
                         </h3>
                       </div>
-
-                      <p className='text-gray-600 text-sm mb-3 line-clamp-2'>
-                        {press.excerpt}
-                      </p>
 
                       <div className='flex items-center gap-2 text-xs text-gray-500 mb-4'>
                         <span>{press.author}</span>

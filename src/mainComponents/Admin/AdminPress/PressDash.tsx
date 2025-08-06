@@ -283,10 +283,6 @@ const PressDash = () => {
                           </Badge>
                         </div>
 
-                        <p className='text-slate-600 line-clamp-2'>
-                          {press.excerpt}
-                        </p>
-
                         <div className='flex flex-wrap items-center gap-4 text-sm text-slate-500'>
                           <span>By {press.author}</span>
                           <span>•</span>
