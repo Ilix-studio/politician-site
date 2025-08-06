@@ -8,13 +8,17 @@ import {
   Play,
   Clock,
   AlertCircle,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Import API hooks from project knowledge
-import { useGetPhotosQuery } from "@/redux-store/services/photoApi";
+import {
+  useGetPhotosQuery,
+  useGetPhotosByCategoryQuery,
+} from "@/redux-store/services/photoApi";
 import { useGetVideosQuery } from "@/redux-store/services/videoApi";
 
 // Import types from project knowledge
@@ -25,6 +29,7 @@ const Gallery = () => {
   const navigate = useNavigate();
   const [hovered, setHovered] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"photos" | "videos">("photos");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // API hooks for photos with proper types from project knowledge
   const {
@@ -37,6 +42,21 @@ const Gallery = () => {
     sortBy: "createdAt",
     sortOrder: "desc",
   });
+
+  // API hook for category-filtered photos
+  const {
+    data: categoryPhotosData,
+    isLoading: loadingCategoryPhotos,
+    error: categoryPhotosError,
+  } = useGetPhotosByCategoryQuery(
+    {
+      category: selectedCategory!,
+      limit: 50,
+    },
+    {
+      skip: !selectedCategory,
+    }
+  );
 
   // API hooks for videos with proper types from project knowledge
   const {
@@ -92,6 +112,14 @@ const Gallery = () => {
     return category.name;
   };
 
+  // Helper function to get photo category ID
+  const getPhotoCategoryId = (category: Photo["category"]): string => {
+    if (typeof category === "string") {
+      return category;
+    }
+    return category._id;
+  };
+
   // Helper function to get photo primary image
   const getPhotoMainImage = (photo: Photo) => {
     return photo.images && photo.images.length > 0
@@ -107,11 +135,19 @@ const Gallery = () => {
     navigate(`/view/video/${video._id}`);
   };
 
-  const isLoading = loadingPhotos || loadingVideos;
-  const hasError = photosError || videosError;
+  const handleCategoryFilter = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+  };
+
+  const clearCategoryFilter = () => {
+    setSelectedCategory(null);
+  };
+
+  const isLoading = loadingPhotos || loadingVideos || loadingCategoryPhotos;
+  const hasError = photosError || videosError || categoryPhotosError;
 
   // Loading state
-  if (isLoading) {
+  if (isLoading && !selectedCategory) {
     return (
       <section id='gallery' className='py-12 md:py-16 lg:py-24 bg-slate-50'>
         <div className='container px-4 sm:px-6'>
@@ -159,8 +195,17 @@ const Gallery = () => {
   }
 
   // Extract data with proper error handling
-  const photos = photosData?.data?.photos || [];
+  const photos = selectedCategory
+    ? categoryPhotosData?.data?.photos || []
+    : photosData?.data?.photos || [];
   const videos = videosData?.data?.videos || [];
+
+  // Get category name for filtered view
+  const selectedCategoryName = selectedCategory
+    ? photos[0]
+      ? getPhotoCategoryName(photos[0].category)
+      : "Category"
+    : null;
 
   return (
     <section id='gallery' className='py-12 md:py-16 lg:py-24 bg-slate-50'>
@@ -170,41 +215,41 @@ const Gallery = () => {
             Gallery
           </div>
           <h2 className='text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight'>
-            Moments from the Journey
+            {selectedCategory
+              ? `${selectedCategoryName} Photos`
+              : "Moments from the Journey"}
           </h2>
           <p className='text-muted-foreground mt-4 px-2'>
-            A glimpse into our work, community engagement, and public events.
+            {selectedCategory
+              ? `Photos from ${selectedCategoryName} category`
+              : "A glimpse into our work, community engagement, and public events."}
           </p>
+          {selectedCategory && (
+            <button
+              onClick={clearCategoryFilter}
+              className='mt-4 inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors'
+            >
+              <X className='w-4 h-4' />
+              Back to Photos
+            </button>
+          )}
         </div>
 
-        {/* Tabs for Photos and Videos */}
-        <Tabs
-          defaultValue='photos'
-          value={activeTab}
-          onValueChange={(value) => setActiveTab(value as "photos" | "videos")}
-          className='w-full'
-        >
-          <TabsList className='grid w-full max-w-md mx-auto grid-cols-2 mb-8'>
-            <TabsTrigger value='photos' className='flex items-center gap-2'>
-              <span>📸</span>
-              Photos ({photos.length})
-            </TabsTrigger>
-            <TabsTrigger value='videos' className='flex items-center gap-2'>
-              <Play className='w-4 h-4' />
-              Videos ({videos.length})
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Photos Tab Content */}
-          <TabsContent value='photos' className='w-full'>
-            {photos.length === 0 ? (
+        {selectedCategory ? (
+          // Category filtered photos view
+          <div className='w-full'>
+            {loadingCategoryPhotos ? (
+              <div className='flex justify-center'>
+                <Loader2 className='w-8 h-8 animate-spin text-[#138808]' />
+              </div>
+            ) : photos.length === 0 ? (
               <div className='text-center py-12'>
                 <p className='text-muted-foreground text-lg'>
-                  No photos available at the moment.
+                  No photos available in this category.
                 </p>
               </div>
             ) : (
-              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-7xl mx-auto'>
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-7xl mx-auto'>
                 {photos.map((photo, index) => {
                   const mainImage = getPhotoMainImage(photo);
                   const categoryName = getPhotoCategoryName(photo.category);
@@ -243,7 +288,6 @@ const Gallery = () => {
                           {categoryName.charAt(0).toUpperCase() +
                             categoryName.slice(1)}
                         </span>
-                        <p>view All</p>
                       </div>
 
                       {/* Hover overlay */}
@@ -283,124 +327,249 @@ const Gallery = () => {
                 })}
               </div>
             )}
-          </TabsContent>
+          </div>
+        ) : (
+          // Regular gallery view with tabs
+          <Tabs
+            defaultValue='photos'
+            value={activeTab}
+            onValueChange={(value) =>
+              setActiveTab(value as "photos" | "videos")
+            }
+            className='w-full'
+          >
+            <TabsList className='grid w-full max-w-md mx-auto grid-cols-2 mb-8'>
+              <TabsTrigger value='photos' className='flex items-center gap-2'>
+                <span>📸</span>
+                Photos ({photos.length})
+              </TabsTrigger>
+              <TabsTrigger value='videos' className='flex items-center gap-2'>
+                <Play className='w-4 h-4' />
+                Videos ({videos.length})
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Videos Tab Content */}
-          <TabsContent value='videos' className='w-full'>
-            {videos.length === 0 ? (
-              <div className='text-center py-12'>
-                <p className='text-muted-foreground text-lg'>
-                  No videos available at the moment.
-                </p>
-              </div>
-            ) : (
-              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-7xl mx-auto'>
-                {videos.map((video, index) => {
-                  const categoryName = getVideoCategoryName(video.category);
+            {/* Photos Tab Content */}
+            <TabsContent value='photos' className='w-full'>
+              {photos.length === 0 ? (
+                <div className='text-center py-12'>
+                  <p className='text-muted-foreground text-lg'>
+                    No photos available at the moment.
+                  </p>
+                </div>
+              ) : (
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-7xl mx-auto'>
+                  {photos.map((photo, index) => {
+                    const mainImage = getPhotoMainImage(photo);
+                    const categoryName = getPhotoCategoryName(photo.category);
+                    const categoryId = getPhotoCategoryId(photo.category);
 
-                  return (
-                    <motion.div
-                      key={video._id}
-                      onClick={() => handleVideoClick(video)}
-                      onMouseEnter={() => setHovered(index + 1000)} // Offset to avoid conflicts with photos
-                      onMouseLeave={() => setHovered(null)}
-                      className={cn(
-                        "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out cursor-pointer group",
-                        hovered !== null &&
-                          hovered !== index + 1000 &&
-                          "blur-sm scale-[0.98]"
-                      )}
-                      whileHover={{ scale: 1.02 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <div className='absolute inset-0'>
-                        <img
-                          src={video.thumbnail}
-                          alt={video.title}
-                          className='w-full h-full object-cover'
-                          loading='lazy'
-                        />
-
-                        {/* Play button overlay */}
-                        <div className='absolute inset-0 flex items-center justify-center'>
-                          <div className='w-16 h-16 bg-white/90 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform'>
-                            <Play
-                              className='w-8 h-8 text-[#FF9933] ml-1'
-                              fill='currentColor'
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Category and featured badges */}
-                      <div className='absolute top-4 left-4 flex gap-2'>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(
-                            categoryName
-                          )}`}
-                        >
-                          {categoryName.charAt(0).toUpperCase() +
-                            categoryName.slice(1)}
-                        </span>
-                        {video.featured && (
-                          <span className='px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium'>
-                            Featured
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Hover overlay */}
-                      <div
+                    return (
+                      <motion.div
+                        key={photo._id}
+                        onMouseEnter={() => setHovered(index)}
+                        onMouseLeave={() => setHovered(null)}
                         className={cn(
-                          "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300",
-                          hovered === index + 1000 ? "opacity-100" : "opacity-0"
+                          "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out",
+                          hovered !== null &&
+                            hovered !== index &&
+                            "blur-sm scale-[0.98]"
                         )}
+                        whileHover={{ scale: 1.02 }}
+                        transition={{ duration: 0.2 }}
                       >
-                        <div className='text-white'>
-                          <h3 className='text-xl md:text-2xl font-bold mb-2 line-clamp-2'>
-                            {video.title}
-                          </h3>
-                          <div className='flex items-center gap-4 text-sm opacity-90 flex-wrap'>
-                            <div className='flex items-center gap-1'>
-                              <Calendar className='h-4 w-4' />
-                              {formatDate(video.date)}
-                            </div>
-                            {video.duration && (
+                        <div
+                          className='absolute inset-0 cursor-pointer'
+                          onClick={() => handlePhotoClick(photo)}
+                        >
+                          <img
+                            src={mainImage.src}
+                            alt={mainImage.alt}
+                            className='w-full h-full object-cover'
+                            loading='lazy'
+                          />
+                        </div>
+
+                        {/* Modified Category badge with flex layout */}
+                        <div className='absolute top-4 left-4 flex items-center gap-2'>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(
+                              categoryName
+                            )}`}
+                          >
+                            {categoryName.charAt(0).toUpperCase() +
+                              categoryName.slice(1)}
+                          </span>
+                          <p
+                            className='text-xs text-white bg-black/50 px-2 py-1 rounded cursor-pointer underline hover:bg-black/70 transition-colors'
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCategoryFilter(categoryId);
+                            }}
+                          >
+                            view All
+                          </p>
+                        </div>
+
+                        {/* Hover overlay */}
+                        <div
+                          className={cn(
+                            "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300 pointer-events-none",
+                            hovered === index ? "opacity-100" : "opacity-0"
+                          )}
+                        >
+                          <div className='text-white'>
+                            <h3 className='text-xl md:text-2xl font-bold mb-2 line-clamp-2'>
+                              {photo.title}
+                            </h3>
+                            <div className='flex items-center gap-4 text-sm opacity-90'>
                               <div className='flex items-center gap-1'>
-                                <Clock className='h-4 w-4' />
-                                {video.duration}
+                                <Calendar className='h-4 w-4' />
+                                {formatDate(photo.date)}
+                              </div>
+                              {photo.location && (
+                                <div className='flex items-center gap-1'>
+                                  <MapPin className='h-4 w-4' />
+                                  <span className='truncate max-w-24'>
+                                    {photo.location}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            {photo.images && photo.images.length > 1 && (
+                              <div className='mt-2 text-xs opacity-75'>
+                                +{photo.images.length - 1} more photos
                               </div>
                             )}
                           </div>
-                          {video.description && (
-                            <p className='mt-2 text-xs opacity-75 line-clamp-2'>
-                              {video.description}
-                            </p>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
+            </TabsContent>
+
+            {/* Videos Tab Content */}
+            <TabsContent value='videos' className='w-full'>
+              {videos.length === 0 ? (
+                <div className='text-center py-12'>
+                  <p className='text-muted-foreground text-lg'>
+                    No videos available at the moment.
+                  </p>
+                </div>
+              ) : (
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-7xl mx-auto'>
+                  {videos.map((video, index) => {
+                    const categoryName = getVideoCategoryName(video.category);
+
+                    return (
+                      <motion.div
+                        key={video._id}
+                        onClick={() => handleVideoClick(video)}
+                        onMouseEnter={() => setHovered(index + 1000)} // Offset to avoid conflicts with photos
+                        onMouseLeave={() => setHovered(null)}
+                        className={cn(
+                          "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out cursor-pointer group",
+                          hovered !== null &&
+                            hovered !== index + 1000 &&
+                            "blur-sm scale-[0.98]"
+                        )}
+                        whileHover={{ scale: 1.02 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <div className='absolute inset-0'>
+                          <img
+                            src={video.thumbnail}
+                            alt={video.title}
+                            className='w-full h-full object-cover'
+                            loading='lazy'
+                          />
+
+                          {/* Play button overlay */}
+                          <div className='absolute inset-0 flex items-center justify-center'>
+                            <div className='w-16 h-16 bg-white/90 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform'>
+                              <Play
+                                className='w-8 h-8 text-[#FF9933] ml-1'
+                                fill='currentColor'
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Category and featured badges */}
+                        <div className='absolute top-4 left-4 flex gap-2'>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(
+                              categoryName
+                            )}`}
+                          >
+                            {categoryName.charAt(0).toUpperCase() +
+                              categoryName.slice(1)}
+                          </span>
+                          {video.featured && (
+                            <span className='px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium'>
+                              Featured
+                            </span>
                           )}
                         </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            )}
-          </TabsContent>
-          {/* See More Button */}
-          <div className='text-center mt-8'>
-            <button
-              onClick={() => {
-                if (activeTab === "photos") {
-                  navigate("/photo-gallery");
-                } else {
-                  navigate("/video-gallery");
-                }
-              }}
-              className='px-6 py-3 bg-gradient-to-r from-[#FF9933] to-[#138808] text-white font-medium rounded-lg hover:from-[#FF9933]/90 hover:to-[#138808]/90 transition-all duration-300 shadow-lg hover:shadow-xl'
-            >
-              See More {activeTab === "photos" ? "Photos" : "Videos"}
-            </button>
-          </div>
-        </Tabs>
+
+                        {/* Hover overlay */}
+                        <div
+                          className={cn(
+                            "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300",
+                            hovered === index + 1000
+                              ? "opacity-100"
+                              : "opacity-0"
+                          )}
+                        >
+                          <div className='text-white'>
+                            <h3 className='text-xl md:text-2xl font-bold mb-2 line-clamp-2'>
+                              {video.title}
+                            </h3>
+                            <div className='flex items-center gap-4 text-sm opacity-90 flex-wrap'>
+                              <div className='flex items-center gap-1'>
+                                <Calendar className='h-4 w-4' />
+                                {formatDate(video.date)}
+                              </div>
+                              {video.duration && (
+                                <div className='flex items-center gap-1'>
+                                  <Clock className='h-4 w-4' />
+                                  {video.duration}
+                                </div>
+                              )}
+                            </div>
+                            {video.description && (
+                              <p className='mt-2 text-xs opacity-75 line-clamp-2'>
+                                {video.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
+            </TabsContent>
+
+            {/* See More Button */}
+            <div className='text-center mt-8'>
+              <button
+                onClick={() => {
+                  if (activeTab === "photos") {
+                    navigate("/photo-gallery");
+                  } else {
+                    navigate("/video-gallery");
+                  }
+                }}
+                className='px-6 py-3 bg-gradient-to-r from-[#FF9933] to-[#138808] text-white font-medium rounded-lg hover:from-[#FF9933]/90 hover:to-[#138808]/90 transition-all duration-300 shadow-lg hover:shadow-xl'
+              >
+                See More {activeTab === "photos" ? "Photos" : "Videos"}
+              </button>
+            </div>
+          </Tabs>
+        )}
       </div>
     </section>
   );
