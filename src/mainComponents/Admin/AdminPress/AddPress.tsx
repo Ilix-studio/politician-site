@@ -13,6 +13,9 @@ import {
   Image as ImageIcon,
   Link as LinkIcon,
   FileText,
+  Plus,
+  Check,
+  X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -22,9 +25,13 @@ import {
   useCreatePressMutation,
   useUploadPressMutation,
 } from "@/redux-store/services/pressApi";
-import { useGetCategoriesByTypeQuery } from "@/redux-store/services/categoryApi";
+import {
+  useGetCategoriesByTypeQuery,
+  useCreateCategoryMutation,
+} from "@/redux-store/services/categoryApi";
 import { PressCreateData } from "@/types/press.types";
 import { BackNavigation } from "@/config/navigation/BackNavigation";
+import toast from "react-hot-toast";
 
 const AddPress = () => {
   const navigate = useNavigate();
@@ -38,7 +45,6 @@ const AddPress = () => {
     source: "",
     date: new Date().toISOString().split("T")[0],
     category: "",
-    author: "",
     readTime: "",
     content: "",
   });
@@ -52,6 +58,10 @@ const AddPress = () => {
   const [imagePreview, setImagePreview] = useState<string>("");
   const [uploadMethod, setUploadMethod] = useState<"upload" | "url">("upload");
 
+  // Category management state
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+
   // API hooks
   const {
     data: pressCategories,
@@ -60,6 +70,8 @@ const AddPress = () => {
   } = useGetCategoriesByTypeQuery("press");
   const [createPress, { isLoading: creating }] = useCreatePressMutation();
   const [uploadPress, { isLoading: uploading }] = useUploadPressMutation();
+  const [createCategory, { isLoading: creatingCategory }] =
+    useCreateCategoryMutation();
 
   // Debug logging
   console.log("Press categories:", pressCategories);
@@ -72,6 +84,34 @@ const AddPress = () => {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // Create new category
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim()) {
+      toast.error("Please enter a category name");
+      return;
+    }
+
+    try {
+      const result = await createCategory({
+        name: newCategoryName.trim(),
+        type: "press",
+      }).unwrap();
+
+      console.log("Created category:", result);
+      toast.success("Category created successfully");
+      setNewCategoryName("");
+      setShowAddCategory(false);
+
+      // Auto-select the newly created category
+      setFormData((prev) => ({ ...prev, category: result._id }));
+    } catch (error: any) {
+      console.error("Create category error:", error);
+      toast.error(
+        error?.data?.message || error?.message || "Failed to create category"
+      );
+    }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,12 +138,12 @@ const AddPress = () => {
 
     // Validation
     if (!formData.title.trim()) {
-      alert("Please enter a title");
+      toast.error("Please enter a title");
       return;
     }
 
     if (!formData.category) {
-      alert("Please select a category");
+      toast.error("Please select a category");
       return;
     }
 
@@ -115,10 +155,8 @@ const AddPress = () => {
           source: formData.source,
           date: formData.date,
           category: formData.category,
-          author: formData.author,
           readTime: formData.readTime,
           content: formData.content,
-
           alt: urlFormData.alt || formData.title,
         };
 
@@ -138,16 +176,17 @@ const AddPress = () => {
 
         await createPress(createData).unwrap();
       } else {
-        alert(
+        toast.error(
           "Please provide an image either by uploading a file or entering a URL"
         );
         return;
       }
 
+      toast.success("Press article created successfully!");
       navigate("/admin/pressDashboard");
     } catch (error: any) {
       console.error("Failed to create press article:", error);
-      alert(error.data?.message || "Failed to create press article");
+      toast.error(error.data?.message || "Failed to create press article");
     }
   };
 
@@ -166,7 +205,7 @@ const AddPress = () => {
           >
             {/* Page Header */}
             <div>
-              <h1 className='text-3xl font-bold text-slate-800'>
+              <h1 className='text-2xl font-bold text-slate-800'>
                 Add Press Article
               </h1>
               <p className='text-slate-600 mt-1'>
@@ -213,18 +252,6 @@ const AddPress = () => {
 
                   <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
                     <div>
-                      <Label htmlFor='author'>Author *</Label>
-                      <Input
-                        id='author'
-                        value={formData.author}
-                        onChange={(e) =>
-                          handleInputChange("author", e.target.value)
-                        }
-                        placeholder='Author name'
-                        required
-                      />
-                    </div>
-                    <div>
                       <Label htmlFor='date'>Date *</Label>
                       <Input
                         id='date'
@@ -250,9 +277,10 @@ const AddPress = () => {
                     </div>
                   </div>
 
-                  <div className='grid grid-cols-1 md:grid-cols-1 gap-4'>
-                    <div>
-                      <Label htmlFor='category'>Category *</Label>
+                  {/* Category with Add Button */}
+                  <div>
+                    <Label htmlFor='category'>Category *</Label>
+                    <div className='flex gap-2'>
                       <select
                         id='category'
                         name='category'
@@ -260,8 +288,9 @@ const AddPress = () => {
                         onChange={(e) =>
                           handleInputChange("category", e.target.value)
                         }
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                        className='flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                         required
+                        disabled={categoriesLoading}
                       >
                         <option value=''>
                           {categoriesLoading
@@ -273,18 +302,66 @@ const AddPress = () => {
                         {!categoriesLoading &&
                           !categoriesError &&
                           pressCategories?.map((category) => (
-                            <option key={category._id} value={category.name}>
+                            <option key={category._id} value={category._id}>
                               {category.name}
                             </option>
                           ))}
                       </select>
-                      {categoriesError && (
-                        <p className='text-sm text-red-500 mt-1'>
-                          Failed to load categories. Please refresh and try
-                          again.
-                        </p>
-                      )}
+                      <Button
+                        type='button'
+                        onClick={() => setShowAddCategory(!showAddCategory)}
+                        className='px-3 py-2 bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center gap-1'
+                        title='Add new category'
+                      >
+                        <Plus className='w-4 h-4' />
+                      </Button>
                     </div>
+
+                    {/* Add Category Input */}
+                    {showAddCategory && (
+                      <div className='mt-2 p-3 bg-gray-50 rounded-lg border'>
+                        <div className='flex gap-2'>
+                          <Input
+                            type='text'
+                            value={newCategoryName}
+                            onChange={(e) => setNewCategoryName(e.target.value)}
+                            placeholder='Enter category name'
+                            className='flex-1'
+                            onKeyPress={(e) =>
+                              e.key === "Enter" && handleCreateCategory()
+                            }
+                          />
+                          <Button
+                            type='button'
+                            onClick={handleCreateCategory}
+                            disabled={creatingCategory}
+                            className='px-3 py-2 bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center gap-1'
+                          >
+                            {creatingCategory ? (
+                              <Loader2 className='w-4 h-4 animate-spin' />
+                            ) : (
+                              <Check className='w-4 h-4' />
+                            )}
+                          </Button>
+                          <Button
+                            type='button'
+                            onClick={() => {
+                              setShowAddCategory(false);
+                              setNewCategoryName("");
+                            }}
+                            className='px-3 py-2 bg-gray-500 text-white hover:bg-gray-600 transition-colors'
+                          >
+                            <X className='w-4 h-4' />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {categoriesError && (
+                      <p className='text-sm text-red-500 mt-1'>
+                        Failed to load categories. Please refresh and try again.
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>

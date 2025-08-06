@@ -36,7 +36,6 @@ const EditPress = () => {
     source: "",
     date: "",
     category: "",
-    author: "",
     readTime: "",
     content: "",
 
@@ -91,7 +90,6 @@ const EditPress = () => {
         source: press.source,
         date: formattedDate,
         category: getCategoryId(press.category),
-        author: press.author,
         readTime: press.readTime,
         content: press.content,
         isActive: press.isActive,
@@ -236,18 +234,6 @@ const EditPress = () => {
                   </div>
 
                   <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                    <div>
-                      <Label htmlFor='author'>Author *</Label>
-                      <Input
-                        id='author'
-                        value={formData.author || ""}
-                        onChange={(e) =>
-                          handleInputChange("author", e.target.value)
-                        }
-                        placeholder='Author name'
-                        required
-                      />
-                    </div>
                     <div>
                       <Label htmlFor='date'>Date *</Label>
                       <Input

@@ -18,7 +18,6 @@ export interface Press {
         type: string;
       }
     | string;
-  author: string;
   readTime: string;
   content: string;
 
@@ -41,7 +40,7 @@ export interface PressQueryParams {
   limit?: number;
   category?: string;
   search?: string;
-  sortBy?: "date" | "title" | "author" | "readTime";
+  sortBy?: "date" | "title" | "readTime";
   sortOrder?: "asc" | "desc";
 }
 
@@ -81,7 +80,6 @@ export interface PressCreateData {
   date?: string;
   images: PressImage[];
   category: string;
-  author: string;
   readTime: string;
   content: string;
 }
@@ -92,7 +90,6 @@ export interface PressUpdateData {
   date?: string;
   images?: PressImage[];
   category?: string;
-  author?: string;
   readTime?: string;
   content?: string;
 
@@ -104,7 +101,6 @@ export interface PressUploadData {
   source: string;
   date?: string;
   category: string;
-  author: string;
   readTime: string;
   content: string;
 
@@ -116,7 +112,6 @@ export interface PressMultipleUploadData {
   source: string;
   date?: string;
   category: string;
-  author: string;
   readTime: string;
   content: string;
   altTexts?: string | string[];
