@@ -112,7 +112,7 @@ const VideoDash: React.FC = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [deletingVideoId, setDeletingVideoId] = useState<string | null>(null);
 
-  // Query parameters
+  // Query parameters - Fixed to match PhotoDash pattern
   const [queryParams, setQueryParams] = useState<VideoQueryParams>({
     page: "1",
     limit: "12",
@@ -122,13 +122,39 @@ const VideoDash: React.FC = () => {
     sortOrder: "desc",
   });
 
+  // Build clean query params that only include non-empty values - Following PhotoDash pattern
+  const cleanQueryParams = React.useMemo(() => {
+    const params: VideoQueryParams = {
+      page: queryParams.page,
+      limit: queryParams.limit,
+      sortBy: queryParams.sortBy,
+      sortOrder: queryParams.sortOrder,
+    };
+
+    // Only include category if it's not empty and not "all"
+    if (
+      queryParams.category &&
+      queryParams.category !== "all" &&
+      queryParams.category.trim() !== ""
+    ) {
+      params.category = queryParams.category;
+    }
+
+    // Only include search if it's not empty
+    if (queryParams.search && queryParams.search.trim() !== "") {
+      params.search = queryParams.search;
+    }
+
+    return params;
+  }, [queryParams]);
+
   // API hooks
   const {
     data: videosData,
     isLoading: isLoadingVideos,
     error: videosError,
     refetch: refetchVideos,
-  } = useGetVideosQuery(queryParams);
+  } = useGetVideosQuery(cleanQueryParams);
 
   const { data: categories = [], isLoading: isLoadingCategories } =
     useGetCategoriesByTypeQuery("video");
@@ -170,13 +196,18 @@ const VideoDash: React.FC = () => {
   }
 
   const handleSearch = (search: string) => {
-    setQueryParams((prev) => ({ ...prev, search, page: "1" }));
-  };
-
-  const handleCategoryFilter = (categoryId: string) => {
     setQueryParams((prev) => ({
       ...prev,
-      category: categoryId === "all" ? "" : categoryId,
+      search: search.trim(),
+      page: "1",
+    }));
+  };
+
+  // Fixed category filter handler - Following PhotoDash pattern
+  const handleCategoryFilter = (category: string) => {
+    setQueryParams((prev) => ({
+      ...prev,
+      category: category === "all" ? "" : category,
       page: "1",
     }));
   };
@@ -270,76 +301,80 @@ const VideoDash: React.FC = () => {
             </div>
           </div>
 
-          {/* Filters and Controls */}
-          <Card className='mb-4'>
-            <CardContent className='p-3'>
-              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 items-end'>
-                {/* Search */}
-                <div className='lg:col-span-2'>
-                  <label className='text-sm font-medium text-slate-700 mb-2 block'>
-                    Search Videos
-                  </label>
+          {/* Stats Card */}
+          <Card>
+            <CardContent className='pt-1'>
+              <div className='grid grid-cols-3 md:grid-cols-3 gap-3 text-center'>
+                <div>
+                  <h3 className='text-2xl font-bold text-blue-600'>
+                    {pagination?.totalVideos || 0}
+                  </h3>
+                  <p className='text-sm text-gray-600'>Total Videos</p>
+                </div>
+                <div>
+                  <h3 className='text-2xl font-bold text-green-600'>
+                    {categories.length}
+                  </h3>
+                  <p className='text-sm text-gray-600'>Categories</p>
+                </div>
+                <div>
+                  <h3 className='text-2xl font-bold text-purple-600'>
+                    {pagination?.totalPages || 0}
+                  </h3>
+                  <p className='text-sm text-gray-600'>Pages</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Filters and Controls - Improved layout following PhotoDash */}
+          <Card>
+            <CardContent className='pt-1'>
+              <div className='flex flex-col sm:flex-row gap-4'>
+                <div className='flex-1'>
                   <div className='relative'>
                     <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4' />
                     <Input
-                      placeholder='Search by title or description...'
+                      placeholder='Search videos...'
                       value={queryParams.search || ""}
                       onChange={(e) => handleSearch(e.target.value)}
                       className='pl-10'
+                      disabled={isLoadingVideos}
                     />
                   </div>
                 </div>
 
-                {/* Category Filter */}
-                <div>
-                  <label className='text-sm font-medium text-slate-700 mb-2 block'>
-                    Category
-                  </label>
-                  <Select
-                    value={queryParams.category || "all"}
-                    onValueChange={handleCategoryFilter}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='all'>All Categories</SelectItem>
-                      {isLoadingCategories ? (
-                        <SelectItem value='loading' disabled>
-                          Loading...
-                        </SelectItem>
-                      ) : (
-                        categories.map((category) => (
-                          <SelectItem key={category._id} value={category._id}>
-                            {category.name}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {/* Category Filter - Using native select like PhotoDash */}
+                <select
+                  className='w-48 px-3 py-2 border rounded-md text-sm'
+                  value={queryParams.category || "all"}
+                  onChange={(e) => handleCategoryFilter(e.target.value)}
+                  disabled={isLoadingVideos || isLoadingCategories}
+                >
+                  <option value='all'>All Categories</option>
+                  {categories.map((cat) => (
+                    <option key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
 
-                {/* Sort */}
-                <div>
-                  <label className='text-sm font-medium text-slate-700 mb-2 block'>
-                    Sort By
-                  </label>
-                  <Select
-                    value={`${queryParams.sortBy}-${queryParams.sortOrder}`}
-                    onValueChange={handleSortChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {VIDEO_SORT_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {/* Sort - Keep the Select component for this */}
+                <Select
+                  value={`${queryParams.sortBy}-${queryParams.sortOrder}`}
+                  onValueChange={handleSortChange}
+                >
+                  <SelectTrigger className='w-48'>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {VIDEO_SORT_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>

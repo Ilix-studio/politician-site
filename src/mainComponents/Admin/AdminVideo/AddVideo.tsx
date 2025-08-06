@@ -384,6 +384,16 @@ const AddVideo = () => {
                                   <Check className='w-4 h-4' />
                                 )}
                               </button>
+                              {/* <button
+                                type='button'
+                                onClick={() => {
+                                  setShowAddCategory(false);
+                                  setNewCategoryName("");
+                                }}
+                                className='px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors'
+                              >
+                                <X className='w-4 h-4' />
+                              </button> */}
                             </div>
                           </div>
                         )}

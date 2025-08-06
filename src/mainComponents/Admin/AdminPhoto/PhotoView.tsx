@@ -263,29 +263,6 @@ const PhotoView: React.FC<PhotoViewProps> = ({
             </div>
           )}
 
-          {/* Images Grid (if multiple images) */}
-          {photo.images && photo.images.length > 1 && (
-            <div>
-              <h3 className='text-lg font-semibold mb-2'>All Images</h3>
-              <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
-                {photo.images.map((image, index) => (
-                  <div key={index} className='relative group cursor-pointer'>
-                    <img
-                      src={image.src}
-                      alt={image.alt}
-                      className='w-full h-32 object-cover rounded-lg shadow-md hover:shadow-lg transition-shadow'
-                      onClick={() => openLightbox(index)}
-                    />
-                    <div className='absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-lg' />
-                    <div className='absolute top-2 right-2 bg-black/50 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity'>
-                      {index + 1}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Lightbox Modal */}
           {showLightbox && photo.images && (
             <div className='fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4'>

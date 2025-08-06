@@ -274,8 +274,6 @@ const PressDash = () => {
                         </div>
 
                         <div className='flex flex-wrap items-center gap-4 text-sm text-slate-500'>
-                          <span>By {press.author}</span>
-                          <span>•</span>
                           <span>{press.source}</span>
                           <span>•</span>
                           <span>{formatDate(press.date)}</span>
