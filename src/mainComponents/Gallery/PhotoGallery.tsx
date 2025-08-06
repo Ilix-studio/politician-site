@@ -1,5 +1,5 @@
 // src/components/PhotoGallery.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,13 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Search, Calendar, MapPin, AlertCircle, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -31,19 +24,45 @@ const PhotoGallery: React.FC = () => {
   const [queryParams, setQueryParams] = useState<PhotosQueryParams>({
     page: 1,
     limit: 24,
-    category: "",
-    search: "",
     sortBy: "createdAt",
     sortOrder: "desc",
+    // Don't include category or search if they're empty
   });
 
-  // Use the correct API hook with proper error handling
+  // Build clean query params that only include non-empty values
+  const cleanQueryParams = React.useMemo(() => {
+    const params: PhotosQueryParams = {
+      page: queryParams.page,
+      limit: queryParams.limit,
+      sortBy: queryParams.sortBy,
+      sortOrder: queryParams.sortOrder,
+    };
+
+    // Only include category if it's not empty and not "all"
+    // Make sure to use the category ID, not "all"
+    if (
+      queryParams.category &&
+      queryParams.category !== "all" &&
+      queryParams.category.trim() !== ""
+    ) {
+      params.category = queryParams.category; // This will be the ObjectId
+    }
+
+    // Only include search if it's not empty
+    if (queryParams.search && queryParams.search.trim() !== "") {
+      params.search = queryParams.search;
+    }
+
+    return params;
+  }, [queryParams]);
+
+  // Use the correct API hook with clean params
   const {
     data: photosData,
     isLoading,
     error,
     refetch,
-  } = useGetPhotosQuery(queryParams);
+  } = useGetPhotosQuery(cleanQueryParams);
 
   // Fetch photo categories dynamically from API
   const {
@@ -51,6 +70,15 @@ const PhotoGallery: React.FC = () => {
     isLoading: categoriesLoading,
     error: categoriesError,
   } = useGetCategoriesByTypeQuery("photo");
+
+  // Debug logs to help troubleshoot
+  useEffect(() => {
+    console.log("Query params being sent:", cleanQueryParams);
+  }, [cleanQueryParams]);
+
+  useEffect(() => {
+    console.log("Categories loaded:", categories);
+  }, [categories]);
 
   const formatDate = (dateString: string | Date) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -84,13 +112,18 @@ const PhotoGallery: React.FC = () => {
   };
 
   const handleSearch = (search: string) => {
-    setQueryParams((prev) => ({ ...prev, search, page: 1 }));
+    setQueryParams((prev) => ({
+      ...prev,
+      search: search.trim(), // Trim whitespace
+      page: 1,
+    }));
   };
 
+  // Fixed category filter handler
   const handleCategoryFilter = (category: string) => {
     setQueryParams((prev) => ({
       ...prev,
-      category: category === "all" ? "" : category,
+      category: category === "all" ? undefined : category, // Keep the ObjectId
       page: 1,
     }));
   };
@@ -103,6 +136,17 @@ const PhotoGallery: React.FC = () => {
       sortOrder: sortOrder as "asc" | "desc",
       page: 1,
     }));
+  };
+
+  // Fixed clearAllFilters function
+  const clearAllFilters = () => {
+    setQueryParams({
+      page: 1,
+      limit: 24,
+      sortBy: "createdAt",
+      sortOrder: "desc",
+      // Remove category and search entirely, don't set to undefined
+    });
   };
 
   const handlePageChange = (page: number) => {
@@ -147,6 +191,9 @@ const PhotoGallery: React.FC = () => {
   const photos = photosData?.data?.photos || [];
   const pagination = photosData?.data?.pagination;
 
+  // Get the current category display value
+  const currentCategoryValue = queryParams.category || "all";
+
   return (
     <>
       <BackNavigation />
@@ -179,44 +226,35 @@ const PhotoGallery: React.FC = () => {
               </div>
 
               <div className='flex gap-2'>
-                <Select
-                  value={queryParams.category || "all"}
-                  onValueChange={handleCategoryFilter}
+                <select
+                  value={currentCategoryValue}
+                  onChange={(e) => handleCategoryFilter(e.target.value)}
                   disabled={categoriesLoading}
+                  className='w-48 px-2 py-2 border rounded-md bg-white text-sm'
                 >
-                  <SelectTrigger className='w-48'>
-                    <SelectValue
-                      placeholder={
-                        categoriesLoading ? "Loading..." : "Filter by category"
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='all'>All Categories</SelectItem>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat._id} value={cat._id}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <option value='' disabled hidden>
+                    {categoriesLoading ? "Loading..." : "Filter by category"}
+                  </option>
+                  <option value='all'>All Categories</option>
+                  {categories.map((cat) => (
+                    <option key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
 
-                <Select
+                <select
                   value={`${queryParams.sortBy}-${queryParams.sortOrder}`}
-                  onValueChange={handleSortChange}
+                  onChange={(e) => handleSortChange(e.target.value)}
+                  className='w-48 px-2 py-2 border rounded-md bg-white text-sm'
                 >
-                  <SelectTrigger className='w-48'>
-                    <SelectValue placeholder='Sort by' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='createdAt-desc'>Newest First</SelectItem>
-                    <SelectItem value='createdAt-asc'>Oldest First</SelectItem>
-                    <SelectItem value='title-asc'>Title A-Z</SelectItem>
-                    <SelectItem value='title-desc'>Title Z-A</SelectItem>
-                    <SelectItem value='date-desc'>Date (Recent)</SelectItem>
-                    <SelectItem value='date-asc'>Date (Oldest)</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <option value='createdAt-desc'>Newest First</option>
+                  <option value='createdAt-asc'>Oldest First</option>
+                  <option value='title-asc'>Title A-Z</option>
+                  <option value='title-desc'>Title Z-A</option>
+                  <option value='date-desc'>Date (Recent)</option>
+                  <option value='date-asc'>Date (Oldest)</option>
+                </select>
               </div>
             </div>
           </div>
@@ -242,19 +280,7 @@ const PhotoGallery: React.FC = () => {
                 Try adjusting your search terms or filters to find what you're
                 looking for.
               </p>
-              <Button
-                onClick={() =>
-                  setQueryParams({
-                    page: 1,
-                    limit: 24,
-                    category: "",
-                    search: "",
-                    sortBy: "createdAt",
-                    sortOrder: "desc",
-                  })
-                }
-                variant='outline'
-              >
+              <Button onClick={clearAllFilters} variant='outline'>
                 Clear Filters
               </Button>
             </div>
@@ -269,30 +295,19 @@ const PhotoGallery: React.FC = () => {
                       for "{queryParams.search}"
                     </span>
                   )}
-                  {queryParams.category && (
+                  {/* Fixed results summary to properly display category names */}
+                  {queryParams.category && queryParams.category !== "all" && (
                     <span className='ml-2 text-sm'>
                       in{" "}
                       {categories.find((c) => c._id === queryParams.category)
-                        ?.name || queryParams.category}
+                        ?.name || "Unknown Category"}
                     </span>
                   )}
                 </p>
 
-                {(queryParams.search || queryParams.category) && (
-                  <Button
-                    onClick={() =>
-                      setQueryParams({
-                        page: 1,
-                        limit: 24,
-                        category: "",
-                        search: "",
-                        sortBy: "createdAt",
-                        sortOrder: "desc",
-                      })
-                    }
-                    variant='ghost'
-                    size='sm'
-                  >
+                {(queryParams.search ||
+                  (queryParams.category && queryParams.category !== "all")) && (
+                  <Button onClick={clearAllFilters} variant='ghost' size='sm'>
                     Clear All Filters
                   </Button>
                 )}

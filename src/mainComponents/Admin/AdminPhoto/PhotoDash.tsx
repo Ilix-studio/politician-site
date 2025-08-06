@@ -320,23 +320,19 @@ const PhotoDash: React.FC = () => {
                     />
                   </div>
                 </div>
-                <Select
+                <select
+                  className='w-48 px-3 py-2 border rounded-md text-sm'
                   value={queryParams.category || "all"}
-                  onValueChange={handleCategoryFilter}
+                  onChange={(e) => handleCategoryFilter(e.target.value)}
                   disabled={isLoadingPhotos || isLoadingCategories}
                 >
-                  <SelectTrigger className='w-48'>
-                    <SelectValue placeholder='Filter by category' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='all'>All Categories</SelectItem>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat._id} value={cat._id}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <option value='all'>All Categories</option>
+                  {categories.map((cat) => (
+                    <option key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </CardContent>
           </Card>

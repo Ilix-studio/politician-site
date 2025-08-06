@@ -15,15 +15,21 @@ import {
   Calendar,
   Clock,
   AlertCircle,
+  Plus,
+  Check,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectAuth, selectIsAdmin } from "@/redux-store/slices/authSlice";
 import { Navigate } from "react-router-dom";
 import { useUploadVideoMutation } from "@/redux-store/services/videoApi";
-import { useGetCategoriesByTypeQuery } from "@/redux-store/services/categoryApi";
+import {
+  useGetCategoriesByTypeQuery,
+  useCreateCategoryMutation,
+} from "@/redux-store/services/categoryApi";
 import { VideoUploadData } from "@/types/video.types";
 import { BackNavigation } from "@/config/navigation/BackNavigation";
+import toast from "react-hot-toast";
 
 const AddVideo = () => {
   const navigate = useNavigate();
@@ -39,6 +45,12 @@ const AddVideo = () => {
     isLoading: categoriesLoading,
     error: categoriesError,
   } = useGetCategoriesByTypeQuery("video");
+
+  // Category management
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [createCategory, { isLoading: creatingCategory }] =
+    useCreateCategoryMutation();
 
   // Form state
   const [formData, setFormData] = useState<VideoUploadData>({
@@ -68,6 +80,34 @@ const AddVideo = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  // Create new category
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim()) {
+      toast.error("Please enter a category name");
+      return;
+    }
+
+    try {
+      const result = await createCategory({
+        name: newCategoryName.trim(),
+        type: "video",
+      }).unwrap();
+
+      console.log("Created category:", result);
+      toast.success("Category created successfully");
+      setNewCategoryName("");
+      setShowAddCategory(false);
+
+      // Auto-select the newly created category
+      setFormData((prev) => ({ ...prev, category: result._id }));
+    } catch (error: any) {
+      console.error("Create category error:", error);
+      toast.error(
+        error?.data?.message || error?.message || "Failed to create category"
+      );
     }
   };
 
@@ -154,8 +194,12 @@ const AddVideo = () => {
 
       // Success - navigate back to dashboard
       navigate("/admin/videoDashboard");
+      toast.success("Video uploaded successfully!");
     } catch (error: any) {
       console.error("Upload failed:", error);
+      toast.error(
+        error.data?.message || "Failed to upload video. Please try again."
+      );
       setErrors({
         submit:
           error.data?.message || "Failed to upload video. Please try again.",
@@ -169,6 +213,35 @@ const AddVideo = () => {
     if (thumbnailPreview) URL.revokeObjectURL(thumbnailPreview);
     navigate("/admin/videoDashboard");
   };
+
+  // Show loading state while categories are loading
+  if (categoriesLoading) {
+    return (
+      <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white flex items-center justify-center'>
+        <div className='flex items-center gap-2'>
+          <Loader2 className='w-6 h-6 animate-spin' />
+          <span>Loading categories...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if categories failed to load
+  if (categoriesError) {
+    return (
+      <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white flex items-center justify-center'>
+        <div className='text-center'>
+          <p className='text-red-600 mb-4'>Failed to load categories</p>
+          <button
+            onClick={() => window.location.reload()}
+            className='px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700'
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -235,41 +308,86 @@ const AddVideo = () => {
 
                     {/* Category and Date */}
                     <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                      {/* Category with Add Button */}
                       <div>
                         <Label htmlFor='category'>Category *</Label>
-                        <select
-                          id='category'
-                          value={formData.category}
-                          onChange={(e) =>
-                            handleInputChange("category", e.target.value)
-                          }
-                          className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
-                            errors.category ? "border-red-500" : ""
-                          }`}
-                        >
-                          <option value='' disabled>
-                            Select category
-                          </option>
-                          {categoriesLoading ? (
+                        <div className='flex gap-2'>
+                          <select
+                            id='category'
+                            value={formData.category}
+                            onChange={(e) =>
+                              handleInputChange("category", e.target.value)
+                            }
+                            disabled={categoriesLoading}
+                            className={`flex-1 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+                              errors.category ? "border-red-500" : ""
+                            }`}
+                          >
                             <option value='' disabled>
-                              Loading categories...
+                              Select category
                             </option>
-                          ) : categoriesError ? (
-                            <option value='' disabled>
-                              Error loading categories
-                            </option>
-                          ) : categories.length === 0 ? (
-                            <option value='' disabled>
-                              No categories available
-                            </option>
-                          ) : (
-                            categories.map((category) => (
-                              <option key={category._id} value={category._id}>
-                                {category.name}
+                            {categoriesLoading ? (
+                              <option value='' disabled>
+                                Loading categories...
                               </option>
-                            ))
-                          )}
-                        </select>
+                            ) : categoriesError ? (
+                              <option value='' disabled>
+                                Error loading categories
+                              </option>
+                            ) : categories.length === 0 ? (
+                              <option value='' disabled>
+                                No categories available
+                              </option>
+                            ) : (
+                              categories.map((category) => (
+                                <option key={category._id} value={category._id}>
+                                  {category.name}
+                                </option>
+                              ))
+                            )}
+                          </select>
+                          <Button
+                            type='button'
+                            onClick={() => setShowAddCategory(!showAddCategory)}
+                            className='px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1'
+                            title='Add new category'
+                          >
+                            <Plus className='w-4 h-4' />
+                          </Button>
+                        </div>
+
+                        {/* Add Category Input */}
+                        {showAddCategory && (
+                          <div className='mt-2 p-3 bg-gray-50 rounded-lg border'>
+                            <div className='flex gap-2'>
+                              <input
+                                type='text'
+                                value={newCategoryName}
+                                onChange={(e) =>
+                                  setNewCategoryName(e.target.value)
+                                }
+                                placeholder='Enter category name'
+                                className='flex-1 px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-green-500'
+                                onKeyPress={(e) =>
+                                  e.key === "Enter" && handleCreateCategory()
+                                }
+                              />
+                              <button
+                                type='button'
+                                onClick={handleCreateCategory}
+                                disabled={creatingCategory}
+                                className='px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center gap-1'
+                              >
+                                {creatingCategory ? (
+                                  <Loader2 className='w-4 h-4 animate-spin' />
+                                ) : (
+                                  <Check className='w-4 h-4' />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
                         {errors.category && (
                           <p className='text-sm text-red-600 mt-1'>
                             {errors.category}
@@ -312,7 +430,7 @@ const AddVideo = () => {
                           onChange={(e) =>
                             handleInputChange("duration", e.target.value)
                           }
-                          placeholder='e.g., 5:30 or 1:25:45'
+                          placeholder='It will automatically get the time'
                           className={`pl-10 ${
                             errors.duration ? "border-red-500" : ""
                           }`}

@@ -16,8 +16,12 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  Eye,
 } from "lucide-react";
-import { useGetPhotoQuery } from "@/redux-store/services/photoApi";
+import {
+  useGetPhotoQuery,
+  useGetPhotosQuery,
+} from "@/redux-store/services/photoApi";
 import { Photo } from "@/types/photo.types";
 
 const ViewPhotoId: React.FC = () => {
@@ -28,13 +32,12 @@ const ViewPhotoId: React.FC = () => {
 
   const { data: photoData, isLoading, error } = useGetPhotoQuery(id!);
 
-  const formatDate = (dateString: string | Date) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
+  // Extract photo data safely
+  const photo = photoData?.success
+    ? "photo" in photoData.data
+      ? photoData.data.photo
+      : photoData.data
+    : null;
 
   // Helper function to get category name
   const getCategoryName = (category: Photo["category"]): string => {
@@ -44,15 +47,34 @@ const ViewPhotoId: React.FC = () => {
     return category.name;
   };
 
+  // Get category name for related photos query
+  const categoryName = photo ? getCategoryName(photo.category) : "";
+
+  // Get related photos by category (hooks must be called unconditionally)
+  const { data: relatedPhotosData, isLoading: isRelatedLoading } =
+    useGetPhotosQuery(
+      {
+        category: categoryName,
+        limit: 6,
+        page: 1,
+      },
+      { skip: !photo || !categoryName }
+    );
+
+  const formatDate = (dateString: string | Date) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
   const handleBack = () => {
     navigate(-1);
   };
 
   const handleShare = async () => {
-    if (!photoData?.success) return;
-
-    const photo =
-      "photo" in photoData.data ? photoData.data.photo : photoData.data;
+    if (!photoData?.success || !photo) return;
 
     if (navigator.share) {
       try {
@@ -70,6 +92,21 @@ const ViewPhotoId: React.FC = () => {
     }
   };
 
+  const handleRelatedPhotoClick = (photoId: string) => {
+    navigate(`/photos/${photoId}`);
+    // Scroll to top when navigating to related photo
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleBrowseCategory = () => {
+    if (photo) {
+      navigate(
+        `/photos?category=${getCategoryName(photo.category).toLowerCase()}`
+      );
+    }
+  };
+
+  // Early returns for error states
   if (!id) {
     return (
       <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white flex items-center justify-center p-4'>
@@ -109,7 +146,7 @@ const ViewPhotoId: React.FC = () => {
     );
   }
 
-  if (error || !photoData?.success) {
+  if (error || !photoData?.success || !photo) {
     return (
       <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white flex items-center justify-center p-4'>
         <Alert variant='destructive' className='max-w-md'>
@@ -121,10 +158,6 @@ const ViewPhotoId: React.FC = () => {
       </div>
     );
   }
-
-  // Handle the union type from PhotoResponse
-  const photo =
-    "photo" in photoData.data ? photoData.data.photo : photoData.data;
 
   // Get the current image from the images array
   const currentImage = photo.images?.[currentImageIndex];
@@ -147,6 +180,14 @@ const ViewPhotoId: React.FC = () => {
     setCurrentImageIndex(index);
     setShowLightbox(true);
   };
+
+  // Filter out current photo from related photos
+  const relatedPhotos =
+    relatedPhotosData?.success && relatedPhotosData.data?.photos
+      ? relatedPhotosData.data.photos.filter(
+          (relatedPhoto) => relatedPhoto._id !== photo._id
+        )
+      : [];
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white'>
@@ -171,7 +212,7 @@ const ViewPhotoId: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className='max-w-4xl mx-auto'
+          className='max-w-4xl mx-auto space-y-8'
         >
           <Card className='overflow-hidden shadow-xl'>
             <CardContent className='p-0'>
@@ -323,6 +364,119 @@ const ViewPhotoId: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Related Photos Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <Card className='shadow-lg'>
+              <CardContent className='p-6'>
+                <div className='flex items-center justify-between mb-6'>
+                  <div>
+                    <h2 className='text-2xl font-bold text-gray-900'>
+                      Related Photos
+                    </h2>
+                    <p className='text-gray-600 mt-1'>
+                      More photos from the {getCategoryName(photo.category)}{" "}
+                      category
+                    </p>
+                  </div>
+                  <Button
+                    variant='outline'
+                    onClick={handleBrowseCategory}
+                    className='flex items-center gap-2'
+                  >
+                    <Eye className='w-4 h-4' />
+                    Browse Category
+                  </Button>
+                </div>
+
+                {isRelatedLoading ? (
+                  <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
+                    {[...Array(6)].map((_, index) => (
+                      <div key={index} className='space-y-3'>
+                        <Skeleton className='w-full h-48' />
+                        <Skeleton className='h-4 w-3/4' />
+                        <Skeleton className='h-3 w-1/2' />
+                      </div>
+                    ))}
+                  </div>
+                ) : relatedPhotos.length > 0 ? (
+                  <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
+                    {relatedPhotos.slice(0, 6).map((relatedPhoto) => (
+                      <motion.div
+                        key={relatedPhoto._id}
+                        whileHover={{ y: -4 }}
+                        transition={{ duration: 0.2 }}
+                        className='group cursor-pointer'
+                        onClick={() =>
+                          handleRelatedPhotoClick(relatedPhoto._id)
+                        }
+                      >
+                        <Card className='overflow-hidden border-0 shadow-md group-hover:shadow-xl transition-all duration-300'>
+                          <div className='relative overflow-hidden'>
+                            <img
+                              src={relatedPhoto.images?.[0]?.src || ""}
+                              alt={
+                                relatedPhoto.images?.[0]?.alt ||
+                                relatedPhoto.title
+                              }
+                              className='w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300'
+                            />
+                            <div className='absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
+                          </div>
+                          <CardContent className='p-4'>
+                            <h3 className='font-semibold text-gray-900 group-hover:text-blue-600 transition-colors duration-200 line-clamp-2'>
+                              {relatedPhoto.title}
+                            </h3>
+                            <div className='flex items-center justify-between mt-2 text-sm text-gray-600'>
+                              <span className='flex items-center gap-1'>
+                                <Calendar className='w-3 h-3' />
+                                {formatDate(relatedPhoto.date)}
+                              </span>
+                              {relatedPhoto.location && (
+                                <span className='flex items-center gap-1 truncate max-w-24'>
+                                  <MapPin className='w-3 h-3 flex-shrink-0' />
+                                  {relatedPhoto.location}
+                                </span>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className='text-center py-8'>
+                    <div className='text-gray-500 mb-2'>
+                      No related photos found in this category
+                    </div>
+                    <Button
+                      variant='outline'
+                      onClick={() => navigate("/photos")}
+                      size='sm'
+                    >
+                      Browse All Photos
+                    </Button>
+                  </div>
+                )}
+
+                {relatedPhotos.length > 6 && (
+                  <div className='text-center mt-6'>
+                    <Button
+                      variant='outline'
+                      onClick={handleBrowseCategory}
+                      size='lg'
+                    >
+                      View All {getCategoryName(photo.category)} Photos
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
 
           {/* Lightbox Modal */}
           {showLightbox && photo.images && (
