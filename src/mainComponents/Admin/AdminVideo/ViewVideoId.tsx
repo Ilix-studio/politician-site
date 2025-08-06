@@ -19,8 +19,12 @@ import {
   Maximize,
   Star,
   Tag,
+  Eye,
 } from "lucide-react";
-import { useGetVideoQuery } from "@/redux-store/services/videoApi";
+import {
+  useGetVideoQuery,
+  useGetVideosQuery,
+} from "@/redux-store/services/videoApi";
 import { getVideoCategoryName } from "@/types/video.types";
 
 const ViewVideoId: React.FC = () => {
@@ -35,6 +39,31 @@ const ViewVideoId: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const { data: videoData, isLoading, error } = useGetVideoQuery(id!);
+
+  // Extract video data safely
+  const video = videoData?.success
+    ? "video" in videoData.data
+      ? videoData.data.video
+      : videoData.data
+    : null;
+
+  // Get category name for related videos query
+  const categoryId = video
+    ? typeof video.category === "string"
+      ? video.category
+      : video.category._id
+    : "";
+
+  // Get related videos by category (hooks must be called unconditionally)
+  const { data: relatedVideosData, isLoading: isRelatedLoading } =
+    useGetVideosQuery(
+      {
+        category: categoryId,
+        limit: "6",
+        page: "1",
+      },
+      { skip: !video || !categoryId }
+    );
 
   const formatDate = (dateString: string | Date) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -62,9 +91,7 @@ const ViewVideoId: React.FC = () => {
   };
 
   const handleShare = async () => {
-    if (!videoData?.success) return;
-
-    const video = videoData.data.video;
+    if (!videoData?.success || !video) return;
 
     if (navigator.share) {
       try {
@@ -79,6 +106,19 @@ const ViewVideoId: React.FC = () => {
     } else {
       navigator.clipboard.writeText(window.location.href);
       alert("Link copied to clipboard!");
+    }
+  };
+
+  const handleRelatedVideoClick = (videoId: string) => {
+    navigate(`/view/video/${videoId}`);
+    // Scroll to top when navigating to related video
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleBrowseCategory = () => {
+    if (video) {
+      const categoryName = getVideoCategoryName(video.category);
+      navigate(`/video-gallery?category=${categoryName.toLowerCase()}`);
     }
   };
 
@@ -132,6 +172,18 @@ const ViewVideoId: React.FC = () => {
     setIsFullscreen(!isFullscreen);
   };
 
+  // Early returns for error states
+  if (!id) {
+    return (
+      <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white flex items-center justify-center p-4'>
+        <Alert variant='destructive' className='max-w-md'>
+          <AlertCircle className='h-4 w-4' />
+          <AlertDescription>Video ID not found</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white'>
@@ -158,23 +210,28 @@ const ViewVideoId: React.FC = () => {
     );
   }
 
-  if (error || !videoData?.success) {
+  if (error || !videoData?.success || !video) {
     return (
-      <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white'>
-        <div className='container mx-auto p-4 pt-8'>
-          <Alert variant='destructive' className='max-w-4xl mx-auto'>
-            <AlertCircle className='h-4 w-4' />
-            <AlertDescription>
-              Failed to load video. Please try again later.
-            </AlertDescription>
-          </Alert>
-        </div>
+      <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white flex items-center justify-center p-4'>
+        <Alert variant='destructive' className='max-w-md'>
+          <AlertCircle className='h-4 w-4' />
+          <AlertDescription>
+            Failed to load video. Please try again later.
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
 
-  const video = videoData.data.video;
   const categoryName = getVideoCategoryName(video.category);
+
+  // Filter out current video from related videos
+  const relatedVideos =
+    relatedVideosData?.success && relatedVideosData.data?.videos
+      ? relatedVideosData.data.videos.filter(
+          (relatedVideo) => relatedVideo._id !== video._id
+        )
+      : [];
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white'>
@@ -199,7 +256,7 @@ const ViewVideoId: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className='max-w-4xl mx-auto'
+          className='max-w-4xl mx-auto space-y-8'
         >
           <Card className='overflow-hidden shadow-xl'>
             <CardContent className='p-0'>
@@ -356,6 +413,129 @@ const ViewVideoId: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Related Videos Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <Card className='shadow-lg'>
+              <CardContent className='p-6'>
+                <div className='flex items-center justify-between mb-6'>
+                  <div>
+                    <h2 className='text-2xl font-bold text-gray-900'>
+                      Related Videos
+                    </h2>
+                    <p className='text-gray-600 mt-1'>
+                      More videos from the {categoryName} category
+                    </p>
+                  </div>
+                  <Button
+                    variant='outline'
+                    onClick={handleBrowseCategory}
+                    className='flex items-center gap-2'
+                  >
+                    <Eye className='w-4 h-4' />
+                    Browse Category
+                  </Button>
+                </div>
+
+                {isRelatedLoading ? (
+                  <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
+                    {[...Array(6)].map((_, index) => (
+                      <div key={index} className='space-y-3'>
+                        <Skeleton className='w-full h-48' />
+                        <Skeleton className='h-4 w-3/4' />
+                        <Skeleton className='h-3 w-1/2' />
+                      </div>
+                    ))}
+                  </div>
+                ) : relatedVideos.length > 0 ? (
+                  <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
+                    {relatedVideos.slice(0, 6).map((relatedVideo) => (
+                      <motion.div
+                        key={relatedVideo._id}
+                        whileHover={{ y: -4 }}
+                        transition={{ duration: 0.2 }}
+                        className='group cursor-pointer'
+                        onClick={() =>
+                          handleRelatedVideoClick(relatedVideo._id)
+                        }
+                      >
+                        <Card className='overflow-hidden border-0 shadow-md group-hover:shadow-xl transition-all duration-300'>
+                          <div className='relative overflow-hidden'>
+                            <img
+                              src={relatedVideo.thumbnail}
+                              alt={relatedVideo.title}
+                              className='w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300'
+                            />
+                            {/* Play button overlay */}
+                            <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
+                              <div className='w-12 h-12 bg-white/90 rounded-full flex items-center justify-center'>
+                                <Play
+                                  className='w-6 h-6 text-[#FF9933] ml-0.5'
+                                  fill='currentColor'
+                                />
+                              </div>
+                            </div>
+                            <div className='absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
+                          </div>
+                          <CardContent className='p-4'>
+                            <h3 className='font-semibold text-gray-900 group-hover:text-blue-600 transition-colors duration-200 line-clamp-2'>
+                              {relatedVideo.title}
+                            </h3>
+                            <div className='flex items-center justify-between mt-2 text-sm text-gray-600'>
+                              <span className='flex items-center gap-1'>
+                                <Calendar className='w-3 h-3' />
+                                {formatDate(relatedVideo.date)}
+                              </span>
+                              {relatedVideo.duration && (
+                                <span className='flex items-center gap-1'>
+                                  <Clock className='w-3 h-3' />
+                                  {relatedVideo.duration}
+                                </span>
+                              )}
+                            </div>
+                            {relatedVideo.description && (
+                              <p className='mt-2 text-xs text-gray-500 line-clamp-2'>
+                                {relatedVideo.description}
+                              </p>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className='text-center py-8'>
+                    <div className='text-gray-500 mb-2'>
+                      No related videos found in this category
+                    </div>
+                    <Button
+                      variant='outline'
+                      onClick={() => navigate("/video-gallery")}
+                      size='sm'
+                    >
+                      Browse All Videos
+                    </Button>
+                  </div>
+                )}
+
+                {relatedVideos.length > 6 && (
+                  <div className='text-center mt-6'>
+                    <Button
+                      variant='outline'
+                      onClick={handleBrowseCategory}
+                      size='lg'
+                    >
+                      View All {categoryName} Videos
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
         </motion.div>
       </div>
     </div>

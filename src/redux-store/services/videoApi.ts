@@ -137,6 +137,22 @@ export const videoApi = createApi({
       ],
     }),
 
+    // Get videos by category (Public)
+    getVideosByCategory: builder.query<
+      VideosResponse,
+      { category: string; limit?: number }
+    >({
+      query: ({ category, limit = 12 }) =>
+        `/videos?category=${category}&limit=${limit}`,
+      providesTags: (result, _error, { category }) => [
+        { type: "Video", id: `category-${category}` },
+        ...(result?.data.videos || []).map(({ _id }) => ({
+          type: "Video" as const,
+          id: _id,
+        })),
+      ],
+    }),
+
     // Get video categories with counts (Public)
     getVideoCategoriesWithCounts: builder.query<VideoCategory[], void>({
       query: () => "/videos/categories/counts",
@@ -206,6 +222,7 @@ export const {
   useUpdateVideoMutation,
   useDeleteVideoMutation,
   useGetVideoCategoriesQuery,
+  useGetVideosByCategoryQuery,
   useGetVideoCategoriesWithCountsQuery,
   useCreateVideoCategoryMutation,
   useUpdateVideoCategoryMutation,

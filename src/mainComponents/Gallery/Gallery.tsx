@@ -19,11 +19,15 @@ import {
   useGetPhotosQuery,
   useGetPhotosByCategoryQuery,
 } from "@/redux-store/services/photoApi";
-import { useGetVideosQuery } from "@/redux-store/services/videoApi";
+import {
+  useGetVideosByCategoryQuery,
+  useGetVideosQuery,
+} from "@/redux-store/services/videoApi";
 
 // Import types from project knowledge
 import { Video, getVideoCategoryName } from "@/types/video.types";
 import { Photo } from "@/types/photo.types";
+import { getCategoryColor } from "./getColor";
 
 const Gallery = () => {
   const navigate = useNavigate();
@@ -70,38 +74,27 @@ const Gallery = () => {
     sortOrder: "desc",
   });
 
+  // API hook for category-filtered videos
+  const {
+    data: categoryVideosData,
+    isLoading: loadingCategoryVideos,
+    error: categoryVideosError,
+  } = useGetVideosByCategoryQuery(
+    {
+      category: selectedCategory!,
+      limit: 50,
+    },
+    {
+      skip: !selectedCategory,
+    }
+  );
+
   const formatDate = (dateString: string | Date) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
     });
-  };
-
-  const getCategoryColor = (category: string) => {
-    const colors: Record<string, string> = {
-      // Video categories
-      speech: "bg-blue-100 text-blue-800",
-      event: "bg-green-100 text-green-800",
-      interview: "bg-purple-100 text-purple-800",
-      initiative: "bg-orange-100 text-orange-800",
-      // Photo categories
-      "community-events": "bg-blue-100 text-blue-800",
-      "public-appearances": "bg-green-100 text-green-800",
-      "development-projects": "bg-purple-100 text-purple-800",
-      "cultural-events": "bg-yellow-100 text-yellow-800",
-      "official-meetings": "bg-red-100 text-red-800",
-      "political-events": "bg-indigo-100 text-indigo-800",
-      "community-service": "bg-pink-100 text-pink-800",
-      "public-rallies": "bg-emerald-100 text-emerald-800",
-      meetings: "bg-cyan-100 text-cyan-800",
-      awards: "bg-amber-100 text-amber-800",
-      personal: "bg-rose-100 text-rose-800",
-      campaigns: "bg-violet-100 text-violet-800",
-      speeches: "bg-teal-100 text-teal-800",
-      other: "bg-gray-100 text-gray-800",
-    };
-    return colors[category] || colors.other;
   };
 
   // Helper function to get photo category name
@@ -120,6 +113,14 @@ const Gallery = () => {
     return category._id;
   };
 
+  // Helper function to get video category ID
+  const getVideoCategoryId = (category: Video["category"]): string => {
+    if (typeof category === "string") {
+      return category;
+    }
+    return category._id;
+  };
+
   // Helper function to get photo primary image
   const getPhotoMainImage = (photo: Photo) => {
     return photo.images && photo.images.length > 0
@@ -127,6 +128,7 @@ const Gallery = () => {
       : { src: "/placeholder-image.jpg", alt: photo.title };
   };
 
+  // Updated navigation functions
   const handlePhotoClick = (photo: Photo) => {
     navigate(`/view/photo/${photo._id}`);
   };
@@ -143,8 +145,13 @@ const Gallery = () => {
     setSelectedCategory(null);
   };
 
-  const isLoading = loadingPhotos || loadingVideos || loadingCategoryPhotos;
-  const hasError = photosError || videosError || categoryPhotosError;
+  const isLoading =
+    loadingPhotos ||
+    loadingVideos ||
+    loadingCategoryPhotos ||
+    loadingCategoryVideos;
+  const hasError =
+    photosError || videosError || categoryPhotosError || categoryVideosError;
 
   // Loading state
   if (isLoading && !selectedCategory) {
@@ -198,12 +205,16 @@ const Gallery = () => {
   const photos = selectedCategory
     ? categoryPhotosData?.data?.photos || []
     : photosData?.data?.photos || [];
-  const videos = videosData?.data?.videos || [];
+  const videos = selectedCategory
+    ? categoryVideosData?.data?.videos || []
+    : videosData?.data?.videos || [];
 
   // Get category name for filtered view
   const selectedCategoryName = selectedCategory
     ? photos[0]
       ? getPhotoCategoryName(photos[0].category)
+      : videos[0]
+      ? getVideoCategoryName(videos[0].category)
       : "Category"
     : null;
 
@@ -216,12 +227,16 @@ const Gallery = () => {
           </div>
           <h2 className='text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight'>
             {selectedCategory
-              ? `${selectedCategoryName} Photos`
+              ? `${selectedCategoryName} ${
+                  activeTab === "photos" ? "Photos" : "Videos"
+                }`
               : "Moments from the Journey"}
           </h2>
           <p className='text-muted-foreground mt-4 px-2'>
             {selectedCategory
-              ? `Photos from ${selectedCategoryName} category`
+              ? `${
+                  activeTab === "photos" ? "Photos" : "Videos"
+                } from ${selectedCategoryName} category`
               : "A glimpse into our work, community engagement, and public events."}
           </p>
           {selectedCategory && (
@@ -230,101 +245,186 @@ const Gallery = () => {
               className='mt-4 inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors'
             >
               <X className='w-4 h-4' />
-              Back to Photos
+              Back to All {activeTab === "photos" ? "Photos" : "Videos"}
             </button>
           )}
         </div>
 
         {selectedCategory ? (
-          // Category filtered photos view
+          // Category filtered view
           <div className='w-full'>
-            {loadingCategoryPhotos ? (
+            {loadingCategoryPhotos || loadingCategoryVideos ? (
               <div className='flex justify-center'>
                 <Loader2 className='w-8 h-8 animate-spin text-[#138808]' />
               </div>
-            ) : photos.length === 0 ? (
+            ) : (activeTab === "photos" ? photos : videos).length === 0 ? (
               <div className='text-center py-12'>
                 <p className='text-muted-foreground text-lg'>
-                  No photos available in this category.
+                  No {activeTab} available in this category.
                 </p>
               </div>
             ) : (
               <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-7xl mx-auto'>
-                {photos.map((photo, index) => {
-                  const mainImage = getPhotoMainImage(photo);
-                  const categoryName = getPhotoCategoryName(photo.category);
+                {activeTab === "photos"
+                  ? photos.map((photo, index) => {
+                      const mainImage = getPhotoMainImage(photo);
+                      const categoryName = getPhotoCategoryName(photo.category);
 
-                  return (
-                    <motion.div
-                      key={photo._id}
-                      onClick={() => handlePhotoClick(photo)}
-                      onMouseEnter={() => setHovered(index)}
-                      onMouseLeave={() => setHovered(null)}
-                      className={cn(
-                        "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out cursor-pointer",
-                        hovered !== null &&
-                          hovered !== index &&
-                          "blur-sm scale-[0.98]"
-                      )}
-                      whileHover={{ scale: 1.02 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <div className='absolute inset-0'>
-                        <img
-                          src={mainImage.src}
-                          alt={mainImage.alt}
-                          className='w-full h-full object-cover'
-                          loading='lazy'
-                        />
-                      </div>
-
-                      {/* Category badge */}
-                      <div className='absolute top-4 left-4'>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(
-                            categoryName
-                          )}`}
-                        >
-                          {categoryName.charAt(0).toUpperCase() +
-                            categoryName.slice(1)}
-                        </span>
-                      </div>
-
-                      {/* Hover overlay */}
-                      <div
-                        className={cn(
-                          "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300",
-                          hovered === index ? "opacity-100" : "opacity-0"
-                        )}
-                      >
-                        <div className='text-white'>
-                          <h3 className='text-xl md:text-2xl font-bold mb-2 line-clamp-2'>
-                            {photo.title}
-                          </h3>
-                          <div className='flex items-center gap-4 text-sm opacity-90'>
-                            <div className='flex items-center gap-1'>
-                              <Calendar className='h-4 w-4' />
-                              {formatDate(photo.date)}
-                            </div>
-                            {photo.location && (
-                              <div className='flex items-center gap-1'>
-                                <MapPin className='h-4 w-4' />
-                                <span className='truncate max-w-24'>
-                                  {photo.location}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                          {photo.images && photo.images.length > 1 && (
-                            <div className='mt-2 text-xs opacity-75'>
-                              +{photo.images.length - 1} more photos
-                            </div>
+                      return (
+                        <motion.div
+                          key={photo._id}
+                          onClick={() => handlePhotoClick(photo)}
+                          onMouseEnter={() => setHovered(index)}
+                          onMouseLeave={() => setHovered(null)}
+                          className={cn(
+                            "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out cursor-pointer",
+                            hovered !== null &&
+                              hovered !== index &&
+                              "blur-sm scale-[0.98]"
                           )}
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
+                          whileHover={{ scale: 1.02 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <div className='absolute inset-0'>
+                            <img
+                              src={mainImage.src}
+                              alt={mainImage.alt}
+                              className='w-full h-full object-cover'
+                              loading='lazy'
+                            />
+                          </div>
+
+                          {/* Category badge */}
+                          <div className='absolute top-4 left-4'>
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(
+                                categoryName
+                              )}`}
+                            >
+                              {categoryName.charAt(0).toUpperCase() +
+                                categoryName.slice(1)}
+                            </span>
+                          </div>
+
+                          {/* Hover overlay */}
+                          <div
+                            className={cn(
+                              "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300",
+                              hovered === index ? "opacity-100" : "opacity-0"
+                            )}
+                          >
+                            <div className='text-white'>
+                              <h3 className='text-xl md:text-2xl font-bold mb-2 line-clamp-2'>
+                                {photo.title}
+                              </h3>
+                              <div className='flex items-center gap-4 text-sm opacity-90'>
+                                <div className='flex items-center gap-1'>
+                                  <Calendar className='h-4 w-4' />
+                                  {formatDate(photo.date)}
+                                </div>
+                                {photo.location && (
+                                  <div className='flex items-center gap-1'>
+                                    <MapPin className='h-4 w-4' />
+                                    <span className='truncate max-w-24'>
+                                      {photo.location}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                              {photo.images && photo.images.length > 1 && (
+                                <div className='mt-2 text-xs opacity-75'>
+                                  +{photo.images.length - 1} more photos
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })
+                  : videos.map((video, index) => {
+                      const categoryName = getVideoCategoryName(video.category);
+
+                      return (
+                        <motion.div
+                          key={video._id}
+                          onClick={() => handleVideoClick(video)}
+                          onMouseEnter={() => setHovered(index + 1000)}
+                          onMouseLeave={() => setHovered(null)}
+                          className={cn(
+                            "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out cursor-pointer group",
+                            hovered !== null &&
+                              hovered !== index + 1000 &&
+                              "blur-sm scale-[0.98]"
+                          )}
+                          whileHover={{ scale: 1.02 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <div className='absolute inset-0'>
+                            <img
+                              src={video.thumbnail}
+                              alt={video.title}
+                              className='w-full h-full object-cover'
+                              loading='lazy'
+                            />
+
+                            {/* Play button overlay */}
+                            <div className='absolute inset-0 flex items-center justify-center'>
+                              <div className='w-16 h-16 bg-white/90 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform'>
+                                <Play
+                                  className='w-8 h-8 text-[#FF9933] ml-1'
+                                  fill='currentColor'
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Category badge */}
+                          <div className='absolute top-4 left-4'>
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(
+                                categoryName
+                              )}`}
+                            >
+                              {categoryName.charAt(0).toUpperCase() +
+                                categoryName.slice(1)}
+                            </span>
+                          </div>
+
+                          {/* Hover overlay */}
+                          <div
+                            className={cn(
+                              "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300",
+                              hovered === index + 1000
+                                ? "opacity-100"
+                                : "opacity-0"
+                            )}
+                          >
+                            <div className='text-white'>
+                              <h3 className='text-xl md:text-2xl font-bold mb-2 line-clamp-2'>
+                                {video.title}
+                              </h3>
+                              <div className='flex items-center gap-4 text-sm opacity-90 flex-wrap'>
+                                <div className='flex items-center gap-1'>
+                                  <Calendar className='h-4 w-4' />
+                                  {formatDate(video.date)}
+                                </div>
+                                {video.duration && (
+                                  <div className='flex items-center gap-1'>
+                                    <Clock className='h-4 w-4' />
+                                    {video.duration}
+                                  </div>
+                                )}
+                              </div>
+                              {video.description && (
+                                <p className='mt-2 text-xs opacity-75 line-clamp-2'>
+                                  {video.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
               </div>
             )}
           </div>
@@ -400,15 +500,15 @@ const Gallery = () => {
                             {categoryName.charAt(0).toUpperCase() +
                               categoryName.slice(1)}
                           </span>
-                          <p
+                          <button
                             className='text-xs text-white bg-black/50 px-2 py-1 rounded cursor-pointer underline hover:bg-black/70 transition-colors'
                             onClick={(e) => {
                               e.stopPropagation();
                               handleCategoryFilter(categoryId);
                             }}
                           >
-                            view All
-                          </p>
+                            view all
+                          </button>
                         </div>
 
                         {/* Hover overlay */}
@@ -462,6 +562,7 @@ const Gallery = () => {
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-7xl mx-auto'>
                   {videos.map((video, index) => {
                     const categoryName = getVideoCategoryName(video.category);
+                    const categoryId = getVideoCategoryId(video.category);
 
                     return (
                       <motion.div
@@ -497,8 +598,8 @@ const Gallery = () => {
                           </div>
                         </div>
 
-                        {/* Category and featured badges */}
-                        <div className='absolute top-4 left-4 flex gap-2'>
+                        {/* Category and view all */}
+                        <div className='absolute top-4 left-4 flex items-center gap-2'>
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(
                               categoryName
@@ -507,11 +608,15 @@ const Gallery = () => {
                             {categoryName.charAt(0).toUpperCase() +
                               categoryName.slice(1)}
                           </span>
-                          {video.featured && (
-                            <span className='px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium'>
-                              Featured
-                            </span>
-                          )}
+                          <button
+                            className='text-xs text-white bg-black/50 px-2 py-1 rounded cursor-pointer underline hover:bg-black/70 transition-colors'
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCategoryFilter(categoryId);
+                            }}
+                          >
+                            view all
+                          </button>
                         </div>
 
                         {/* Hover overlay */}
