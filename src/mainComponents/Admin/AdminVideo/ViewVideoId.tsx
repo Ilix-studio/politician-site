@@ -1,4 +1,5 @@
-import React, { useState, useRef } from "react";
+// src/components/ViewVideoId.tsx
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,25 +21,62 @@ import {
   Star,
   Tag,
   Eye,
+  Download,
+  ExternalLink,
+  Loader2,
 } from "lucide-react";
 import {
   useGetVideoQuery,
   useGetVideosQuery,
 } from "@/redux-store/services/videoApi";
-import { getVideoCategoryName } from "@/types/video.types";
+
+// Animation variants
+const fadeInVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+};
+
+const staggerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const childVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+};
 
 const ViewVideoId: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  // Video player state
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const [isBuffering, setIsBuffering] = useState(false);
 
-  const { data: videoData, isLoading, error } = useGetVideoQuery(id!);
+  // UI state
+  const [showControls, setShowControls] = useState(true);
+  const [isSharing, setIsSharing] = useState(false);
+
+  const {
+    data: videoData,
+    isLoading,
+    error,
+    refetch,
+  } = useGetVideoQuery(id!, {
+    skip: !id,
+  });
 
   // Extract video data safely
   const video = videoData?.success
@@ -47,33 +85,76 @@ const ViewVideoId: React.FC = () => {
       : videoData.data
     : null;
 
-  // Get category name for related videos query
-  const categoryId = video
-    ? typeof video.category === "string"
-      ? video.category
-      : video.category._id
-    : "";
+  // Get category information - improved to handle both string and object types
+  const getCategoryInfo = useCallback((category: any) => {
+    if (!category) return { name: "", id: "" };
 
-  // Get related videos by category (hooks must be called unconditionally)
+    if (typeof category === "string") {
+      return { name: category, id: category };
+    }
+
+    return {
+      name: category.name || "",
+      id: category._id || category.id || "",
+    };
+  }, []);
+
+  const categoryInfo = video ? getCategoryInfo(video.category) : null;
+
+  // Get related videos by category with better error handling and category name
   const { data: relatedVideosData, isLoading: isRelatedLoading } =
     useGetVideosQuery(
       {
-        category: categoryId,
-        limit: "6",
+        // Use category name instead of ID for better compatibility
+        category: categoryInfo?.name || "",
+        limit: "9", // Get more videos to ensure we have enough after filtering
         page: "1",
+        sortBy: "date",
+        sortOrder: "desc",
       },
-      { skip: !video || !categoryId }
+      {
+        skip: !video || !categoryInfo?.name,
+        refetchOnMountOrArgChange: true,
+      }
     );
 
-  const formatDate = (dateString: string | Date) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+  // Enhanced related videos filtering and memoization
+  const relatedVideos = React.useMemo(() => {
+    if (
+      !relatedVideosData?.success ||
+      !relatedVideosData.data?.videos ||
+      !video
+    ) {
+      return [];
+    }
+
+    return relatedVideosData.data.videos
+      .filter((relatedVideo) => relatedVideo._id !== video._id)
+      .slice(0, 6); // Limit to 6 videos for better UX
+  }, [relatedVideosData, video]);
+
+  // Enhanced date formatting
+  const formatDate = useCallback((dateString: string | Date) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    const formattedDate = date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
     });
-  };
 
-  const formatDuration = (seconds: number) => {
+    if (diffDays === 1) return `${formattedDate} (Yesterday)`;
+    if (diffDays <= 7) return `${formattedDate} (${diffDays} days ago)`;
+    return formattedDate;
+  }, []);
+
+  // Enhanced duration formatting
+  const formatDuration = useCallback((seconds: number) => {
+    if (!seconds || isNaN(seconds)) return "0:00";
+
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = Math.floor(seconds % 60);
@@ -84,80 +165,120 @@ const ViewVideoId: React.FC = () => {
         .padStart(2, "0")}`;
     }
     return `${minutes}:${secs.toString().padStart(2, "0")}`;
-  };
+  }, []);
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     navigate(-1);
-  };
+  }, [navigate]);
 
-  const handleShare = async () => {
+  // Enhanced sharing functionality
+  const handleShare = useCallback(async () => {
     if (!videoData?.success || !video) return;
 
-    if (navigator.share) {
-      try {
-        await navigator.share({
+    setIsSharing(true);
+
+    try {
+      if (navigator.share && navigator.canShare) {
+        const shareData = {
           title: video.title,
-          text: video.description,
+          text: video.description || `Check out this video: ${video.title}`,
           url: window.location.href,
-        });
-      } catch (error) {
-        console.log("Error sharing:", error);
+        };
+
+        if (navigator.canShare(shareData)) {
+          await navigator.share(shareData);
+        } else {
+          throw new Error("Cannot share this content");
+        }
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        alert("Link copied to clipboard!");
       }
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert("Link copied to clipboard!");
+    } catch (error) {
+      console.log("Error sharing:", error);
+      // Fallback to clipboard
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        alert("Link copied to clipboard!");
+      } catch (clipboardError) {
+        console.error("Failed to copy to clipboard:", clipboardError);
+      }
+    } finally {
+      setIsSharing(false);
     }
-  };
+  }, [videoData, video]);
 
-  const handleRelatedVideoClick = (videoId: string) => {
-    navigate(`/view/video/${videoId}`);
-    // Scroll to top when navigating to related video
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  const handleRelatedVideoClick = useCallback(
+    (videoId: string) => {
+      navigate(`/view/video/${videoId}`);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    [navigate]
+  );
 
-  const handleBrowseCategory = () => {
-    if (video) {
-      const categoryName = getVideoCategoryName(video.category);
-      navigate(`/video-gallery?category=${categoryName.toLowerCase()}`);
+  const handleBrowseCategory = useCallback(() => {
+    if (video && categoryInfo?.name) {
+      navigate(`/video-gallery?category=${categoryInfo.name.toLowerCase()}`);
     }
-  };
+  }, [video, categoryInfo, navigate]);
 
-  const togglePlay = () => {
+  // Enhanced video player controls
+  const togglePlay = useCallback(() => {
     if (!videoRef.current) return;
 
     if (isPlaying) {
       videoRef.current.pause();
     } else {
-      videoRef.current.play();
+      videoRef.current.play().catch((error) => {
+        console.error("Error playing video:", error);
+      });
     }
-    setIsPlaying(!isPlaying);
-  };
+  }, [isPlaying]);
 
-  const toggleMute = () => {
+  const toggleMute = useCallback(() => {
     if (!videoRef.current) return;
 
-    videoRef.current.muted = !isMuted;
-    setIsMuted(!isMuted);
-  };
+    const newMutedState = !isMuted;
+    videoRef.current.muted = newMutedState;
+    setIsMuted(newMutedState);
+  }, [isMuted]);
 
-  const handleTimeUpdate = () => {
+  const handleVolumeChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!videoRef.current) return;
+
+      const newVolume = parseFloat(e.target.value);
+      videoRef.current.volume = newVolume;
+      setVolume(newVolume);
+
+      // Auto-unmute if volume is increased from 0
+      if (newVolume > 0 && isMuted) {
+        videoRef.current.muted = false;
+        setIsMuted(false);
+      }
+    },
+    [isMuted]
+  );
+
+  const handleTimeUpdate = useCallback(() => {
     if (!videoRef.current) return;
     setCurrentTime(videoRef.current.currentTime);
-  };
+  }, []);
 
-  const handleLoadedMetadata = () => {
+  const handleLoadedMetadata = useCallback(() => {
     if (!videoRef.current) return;
     setDuration(videoRef.current.duration);
-  };
+    setVolume(videoRef.current.volume);
+  }, []);
 
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSeek = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (!videoRef.current) return;
     const newTime = parseFloat(e.target.value);
     videoRef.current.currentTime = newTime;
     setCurrentTime(newTime);
-  };
+  }, []);
 
-  const toggleFullscreen = () => {
+  const toggleFullscreen = useCallback(() => {
     if (!videoRef.current) return;
 
     if (!isFullscreen) {
@@ -169,8 +290,80 @@ const ViewVideoId: React.FC = () => {
         document.exitFullscreen();
       }
     }
-    setIsFullscreen(!isFullscreen);
-  };
+  }, [isFullscreen]);
+
+  // Enhanced download functionality
+  const handleDownload = useCallback(() => {
+    if (!video?.videoUrl) return;
+
+    // Create a temporary link and trigger download
+    const link = document.createElement("a");
+    link.href = video.videoUrl;
+    link.download = `${video.title}.mp4`;
+    link.target = "_blank";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [video]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (!videoRef.current) return;
+
+      switch (event.code) {
+        case "Space":
+          event.preventDefault();
+          togglePlay();
+          break;
+        case "KeyM":
+          event.preventDefault();
+          toggleMute();
+          break;
+        case "KeyF":
+          event.preventDefault();
+          toggleFullscreen();
+          break;
+        case "ArrowLeft":
+          event.preventDefault();
+          videoRef.current.currentTime = Math.max(0, currentTime - 10);
+          break;
+        case "ArrowRight":
+          event.preventDefault();
+          videoRef.current.currentTime = Math.min(duration, currentTime + 10);
+          break;
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyPress);
+    return () => document.removeEventListener("keydown", handleKeyPress);
+  }, [togglePlay, toggleMute, toggleFullscreen, currentTime, duration]);
+
+  // Handle fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
+  // Auto-hide controls
+  useEffect(() => {
+    if (!isPlaying) {
+      setShowControls(true);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setShowControls(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [isPlaying, showControls]);
 
   // Early returns for error states
   if (!id) {
@@ -218,24 +411,23 @@ const ViewVideoId: React.FC = () => {
           <AlertDescription>
             Failed to load video. Please try again later.
           </AlertDescription>
+          <div className='mt-4 flex gap-2'>
+            <Button variant='outline' size='sm' onClick={() => refetch()}>
+              Try Again
+            </Button>
+            <Button variant='outline' size='sm' onClick={handleBack}>
+              <ArrowLeft className='w-4 h-4 mr-2' />
+              Back
+            </Button>
+          </div>
         </Alert>
       </div>
     );
   }
 
-  const categoryName = getVideoCategoryName(video.category);
-
-  // Filter out current video from related videos
-  const relatedVideos =
-    relatedVideosData?.success && relatedVideosData.data?.videos
-      ? relatedVideosData.data.videos.filter(
-          (relatedVideo) => relatedVideo._id !== video._id
-        )
-      : [];
-
   return (
     <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white'>
-      {/* Header */}
+      {/* Enhanced Header */}
       <div className='sticky top-0 z-40 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60'>
         <div className='container flex h-16 items-center justify-between px-4'>
           <Button variant='ghost' onClick={handleBack}>
@@ -244,8 +436,20 @@ const ViewVideoId: React.FC = () => {
           </Button>
 
           <div className='flex items-center gap-2'>
-            <Button variant='outline' size='sm' onClick={handleShare}>
-              <Share2 className='w-4 h-4' />
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={handleShare}
+              disabled={isSharing}
+            >
+              {isSharing ? (
+                <Loader2 className='w-4 h-4 animate-spin' />
+              ) : (
+                <Share2 className='w-4 h-4' />
+              )}
+            </Button>
+            <Button variant='outline' size='sm' onClick={handleDownload}>
+              <Download className='w-4 h-4' />
             </Button>
           </div>
         </div>
@@ -253,34 +457,34 @@ const ViewVideoId: React.FC = () => {
 
       <div className='container mx-auto p-4 pt-8'>
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          initial='hidden'
+          animate='visible'
+          variants={fadeInVariants}
           className='max-w-4xl mx-auto space-y-8'
         >
           <Card className='overflow-hidden shadow-xl'>
             <CardContent className='p-0'>
-              {/* Video Header */}
+              {/* Enhanced Video Header */}
               <div className='p-6 pb-4'>
                 <div className='flex items-start justify-between mb-4'>
                   <div className='space-y-2 flex-1'>
-                    <div className='flex items-center gap-3'>
-                      <h1 className='text-3xl font-bold text-gray-900'>
+                    <div className='flex items-center gap-3 flex-wrap'>
+                      <h1 className='text-3xl font-bold text-gray-900 leading-tight'>
                         {video.title}
                       </h1>
                       {video.featured && (
                         <Badge
                           variant='secondary'
-                          className='bg-yellow-100 text-yellow-800'
+                          className='bg-yellow-100 text-yellow-800 border-yellow-300'
                         >
                           <Star className='w-3 h-3 mr-1' />
                           Featured
                         </Badge>
                       )}
                     </div>
-                    <div className='flex items-center gap-4'>
+                    <div className='flex items-center gap-4 flex-wrap'>
                       <Badge variant='outline' className='text-sm'>
-                        {categoryName.toUpperCase()}
+                        {categoryInfo?.name.toUpperCase()}
                       </Badge>
                       <div className='flex items-center gap-1 text-sm text-gray-500'>
                         <Calendar className='w-4 h-4' />
@@ -295,22 +499,41 @@ const ViewVideoId: React.FC = () => {
                 </div>
               </div>
 
-              {/* Video Player */}
-              <div className='relative bg-black'>
+              {/* Enhanced Video Player */}
+              <div
+                className='relative bg-black group'
+                onMouseEnter={() => setShowControls(true)}
+                onMouseMove={() => setShowControls(true)}
+                onMouseLeave={() => isPlaying && setShowControls(false)}
+              >
                 <video
                   ref={videoRef}
                   src={video.videoUrl}
                   poster={video.thumbnail}
-                  className='w-full aspect-video'
+                  className='w-full aspect-video cursor-pointer'
                   onTimeUpdate={handleTimeUpdate}
                   onLoadedMetadata={handleLoadedMetadata}
                   onPlay={() => setIsPlaying(true)}
                   onPause={() => setIsPlaying(false)}
                   onEnded={() => setIsPlaying(false)}
+                  onWaiting={() => setIsBuffering(true)}
+                  onCanPlay={() => setIsBuffering(false)}
+                  onClick={togglePlay}
                 />
 
-                {/* Video Controls Overlay */}
-                <div className='absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4'>
+                {/* Loading indicator */}
+                {isBuffering && (
+                  <div className='absolute inset-0 flex items-center justify-center bg-black/50'>
+                    <Loader2 className='w-8 h-8 text-white animate-spin' />
+                  </div>
+                )}
+
+                {/* Enhanced Video Controls Overlay */}
+                <div
+                  className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4 transition-opacity duration-300 ${
+                    showControls ? "opacity-100" : "opacity-0"
+                  }`}
+                >
                   {/* Progress Bar */}
                   <div className='mb-3'>
                     <input
@@ -319,7 +542,7 @@ const ViewVideoId: React.FC = () => {
                       max={duration || 0}
                       value={currentTime}
                       onChange={handleSeek}
-                      className='w-full h-1 bg-white/30 rounded-lg appearance-none cursor-pointer'
+                      className='w-full h-2 bg-white/30 rounded-lg appearance-none cursor-pointer hover:h-3 transition-all'
                       style={{
                         background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${
                           (currentTime / duration) * 100
@@ -330,14 +553,14 @@ const ViewVideoId: React.FC = () => {
                     />
                   </div>
 
-                  {/* Control Buttons */}
+                  {/* Enhanced Control Buttons */}
                   <div className='flex items-center justify-between'>
                     <div className='flex items-center gap-3'>
                       <Button
                         variant='ghost'
                         size='sm'
                         onClick={togglePlay}
-                        className='text-white hover:bg-white/20'
+                        className='text-white hover:bg-white/20 hover:scale-110 transition-all'
                       >
                         {isPlaying ? (
                           <Pause className='w-5 h-5' />
@@ -350,7 +573,7 @@ const ViewVideoId: React.FC = () => {
                         variant='ghost'
                         size='sm'
                         onClick={toggleMute}
-                        className='text-white hover:bg-white/20'
+                        className='text-white hover:bg-white/20 hover:scale-110 transition-all'
                       >
                         {isMuted ? (
                           <VolumeX className='w-5 h-5' />
@@ -359,7 +582,18 @@ const ViewVideoId: React.FC = () => {
                         )}
                       </Button>
 
-                      <span className='text-white text-sm'>
+                      {/* Volume Slider */}
+                      <input
+                        type='range'
+                        min={0}
+                        max={1}
+                        step={0.1}
+                        value={isMuted ? 0 : volume}
+                        onChange={handleVolumeChange}
+                        className='w-20 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer'
+                      />
+
+                      <span className='text-white text-sm font-medium'>
                         {formatDuration(currentTime)} /{" "}
                         {formatDuration(duration)}
                       </span>
@@ -369,30 +603,37 @@ const ViewVideoId: React.FC = () => {
                       variant='ghost'
                       size='sm'
                       onClick={toggleFullscreen}
-                      className='text-white hover:bg-white/20'
+                      className='text-white hover:bg-white/20 hover:scale-110 transition-all'
                     >
                       <Maximize className='w-5 h-5' />
                     </Button>
                   </div>
                 </div>
+
+                {/* Keyboard shortcuts hint */}
+                <div className='absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
+                  <div className='bg-black/70 text-white px-3 py-1 rounded text-xs backdrop-blur-sm'>
+                    Space: Play/Pause • M: Mute • F: Fullscreen
+                  </div>
+                </div>
               </div>
 
-              {/* Video Information */}
+              {/* Enhanced Video Information */}
               <div className='p-6'>
-                <div className='space-y-4'>
+                <div className='space-y-6'>
                   <div>
-                    <h2 className='text-lg font-semibold text-gray-900 mb-2'>
+                    <h2 className='text-lg font-semibold text-gray-900 mb-3'>
                       Description
                     </h2>
-                    <p className='text-gray-700 leading-relaxed'>
+                    <p className='text-gray-700 leading-relaxed text-base'>
                       {video.description}
                     </p>
                   </div>
 
-                  {/* Tags */}
+                  {/* Enhanced Tags */}
                   {video.tags && video.tags.length > 0 && (
                     <div>
-                      <h3 className='text-sm font-semibold text-gray-900 mb-2 flex items-center gap-1'>
+                      <h3 className='text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2'>
                         <Tag className='w-4 h-4' />
                         Tags
                       </h3>
@@ -401,9 +642,9 @@ const ViewVideoId: React.FC = () => {
                           <Badge
                             key={index}
                             variant='secondary'
-                            className='text-xs'
+                            className='text-xs hover:bg-blue-100 hover:text-blue-800 transition-colors cursor-pointer'
                           >
-                            {tag}
+                            #{tag}
                           </Badge>
                         ))}
                       </div>
@@ -414,11 +655,12 @@ const ViewVideoId: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Related Videos Section */}
+          {/* Enhanced Related Videos Section */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            initial='hidden'
+            animate='visible'
+            variants={fadeInVariants}
+            transition={{ delay: 0.3 }}
           >
             <Card className='shadow-lg'>
               <CardContent className='p-6'>
@@ -428,13 +670,13 @@ const ViewVideoId: React.FC = () => {
                       Related Videos
                     </h2>
                     <p className='text-gray-600 mt-1'>
-                      More videos from the {categoryName} category
+                      More videos from the {categoryInfo?.name} category
                     </p>
                   </div>
                   <Button
                     variant='outline'
                     onClick={handleBrowseCategory}
-                    className='flex items-center gap-2'
+                    className='flex items-center gap-2 hover:bg-blue-50 hover:border-blue-300'
                   >
                     <Eye className='w-4 h-4' />
                     Browse Category
@@ -445,18 +687,24 @@ const ViewVideoId: React.FC = () => {
                   <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
                     {[...Array(6)].map((_, index) => (
                       <div key={index} className='space-y-3'>
-                        <Skeleton className='w-full h-48' />
+                        <Skeleton className='w-full h-48 rounded-lg' />
                         <Skeleton className='h-4 w-3/4' />
                         <Skeleton className='h-3 w-1/2' />
                       </div>
                     ))}
                   </div>
                 ) : relatedVideos.length > 0 ? (
-                  <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
-                    {relatedVideos.slice(0, 6).map((relatedVideo) => (
+                  <motion.div
+                    variants={staggerVariants}
+                    initial='hidden'
+                    animate='visible'
+                    className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
+                  >
+                    {relatedVideos.map((relatedVideo) => (
                       <motion.div
                         key={relatedVideo._id}
-                        whileHover={{ y: -4 }}
+                        variants={childVariants}
+                        whileHover={{ y: -4, scale: 1.02 }}
                         transition={{ duration: 0.2 }}
                         className='group cursor-pointer'
                         onClick={() =>
@@ -468,37 +716,60 @@ const ViewVideoId: React.FC = () => {
                             <img
                               src={relatedVideo.thumbnail}
                               alt={relatedVideo.title}
-                              className='w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300'
+                              className='w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500'
+                              loading='lazy'
                             />
-                            {/* Play button overlay */}
-                            <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
-                              <div className='w-12 h-12 bg-white/90 rounded-full flex items-center justify-center'>
+
+                            {/* Enhanced Play button overlay */}
+                            <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300'>
+                              <div className='w-16 h-16 bg-white/95 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300'>
                                 <Play
-                                  className='w-6 h-6 text-[#FF9933] ml-0.5'
+                                  className='w-8 h-8 text-blue-600 ml-1'
                                   fill='currentColor'
                                 />
                               </div>
                             </div>
-                            <div className='absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
+
+                            <div className='absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
+
+                            {/* Video duration badge */}
+                            {relatedVideo.duration && (
+                              <div className='absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded backdrop-blur-sm'>
+                                {relatedVideo.duration}
+                              </div>
+                            )}
+
+                            {/* External link indicator */}
+                            <div className='absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
+                              <div className='bg-white/90 backdrop-blur-sm rounded-full p-1'>
+                                <ExternalLink className='w-3 h-3 text-gray-700' />
+                              </div>
+                            </div>
                           </div>
+
                           <CardContent className='p-4'>
-                            <h3 className='font-semibold text-gray-900 group-hover:text-blue-600 transition-colors duration-200 line-clamp-2'>
+                            <h3 className='font-semibold text-gray-900 group-hover:text-blue-600 transition-colors duration-200 line-clamp-2 mb-2'>
                               {relatedVideo.title}
                             </h3>
-                            <div className='flex items-center justify-between mt-2 text-sm text-gray-600'>
+
+                            <div className='flex items-center justify-between mb-2 text-sm text-gray-600'>
                               <span className='flex items-center gap-1'>
                                 <Calendar className='w-3 h-3' />
                                 {formatDate(relatedVideo.date)}
                               </span>
-                              {relatedVideo.duration && (
-                                <span className='flex items-center gap-1'>
-                                  <Clock className='w-3 h-3' />
-                                  {relatedVideo.duration}
-                                </span>
+                              {relatedVideo.featured && (
+                                <Badge
+                                  variant='secondary'
+                                  className='bg-yellow-100 text-yellow-800 text-xs border-yellow-300'
+                                >
+                                  <Star className='w-2 h-2 mr-1' />
+                                  Featured
+                                </Badge>
                               )}
                             </div>
+
                             {relatedVideo.description && (
-                              <p className='mt-2 text-xs text-gray-500 line-clamp-2'>
+                              <p className='text-xs text-gray-500 line-clamp-2 leading-relaxed'>
                                 {relatedVideo.description}
                               </p>
                             )}
@@ -506,7 +777,7 @@ const ViewVideoId: React.FC = () => {
                         </Card>
                       </motion.div>
                     ))}
-                  </div>
+                  </motion.div>
                 ) : (
                   <div className='text-center py-8'>
                     <div className='text-gray-500 mb-2'>
@@ -522,14 +793,16 @@ const ViewVideoId: React.FC = () => {
                   </div>
                 )}
 
-                {relatedVideos.length > 6 && (
+                {/* Show more videos button */}
+                {relatedVideos.length >= 6 && (
                   <div className='text-center mt-6'>
                     <Button
                       variant='outline'
                       onClick={handleBrowseCategory}
                       size='lg'
+                      className='hover:bg-blue-50 hover:border-blue-300'
                     >
-                      View All {categoryName} Videos
+                      View All {categoryInfo?.name} Videos
                     </Button>
                   </div>
                 )}

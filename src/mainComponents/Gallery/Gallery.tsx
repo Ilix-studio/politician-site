@@ -31,7 +31,6 @@ import { getCategoryColor } from "./getColor";
 
 const Gallery = () => {
   const navigate = useNavigate();
-  const [hovered, setHovered] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"photos" | "videos">("photos");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
@@ -47,7 +46,7 @@ const Gallery = () => {
     sortOrder: "desc",
   });
 
-  // API hook for category-filtered photos
+  // API hook for category-filtered photos - use category name for photos
   const {
     data: categoryPhotosData,
     isLoading: loadingCategoryPhotos,
@@ -58,7 +57,7 @@ const Gallery = () => {
       limit: 50,
     },
     {
-      skip: !selectedCategory,
+      skip: !selectedCategory || activeTab !== "photos",
     }
   );
 
@@ -85,7 +84,7 @@ const Gallery = () => {
       limit: 50,
     },
     {
-      skip: !selectedCategory,
+      skip: !selectedCategory || activeTab !== "videos",
     }
   );
 
@@ -106,12 +105,12 @@ const Gallery = () => {
   };
 
   // Helper function to get photo category ID
-  const getPhotoCategoryId = (category: Photo["category"]): string => {
-    if (typeof category === "string") {
-      return category;
-    }
-    return category._id;
-  };
+  // const getPhotoCategoryId = (category: Photo["category"]): string => {
+  //   if (typeof category === "string") {
+  //     return category;
+  //   }
+  //   return category._id;
+  // };
 
   // Helper function to get video category ID
   const getVideoCategoryId = (category: Video["category"]): string => {
@@ -128,7 +127,6 @@ const Gallery = () => {
       : { src: "/placeholder-image.jpg", alt: photo.title };
   };
 
-  // Updated navigation functions
   const handlePhotoClick = (photo: Photo) => {
     navigate(`/view/photo/${photo._id}`);
   };
@@ -202,18 +200,21 @@ const Gallery = () => {
   }
 
   // Extract data with proper error handling
-  const photos = selectedCategory
-    ? categoryPhotosData?.data?.photos || []
-    : photosData?.data?.photos || [];
-  const videos = selectedCategory
-    ? categoryVideosData?.data?.videos || []
-    : videosData?.data?.videos || [];
+  const photos =
+    selectedCategory && activeTab === "photos"
+      ? categoryPhotosData?.data?.photos || []
+      : photosData?.data?.photos || [];
+
+  const videos =
+    selectedCategory && activeTab === "videos"
+      ? categoryVideosData?.data?.videos || []
+      : videosData?.data?.videos || [];
 
   // Get category name for filtered view
   const selectedCategoryName = selectedCategory
-    ? photos[0]
+    ? activeTab === "photos" && photos[0]
       ? getPhotoCategoryName(photos[0].category)
-      : videos[0]
+      : activeTab === "videos" && videos[0]
       ? getVideoCategoryName(videos[0].category)
       : "Category"
     : null;
@@ -245,7 +246,7 @@ const Gallery = () => {
               className='mt-4 inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors'
             >
               <X className='w-4 h-4' />
-              Back to All {activeTab === "photos" ? "Photos" : "Videos"}
+              Back to {activeTab === "photos" ? "Photos" : "Videos"}
             </button>
           )}
         </div>
@@ -253,7 +254,8 @@ const Gallery = () => {
         {selectedCategory ? (
           // Category filtered view
           <div className='w-full'>
-            {loadingCategoryPhotos || loadingCategoryVideos ? (
+            {(loadingCategoryPhotos && activeTab === "photos") ||
+            (loadingCategoryVideos && activeTab === "videos") ? (
               <div className='flex justify-center'>
                 <Loader2 className='w-8 h-8 animate-spin text-[#138808]' />
               </div>
@@ -266,7 +268,7 @@ const Gallery = () => {
             ) : (
               <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-7xl mx-auto'>
                 {activeTab === "photos"
-                  ? photos.map((photo, index) => {
+                  ? photos.map((photo) => {
                       const mainImage = getPhotoMainImage(photo);
                       const categoryName = getPhotoCategoryName(photo.category);
 
@@ -274,13 +276,8 @@ const Gallery = () => {
                         <motion.div
                           key={photo._id}
                           onClick={() => handlePhotoClick(photo)}
-                          onMouseEnter={() => setHovered(index)}
-                          onMouseLeave={() => setHovered(null)}
                           className={cn(
-                            "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out cursor-pointer",
-                            hovered !== null &&
-                              hovered !== index &&
-                              "blur-sm scale-[0.98]"
+                            "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out cursor-pointer"
                           )}
                           whileHover={{ scale: 1.02 }}
                           transition={{ duration: 0.2 }}
@@ -309,8 +306,7 @@ const Gallery = () => {
                           {/* Hover overlay */}
                           <div
                             className={cn(
-                              "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300",
-                              hovered === index ? "opacity-100" : "opacity-0"
+                              "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300"
                             )}
                           >
                             <div className='text-white'>
@@ -341,20 +337,15 @@ const Gallery = () => {
                         </motion.div>
                       );
                     })
-                  : videos.map((video, index) => {
+                  : videos.map((video) => {
                       const categoryName = getVideoCategoryName(video.category);
 
                       return (
                         <motion.div
                           key={video._id}
                           onClick={() => handleVideoClick(video)}
-                          onMouseEnter={() => setHovered(index + 1000)}
-                          onMouseLeave={() => setHovered(null)}
                           className={cn(
-                            "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out cursor-pointer group",
-                            hovered !== null &&
-                              hovered !== index + 1000 &&
-                              "blur-sm scale-[0.98]"
+                            "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out cursor-pointer group"
                           )}
                           whileHover={{ scale: 1.02 }}
                           transition={{ duration: 0.2 }}
@@ -393,10 +384,7 @@ const Gallery = () => {
                           {/* Hover overlay */}
                           <div
                             className={cn(
-                              "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300",
-                              hovered === index + 1000
-                                ? "opacity-100"
-                                : "opacity-0"
+                              "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300"
                             )}
                           >
                             <div className='text-white'>
@@ -459,21 +447,16 @@ const Gallery = () => {
                 </div>
               ) : (
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-7xl mx-auto'>
-                  {photos.map((photo, index) => {
+                  {photos.map((photo) => {
                     const mainImage = getPhotoMainImage(photo);
                     const categoryName = getPhotoCategoryName(photo.category);
-                    const categoryId = getPhotoCategoryId(photo.category);
+                    // const categoryId = getPhotoCategoryId(photo.category);
 
                     return (
                       <motion.div
                         key={photo._id}
-                        onMouseEnter={() => setHovered(index)}
-                        onMouseLeave={() => setHovered(null)}
                         className={cn(
-                          "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out",
-                          hovered !== null &&
-                            hovered !== index &&
-                            "blur-sm scale-[0.98]"
+                          "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out"
                         )}
                         whileHover={{ scale: 1.02 }}
                         transition={{ duration: 0.2 }}
@@ -490,7 +473,7 @@ const Gallery = () => {
                           />
                         </div>
 
-                        {/* Modified Category badge with flex layout */}
+                        {/* Category badge with view all button */}
                         <div className='absolute top-4 left-4 flex items-center gap-2'>
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(
@@ -504,18 +487,18 @@ const Gallery = () => {
                             className='text-xs text-white bg-black/50 px-2 py-1 rounded cursor-pointer underline hover:bg-black/70 transition-colors'
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleCategoryFilter(categoryId);
+                              // For photos, send category name instead of ID to match API expectation
+                              handleCategoryFilter(categoryName);
                             }}
                           >
-                            view all
+                            view All
                           </button>
                         </div>
 
                         {/* Hover overlay */}
                         <div
                           className={cn(
-                            "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300 pointer-events-none",
-                            hovered === index ? "opacity-100" : "opacity-0"
+                            "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300 pointer-events-none"
                           )}
                         >
                           <div className='text-white'>
@@ -560,26 +543,23 @@ const Gallery = () => {
                 </div>
               ) : (
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-7xl mx-auto'>
-                  {videos.map((video, index) => {
+                  {videos.map((video) => {
                     const categoryName = getVideoCategoryName(video.category);
                     const categoryId = getVideoCategoryId(video.category);
 
                     return (
                       <motion.div
                         key={video._id}
-                        onClick={() => handleVideoClick(video)}
-                        onMouseEnter={() => setHovered(index + 1000)} // Offset to avoid conflicts with photos
-                        onMouseLeave={() => setHovered(null)}
                         className={cn(
-                          "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out cursor-pointer group",
-                          hovered !== null &&
-                            hovered !== index + 1000 &&
-                            "blur-sm scale-[0.98]"
+                          "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out cursor-pointer group"
                         )}
                         whileHover={{ scale: 1.02 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <div className='absolute inset-0'>
+                        <div
+                          className='absolute inset-0'
+                          onClick={() => handleVideoClick(video)}
+                        >
                           <img
                             src={video.thumbnail}
                             alt={video.title}
@@ -598,7 +578,7 @@ const Gallery = () => {
                           </div>
                         </div>
 
-                        {/* Category and view all */}
+                        {/* Category badge with view all button */}
                         <div className='absolute top-4 left-4 flex items-center gap-2'>
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(
@@ -615,17 +595,19 @@ const Gallery = () => {
                               handleCategoryFilter(categoryId);
                             }}
                           >
-                            view all
+                            view All
                           </button>
+                          {video.featured && (
+                            <span className='px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium'>
+                              Featured
+                            </span>
+                          )}
                         </div>
 
                         {/* Hover overlay */}
                         <div
                           className={cn(
-                            "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300",
-                            hovered === index + 1000
-                              ? "opacity-100"
-                              : "opacity-0"
+                            "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300 pointer-events-none"
                           )}
                         >
                           <div className='text-white'>
@@ -668,7 +650,7 @@ const Gallery = () => {
                     navigate("/video-gallery");
                   }
                 }}
-                className='px-6 py-3 bg-gradient-to-r from-[#FF9933] to-[#138808] text-white font-medium rounded-lg hover:from-[#FF9933]/90 hover:to-[#138808]/90 transition-all duration-300 shadow-lg hover:shadow-xl'
+                className='px-6 py-3 bg-white text-black font-medium rounded-lg hover:from-[#FF9933]/90 hover:to-[#138808]/90 transition-all duration-300 shadow-lg hover:shadow-xl'
               >
                 See More {activeTab === "photos" ? "Photos" : "Videos"}
               </button>
