@@ -8,7 +8,6 @@ import { Separator } from "@/components/ui/separator";
 import {
   Calendar,
   Clock,
-  User,
   Building,
   Loader2,
   AlertCircle,
@@ -157,10 +156,6 @@ const ReadPress = () => {
 
               {/* Meta Information */}
               <div className='flex flex-wrap items-center gap-6 text-sm text-slate-500'>
-                <div className='flex items-center gap-2'>
-                  <User className='w-4 h-4' />
-                  <span className='font-medium'>{press.author}</span>
-                </div>
                 <div className='flex items-center gap-2'>
                   <Building className='w-4 h-4' />
                   <span>{press.source}</span>

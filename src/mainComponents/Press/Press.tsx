@@ -227,8 +227,6 @@ const Press = () => {
                       </div>
 
                       <div className='flex items-center gap-2 text-xs text-gray-500 mb-4'>
-                        <span>{press.author}</span>
-                        <span>•</span>
                         <span>{press.readTime}</span>
                       </div>
 
