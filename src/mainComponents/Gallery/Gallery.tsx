@@ -10,7 +10,6 @@ import {
   AlertCircle,
   X,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -28,9 +27,16 @@ import {
 import { Video, getVideoCategoryName } from "@/types/video.types";
 import { Photo } from "@/types/photo.types";
 import { getCategoryColor } from "./getColor";
+import {
+  formatDate,
+  getPhotoCategoryName,
+  getVideoCategoryId,
+} from "./galleryHelper";
+import { cn } from "@/lib/utils";
 
 const Gallery = () => {
   const navigate = useNavigate();
+  const [hovered, setHovered] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"photos" | "videos">("photos");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
@@ -41,7 +47,7 @@ const Gallery = () => {
     error: photosError,
   } = useGetPhotosQuery({
     page: 1,
-    limit: 50,
+    limit: 6,
     sortBy: "createdAt",
     sortOrder: "desc",
   });
@@ -68,7 +74,7 @@ const Gallery = () => {
     error: videosError,
   } = useGetVideosQuery({
     page: "1",
-    limit: "20",
+    limit: "6",
     sortBy: "date",
     sortOrder: "desc",
   });
@@ -87,38 +93,6 @@ const Gallery = () => {
       skip: !selectedCategory || activeTab !== "videos",
     }
   );
-
-  const formatDate = (dateString: string | Date) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  // Helper function to get photo category name
-  const getPhotoCategoryName = (category: Photo["category"]): string => {
-    if (typeof category === "string") {
-      return category;
-    }
-    return category.name;
-  };
-
-  // Helper function to get photo category ID
-  // const getPhotoCategoryId = (category: Photo["category"]): string => {
-  //   if (typeof category === "string") {
-  //     return category;
-  //   }
-  //   return category._id;
-  // };
-
-  // Helper function to get video category ID
-  const getVideoCategoryId = (category: Video["category"]): string => {
-    if (typeof category === "string") {
-      return category;
-    }
-    return category._id;
-  };
 
   // Helper function to get photo primary image
   const getPhotoMainImage = (photo: Photo) => {
@@ -268,7 +242,7 @@ const Gallery = () => {
             ) : (
               <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-7xl mx-auto'>
                 {activeTab === "photos"
-                  ? photos.map((photo) => {
+                  ? photos.map((photo, index) => {
                       const mainImage = getPhotoMainImage(photo);
                       const categoryName = getPhotoCategoryName(photo.category);
 
@@ -276,10 +250,14 @@ const Gallery = () => {
                         <motion.div
                           key={photo._id}
                           onClick={() => handlePhotoClick(photo)}
+                          onMouseEnter={() => setHovered(index)}
+                          onMouseLeave={() => setHovered(null)}
                           className={cn(
-                            "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out cursor-pointer"
+                            "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out cursor-pointer",
+                            hovered !== null &&
+                              hovered !== index &&
+                              "blur-sm scale-[0.98]"
                           )}
-                          whileHover={{ scale: 1.02 }}
                           transition={{ duration: 0.2 }}
                         >
                           <div className='absolute inset-0'>
@@ -306,7 +284,8 @@ const Gallery = () => {
                           {/* Hover overlay */}
                           <div
                             className={cn(
-                              "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300"
+                              "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300",
+                              hovered === index ? "opacity-100" : "opacity-0"
                             )}
                           >
                             <div className='text-white'>
@@ -337,15 +316,20 @@ const Gallery = () => {
                         </motion.div>
                       );
                     })
-                  : videos.map((video) => {
+                  : videos.map((video, index) => {
                       const categoryName = getVideoCategoryName(video.category);
 
                       return (
                         <motion.div
                           key={video._id}
                           onClick={() => handleVideoClick(video)}
+                          onMouseEnter={() => setHovered(index + 1000)}
+                          onMouseLeave={() => setHovered(null)}
                           className={cn(
-                            "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out cursor-pointer group"
+                            "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out cursor-pointer group",
+                            hovered !== null &&
+                              hovered !== index + 1000 &&
+                              "blur-sm scale-[0.98]"
                           )}
                           whileHover={{ scale: 1.02 }}
                           transition={{ duration: 0.2 }}
@@ -384,7 +368,10 @@ const Gallery = () => {
                           {/* Hover overlay */}
                           <div
                             className={cn(
-                              "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300"
+                              "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300",
+                              hovered === index + 1000
+                                ? "opacity-100"
+                                : "opacity-0"
                             )}
                           >
                             <div className='text-white'>
@@ -447,7 +434,7 @@ const Gallery = () => {
                 </div>
               ) : (
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-7xl mx-auto'>
-                  {photos.map((photo) => {
+                  {photos.map((photo, index) => {
                     const mainImage = getPhotoMainImage(photo);
                     const categoryName = getPhotoCategoryName(photo.category);
                     // const categoryId = getPhotoCategoryId(photo.category);
@@ -455,8 +442,13 @@ const Gallery = () => {
                     return (
                       <motion.div
                         key={photo._id}
+                        onMouseEnter={() => setHovered(index)}
+                        onMouseLeave={() => setHovered(null)}
                         className={cn(
-                          "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out"
+                          "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out",
+                          hovered !== null &&
+                            hovered !== index &&
+                            "blur-sm scale-[0.98]"
                         )}
                         whileHover={{ scale: 1.02 }}
                         transition={{ duration: 0.2 }}
@@ -484,7 +476,7 @@ const Gallery = () => {
                               categoryName.slice(1)}
                           </span>
                           <button
-                            className='text-xs text-white bg-black/50 px-2 py-1 rounded cursor-pointer underline hover:bg-black/70 transition-colors'
+                            className='text-xs text-white bg-black/80 px-2 py-1 rounded-lg cursor-pointer hover:bg-black/70 transition-colors'
                             onClick={(e) => {
                               e.stopPropagation();
                               // For photos, send category name instead of ID to match API expectation
@@ -498,7 +490,8 @@ const Gallery = () => {
                         {/* Hover overlay */}
                         <div
                           className={cn(
-                            "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300 pointer-events-none"
+                            "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300 pointer-events-none",
+                            hovered === index ? "opacity-100" : "opacity-0"
                           )}
                         >
                           <div className='text-white'>
@@ -543,15 +536,20 @@ const Gallery = () => {
                 </div>
               ) : (
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-7xl mx-auto'>
-                  {videos.map((video) => {
+                  {videos.map((video, index) => {
                     const categoryName = getVideoCategoryName(video.category);
                     const categoryId = getVideoCategoryId(video.category);
 
                     return (
                       <motion.div
                         key={video._id}
+                        onMouseEnter={() => setHovered(index + 1000)} // Offset to avoid conflicts with photos
+                        onMouseLeave={() => setHovered(null)}
                         className={cn(
-                          "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out cursor-pointer group"
+                          "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out cursor-pointer group",
+                          hovered !== null &&
+                            hovered !== index + 1000 &&
+                            "blur-sm scale-[0.98]"
                         )}
                         whileHover={{ scale: 1.02 }}
                         transition={{ duration: 0.2 }}
@@ -589,7 +587,7 @@ const Gallery = () => {
                               categoryName.slice(1)}
                           </span>
                           <button
-                            className='text-xs text-white bg-black/50 px-2 py-1 rounded cursor-pointer underline hover:bg-black/70 transition-colors'
+                            className='text-xs text-white bg-black/50 px-2 py-1 rounded-lg  cursor-pointer  hover:bg-black/70 transition-colors'
                             onClick={(e) => {
                               e.stopPropagation();
                               handleCategoryFilter(categoryId);
@@ -597,17 +595,15 @@ const Gallery = () => {
                           >
                             view All
                           </button>
-                          {video.featured && (
-                            <span className='px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium'>
-                              Featured
-                            </span>
-                          )}
                         </div>
 
                         {/* Hover overlay */}
                         <div
                           className={cn(
-                            "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300 pointer-events-none"
+                            "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300",
+                            hovered === index + 1000
+                              ? "opacity-100"
+                              : "opacity-0"
                           )}
                         >
                           <div className='text-white'>
@@ -626,11 +622,6 @@ const Gallery = () => {
                                 </div>
                               )}
                             </div>
-                            {video.description && (
-                              <p className='mt-2 text-xs opacity-75 line-clamp-2'>
-                                {video.description}
-                              </p>
-                            )}
                           </div>
                         </div>
                       </motion.div>

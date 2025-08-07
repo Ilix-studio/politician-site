@@ -39,7 +39,7 @@ const Initiatives = () => {
                     vocational skills to boost employment.
                   </p>
                   <Link
-                    to='#'
+                    to='https://asdm.assam.gov.in/portlet-sub-innerpage/about-entrepreneurship-development-programme'
                     className='text-[#FF9933] inline-flex items-center gap-1 text-sm font-medium'
                   >
                     Learn more <ChevronRight className='h-4 w-4' />
@@ -54,7 +54,7 @@ const Initiatives = () => {
                     to stimulate local economy.
                   </p>
                   <Link
-                    to='#'
+                    to='https://www.myscheme.gov.in/schemes/bps'
                     className='text-[#FF9933] inline-flex items-center gap-1 text-sm font-medium'
                   >
                     Learn more <ChevronRight className='h-4 w-4' />
@@ -73,7 +73,7 @@ const Initiatives = () => {
                     entrepreneurs.
                   </p>
                   <Link
-                    to='#'
+                    to='https://www.ekuhipath.com/blog/building-a-stronger-assam-through-women-empowerment-06-04-2025'
                     className='text-[#FF9933] inline-flex items-center gap-1 text-sm font-medium'
                   >
                     Learn more <ChevronRight className='h-4 w-4' />
@@ -88,7 +88,7 @@ const Initiatives = () => {
                     services in rural areas.
                   </p>
                   <Link
-                    to='#'
+                    to='https://pnrd.assam.gov.in/schemes'
                     className='text-[#FF9933] inline-flex items-center gap-1 text-sm font-medium'
                   >
                     Learn more <ChevronRight className='h-4 w-4' />
@@ -107,7 +107,7 @@ const Initiatives = () => {
                     infrastructure.
                   </p>
                   <Link
-                    to='#'
+                    to='https://aeda.assam.gov.in/'
                     className='text-[#FF9933] inline-flex items-center gap-1 text-sm font-medium'
                   >
                     Learn more <ChevronRight className='h-4 w-4' />
@@ -122,7 +122,7 @@ const Initiatives = () => {
                     drinking water access.
                   </p>
                   <Link
-                    to='#'
+                    to='https://slnaiwmpassam.gov.in/jalshakti.html'
                     className='text-[#FF9933] inline-flex items-center gap-1 text-sm font-medium'
                   >
                     Learn more <ChevronRight className='h-4 w-4' />
@@ -141,7 +141,7 @@ const Initiatives = () => {
                     bridge the digital divide.
                   </p>
                   <Link
-                    to='#'
+                    to='https://scert.assam.gov.in/'
                     className='text-[#FF9933] inline-flex items-center gap-1 text-sm font-medium'
                   >
                     Learn more <ChevronRight className='h-4 w-4' />
@@ -156,7 +156,7 @@ const Initiatives = () => {
                     infrastructure and services.
                   </p>
                   <Link
-                    to='#'
+                    to='https://gdd.assam.gov.in/portlets/smart-city-project'
                     className='text-[#FF9933] inline-flex items-center gap-1 text-sm font-medium'
                   >
                     Learn more <ChevronRight className='h-4 w-4' />
