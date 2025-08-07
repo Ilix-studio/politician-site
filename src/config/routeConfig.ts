@@ -14,12 +14,8 @@ const PhotoGallery = lazy(
 const VideoGallery = lazy(
   () => import("../mainComponents/Gallery/VideoGallery")
 );
-const ViewPhotoId = lazy(
-  () => import("../mainComponents/Admin/AdminPhoto/ViewPhotoId")
-);
-const ViewVideoId = lazy(
-  () => import("../mainComponents/Admin/AdminVideo/ViewVideoId")
-);
+const ViewPhotoId = lazy(() => import("../mainComponents/Gallery/ViewPhotoId"));
+const ViewVideoId = lazy(() => import("../mainComponents/Gallery/ViewVideoId"));
 const ShowPressById = lazy(
   () => import("../mainComponents/Press/ShowPressById")
 );

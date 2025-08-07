@@ -10,8 +10,6 @@ export interface Video {
   duration: string;
   publicId: string;
   thumbnailPublicId?: string;
-  featured?: boolean;
-  tags?: string[];
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -45,8 +43,6 @@ export interface VideoUploadData {
   category: string;
   date: string;
   duration: string;
-  featured?: boolean;
-  tags?: string[];
 }
 
 // Create video data interface (for creating with existing URLs)
@@ -60,8 +56,6 @@ export interface VideoCreateData {
   duration: string;
   publicId: string;
   thumbnailPublicId?: string;
-  featured?: boolean;
-  tags?: string[];
 }
 
 // Update video data interface

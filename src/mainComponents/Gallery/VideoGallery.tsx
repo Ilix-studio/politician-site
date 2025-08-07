@@ -325,26 +325,6 @@ const VideoGallery: React.FC = () => {
                             {video.description}
                           </p>
                         )}
-
-                        {/* Tags */}
-                        {video.tags && video.tags.length > 0 && (
-                          <div className='flex flex-wrap gap-1 mt-2'>
-                            {video.tags.slice(0, 2).map((tag, tagIndex) => (
-                              <Badge
-                                key={tagIndex}
-                                variant='outline'
-                                className='text-xs'
-                              >
-                                {tag}
-                              </Badge>
-                            ))}
-                            {video.tags.length > 2 && (
-                              <Badge variant='outline' className='text-xs'>
-                                +{video.tags.length - 2}
-                              </Badge>
-                            )}
-                          </div>
-                        )}
                       </CardContent>
                     </motion.div>
                   );

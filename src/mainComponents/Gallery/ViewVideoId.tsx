@@ -18,10 +18,7 @@ import {
   Volume2,
   VolumeX,
   Maximize,
-  Star,
-  Tag,
   Eye,
-  Download,
   ExternalLink,
   Loader2,
 } from "lucide-react";
@@ -292,20 +289,6 @@ const ViewVideoId: React.FC = () => {
     }
   }, [isFullscreen]);
 
-  // Enhanced download functionality
-  const handleDownload = useCallback(() => {
-    if (!video?.videoUrl) return;
-
-    // Create a temporary link and trigger download
-    const link = document.createElement("a");
-    link.href = video.videoUrl;
-    link.download = `${video.title}.mp4`;
-    link.target = "_blank";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }, [video]);
-
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
@@ -448,9 +431,6 @@ const ViewVideoId: React.FC = () => {
                 <Share2 className='w-4 h-4' />
               )}
             </Button>
-            <Button variant='outline' size='sm' onClick={handleDownload}>
-              <Download className='w-4 h-4' />
-            </Button>
           </div>
         </div>
       </div>
@@ -472,15 +452,6 @@ const ViewVideoId: React.FC = () => {
                       <h1 className='text-3xl font-bold text-gray-900 leading-tight'>
                         {video.title}
                       </h1>
-                      {video.featured && (
-                        <Badge
-                          variant='secondary'
-                          className='bg-yellow-100 text-yellow-800 border-yellow-300'
-                        >
-                          <Star className='w-3 h-3 mr-1' />
-                          Featured
-                        </Badge>
-                      )}
                     </div>
                     <div className='flex items-center gap-4 flex-wrap'>
                       <Badge variant='outline' className='text-sm'>
@@ -629,27 +600,6 @@ const ViewVideoId: React.FC = () => {
                       {video.description}
                     </p>
                   </div>
-
-                  {/* Enhanced Tags */}
-                  {video.tags && video.tags.length > 0 && (
-                    <div>
-                      <h3 className='text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2'>
-                        <Tag className='w-4 h-4' />
-                        Tags
-                      </h3>
-                      <div className='flex flex-wrap gap-2'>
-                        {video.tags.map((tag, index) => (
-                          <Badge
-                            key={index}
-                            variant='secondary'
-                            className='text-xs hover:bg-blue-100 hover:text-blue-800 transition-colors cursor-pointer'
-                          >
-                            #{tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             </CardContent>
@@ -757,15 +707,6 @@ const ViewVideoId: React.FC = () => {
                                 <Calendar className='w-3 h-3' />
                                 {formatDate(relatedVideo.date)}
                               </span>
-                              {relatedVideo.featured && (
-                                <Badge
-                                  variant='secondary'
-                                  className='bg-yellow-100 text-yellow-800 text-xs border-yellow-300'
-                                >
-                                  <Star className='w-2 h-2 mr-1' />
-                                  Featured
-                                </Badge>
-                              )}
                             </div>
 
                             {relatedVideo.description && (

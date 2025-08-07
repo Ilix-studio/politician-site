@@ -24,14 +24,14 @@ import {
 } from "@/redux-store/services/videoApi";
 
 // Import types from project knowledge
-import { Video, getVideoCategoryName } from "@/types/video.types";
+import {
+  Video,
+  getVideoCategoryName,
+  getVideoCategoryId,
+} from "@/types/video.types";
 import { Photo } from "@/types/photo.types";
 import { getCategoryColor } from "./getColor";
-import {
-  formatDate,
-  getPhotoCategoryName,
-  getVideoCategoryId,
-} from "./galleryHelper";
+import { formatDate, getPhotoCategoryName } from "./galleryHelper";
 import { cn } from "@/lib/utils";
 
 const Gallery = () => {
@@ -40,19 +40,19 @@ const Gallery = () => {
   const [activeTab, setActiveTab] = useState<"photos" | "videos">("photos");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  // API hooks for photos with proper types from project knowledge
+  // API hooks for photos
   const {
     data: photosData,
     isLoading: loadingPhotos,
     error: photosError,
   } = useGetPhotosQuery({
     page: 1,
-    limit: 6,
+    limit: activeTab === "photos" && !selectedCategory ? 6 : 50,
     sortBy: "createdAt",
     sortOrder: "desc",
   });
 
-  // API hook for category-filtered photos - use category name for photos
+  // API hook for category-filtered photos
   const {
     data: categoryPhotosData,
     isLoading: loadingCategoryPhotos,
@@ -67,14 +67,14 @@ const Gallery = () => {
     }
   );
 
-  // API hooks for videos with proper types from project knowledge
+  // API hooks for videos
   const {
     data: videosData,
     isLoading: loadingVideos,
     error: videosError,
   } = useGetVideosQuery({
     page: "1",
-    limit: "6",
+    limit: activeTab === "videos" && !selectedCategory ? "6" : "20",
     sortBy: "date",
     sortOrder: "desc",
   });
@@ -110,6 +110,12 @@ const Gallery = () => {
   };
 
   const handleCategoryFilter = (categoryId: string) => {
+    console.log("Photo category filter:", categoryId);
+    setSelectedCategory(categoryId);
+  };
+
+  const handleCategoryFilterForVideo = (categoryId: string) => {
+    console.log("Video category filter:", categoryId);
     setSelectedCategory(categoryId);
   };
 
@@ -258,6 +264,7 @@ const Gallery = () => {
                               hovered !== index &&
                               "blur-sm scale-[0.98]"
                           )}
+                          whileHover={{ scale: 1.02 }}
                           transition={{ duration: 0.2 }}
                         >
                           <div className='absolute inset-0'>
@@ -483,7 +490,7 @@ const Gallery = () => {
                               handleCategoryFilter(categoryName);
                             }}
                           >
-                            view All
+                            View All
                           </button>
                         </div>
 
@@ -538,11 +545,11 @@ const Gallery = () => {
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-7xl mx-auto'>
                   {videos.map((video, index) => {
                     const categoryName = getVideoCategoryName(video.category);
-                    const categoryId = getVideoCategoryId(video.category);
 
                     return (
                       <motion.div
                         key={video._id}
+                        onClick={() => handleVideoClick(video)}
                         onMouseEnter={() => setHovered(index + 1000)} // Offset to avoid conflicts with photos
                         onMouseLeave={() => setHovered(null)}
                         className={cn(
@@ -554,10 +561,7 @@ const Gallery = () => {
                         whileHover={{ scale: 1.02 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <div
-                          className='absolute inset-0'
-                          onClick={() => handleVideoClick(video)}
-                        >
+                        <div className='absolute inset-0'>
                           <img
                             src={video.thumbnail}
                             alt={video.title}
@@ -587,13 +591,20 @@ const Gallery = () => {
                               categoryName.slice(1)}
                           </span>
                           <button
-                            className='text-xs text-white bg-black/50 px-2 py-1 rounded-lg  cursor-pointer  hover:bg-black/70 transition-colors'
+                            className='text-xs text-white bg-black/80 px-2 py-1 rounded-lg cursor-pointer hover:bg-black/70 transition-colors'
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleCategoryFilter(categoryId);
+                              const categoryId = getVideoCategoryId(
+                                video.category
+                              );
+                              console.log("Video View All clicked:", {
+                                categoryName,
+                                categoryId,
+                              });
+                              handleCategoryFilterForVideo(categoryId);
                             }}
                           >
-                            view All
+                            View All
                           </button>
                         </div>
 
@@ -622,6 +633,11 @@ const Gallery = () => {
                                 </div>
                               )}
                             </div>
+                            {video.description && (
+                              <p className='mt-2 text-xs opacity-75 line-clamp-2'>
+                                {video.description}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </motion.div>
