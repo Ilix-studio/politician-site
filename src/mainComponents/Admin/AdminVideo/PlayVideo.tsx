@@ -6,14 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Calendar,
-  Clock,
-  ArrowLeft,
-  AlertCircle,
-  Share2,
-  Star,
-} from "lucide-react";
+import { Calendar, Clock, ArrowLeft, AlertCircle, Share2 } from "lucide-react";
 import { useGetVideoQuery } from "@/redux-store/services/videoApi";
 import { getVideoCategoryName } from "@/types/video.types";
 
@@ -161,11 +154,6 @@ const PlayVideo: React.FC = () => {
                       <h1 className='text-3xl font-bold text-gray-900'>
                         {video.title}
                       </h1>
-                      {video.featured && (
-                        <div className='bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full'>
-                          <Star className='w-4 h-4' />
-                        </div>
-                      )}
                     </div>
                     <div className='flex items-center gap-4 text-sm text-gray-600'>
                       <Badge variant='outline' className='text-sm'>
@@ -190,24 +178,6 @@ const PlayVideo: React.FC = () => {
                     {video.description}
                   </p>
                 </div>
-
-                {/* Tags */}
-                {video.tags && video.tags.length > 0 && (
-                  <div className='mb-6'>
-                    <h3 className='text-lg font-semibold mb-2'>Tags</h3>
-                    <div className='flex flex-wrap gap-2'>
-                      {video.tags.map((tag, index) => (
-                        <Badge
-                          key={index}
-                          variant='secondary'
-                          className='text-sm'
-                        >
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
                 {/* Video Details Grid */}
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-3'>

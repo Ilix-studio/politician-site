@@ -10,7 +10,6 @@ import {
   Calendar,
   Clock,
   Loader2,
-  Star,
 } from "lucide-react";
 import { Video, getVideoCategoryName } from "@/types/video.types";
 import { useNavigate } from "react-router-dom";
@@ -92,11 +91,6 @@ const VideoCard = ({
                 <div className='absolute bottom-1 right-1 bg-black bg-opacity-75 text-white text-xs px-1 py-0.5 rounded'>
                   {video.duration}
                 </div>
-                {video.featured && (
-                  <div className='absolute top-1 left-1 bg-yellow-500 text-white p-1 rounded'>
-                    <Star className='w-3 h-3' />
-                  </div>
-                )}
               </div>
 
               {/* Content */}
@@ -160,25 +154,6 @@ const VideoCard = ({
                     <Clock className='w-4 h-4' />
                     {video.duration}
                   </div>
-
-                  {video.tags && video.tags.length > 0 && (
-                    <div className='flex items-center gap-1'>
-                      {video.tags.slice(0, 2).map((tag, index) => (
-                        <Badge
-                          key={index}
-                          variant='secondary'
-                          className='text-xs'
-                        >
-                          {tag}
-                        </Badge>
-                      ))}
-                      {video.tags.length > 2 && (
-                        <span className='text-xs text-slate-500'>
-                          +{video.tags.length - 2} more
-                        </span>
-                      )}
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -211,12 +186,6 @@ const VideoCard = ({
           <div className='absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded'>
             {video.duration}
           </div>
-
-          {video.featured && (
-            <div className='absolute top-2 left-2 bg-yellow-500 text-white p-1.5 rounded'>
-              <Star className='w-4 h-4' />
-            </div>
-          )}
         </div>
 
         <CardContent className='p-4 flex-1 flex flex-col'>
@@ -234,22 +203,6 @@ const VideoCard = ({
           <p className='text-sm text-slate-600 line-clamp-3 mb-4 flex-1'>
             {video.description}
           </p>
-
-          {/* Tags */}
-          {video.tags && video.tags.length > 0 && (
-            <div className='flex flex-wrap gap-1 mb-3'>
-              {video.tags.slice(0, 3).map((tag, index) => (
-                <Badge key={index} variant='secondary' className='text-xs'>
-                  {tag}
-                </Badge>
-              ))}
-              {video.tags.length > 3 && (
-                <Badge variant='secondary' className='text-xs'>
-                  +{video.tags.length - 3}
-                </Badge>
-              )}
-            </div>
-          )}
 
           {/* Meta information */}
           <div className='space-y-2 mb-4'>

@@ -248,8 +248,6 @@ const VideoDash: React.FC = () => {
             : editingVideo.category._id,
         date: editingVideo.date.toString(),
         duration: editingVideo.duration,
-        featured: editingVideo.featured,
-        tags: editingVideo.tags,
       };
 
       await updateVideo({
@@ -589,27 +587,6 @@ const VideoDash: React.FC = () => {
                               : null
                           )
                         }
-                      />
-                    </div>
-
-                    <div>
-                      <label className='text-sm font-medium'>Tags</label>
-                      <Input
-                        value={editingVideo.tags?.join(", ") || ""}
-                        onChange={(e) =>
-                          setEditingVideo((prev) =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  tags: e.target.value
-                                    .split(",")
-                                    .map((tag) => tag.trim())
-                                    .filter(Boolean),
-                                }
-                              : null
-                          )
-                        }
-                        placeholder='Enter tags separated by commas'
                       />
                     </div>
 

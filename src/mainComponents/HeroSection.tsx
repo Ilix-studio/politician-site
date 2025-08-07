@@ -17,9 +17,9 @@ import {
   useLazyGetVisitorCountQuery,
 } from "@/redux-store/services/visitorApi";
 
-import Image1 from "./../assets/carousel/A.jpg";
-import Image2 from "./../assets/carousel/B.jpg";
-import Image3 from "./../assets/carousel/C.jpg";
+import Image1 from "./../assets/carousel/A.webp";
+import Image2 from "./../assets/carousel/B.webp";
+import Image3 from "./../assets/carousel/C.webp";
 
 const HeroSection = () => {
   const [currentIndex, setCurrentIndex] = useState(0);

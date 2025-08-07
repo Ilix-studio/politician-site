@@ -59,7 +59,6 @@ const AddVideo = () => {
     category: "",
     date: "",
     duration: "",
-    featured: false,
   });
 
   const [videoFile, setVideoFile] = useState<File | null>(null);
