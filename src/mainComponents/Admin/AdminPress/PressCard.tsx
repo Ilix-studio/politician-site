@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, User, Building, Eye } from "lucide-react";
+import { Calendar, Clock, Building, Eye } from "lucide-react";
 import { Press } from "@/types/press.types";
 
 interface PressCardProps {
@@ -133,10 +133,6 @@ const PressCard = ({
           {/* Meta Information */}
           <div className='flex flex-wrap items-center gap-4 text-sm text-slate-500 mb-4'>
             <div className='flex items-center gap-1'>
-              <User className='w-4 h-4' />
-              <span>{press.author}</span>
-            </div>
-            <div className='flex items-center gap-1'>
               <Building className='w-4 h-4' />
               <span>{press.source}</span>
             </div>
@@ -198,11 +194,6 @@ const PressCard = ({
 
             {/* Meta Information */}
             <div className='flex flex-wrap items-center gap-4 text-sm text-slate-500'>
-              <div className='flex items-center gap-1'>
-                <User className='w-4 h-4' />
-                <span>{press.author}</span>
-              </div>
-              <span>•</span>
               <div className='flex items-center gap-1'>
                 <Building className='w-4 h-4' />
                 <span>{press.source}</span>

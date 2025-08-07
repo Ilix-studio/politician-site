@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   Calendar,
   Clock,
-  User,
   Building,
   Loader2,
   AlertCircle,
@@ -186,10 +185,7 @@ const ShowPressById = () => {
                 <Calendar className='h-4 w-4 flex-shrink-0' />
                 <span>{formatDate(press.date)}</span>
               </div>
-              <div className='flex items-center gap-1'>
-                <User className='h-4 w-4 flex-shrink-0' />
-                <span>{press.author}</span>
-              </div>
+
               <div className='flex items-center gap-1'>
                 <Building className='h-4 w-4 flex-shrink-0' />
                 <span>{press.source}</span>
