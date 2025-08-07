@@ -10,7 +10,6 @@ import {
   AlertCircle,
   X,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -28,6 +27,12 @@ import {
 import { Video, getVideoCategoryName } from "@/types/video.types";
 import { Photo } from "@/types/photo.types";
 import { getCategoryColor } from "./getColor";
+import {
+  formatDate,
+  getPhotoCategoryName,
+  getVideoCategoryId,
+} from "./galleryHelper";
+import { cn } from "@/lib/utils";
 
 const Gallery = () => {
   const navigate = useNavigate();
@@ -42,12 +47,12 @@ const Gallery = () => {
     error: photosError,
   } = useGetPhotosQuery({
     page: 1,
-    limit: 50,
+    limit: 6,
     sortBy: "createdAt",
     sortOrder: "desc",
   });
 
-  // API hook for category-filtered photos
+  // API hook for category-filtered photos - use category name for photos
   const {
     data: categoryPhotosData,
     isLoading: loadingCategoryPhotos,
@@ -58,7 +63,7 @@ const Gallery = () => {
       limit: 50,
     },
     {
-      skip: !selectedCategory,
+      skip: !selectedCategory || activeTab !== "photos",
     }
   );
 
@@ -69,7 +74,7 @@ const Gallery = () => {
     error: videosError,
   } = useGetVideosQuery({
     page: "1",
-    limit: "20",
+    limit: "6",
     sortBy: "date",
     sortOrder: "desc",
   });
@@ -85,41 +90,9 @@ const Gallery = () => {
       limit: 50,
     },
     {
-      skip: !selectedCategory,
+      skip: !selectedCategory || activeTab !== "videos",
     }
   );
-
-  const formatDate = (dateString: string | Date) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  // Helper function to get photo category name
-  const getPhotoCategoryName = (category: Photo["category"]): string => {
-    if (typeof category === "string") {
-      return category;
-    }
-    return category.name;
-  };
-
-  // Helper function to get photo category ID
-  const getPhotoCategoryId = (category: Photo["category"]): string => {
-    if (typeof category === "string") {
-      return category;
-    }
-    return category._id;
-  };
-
-  // Helper function to get video category ID
-  const getVideoCategoryId = (category: Video["category"]): string => {
-    if (typeof category === "string") {
-      return category;
-    }
-    return category._id;
-  };
 
   // Helper function to get photo primary image
   const getPhotoMainImage = (photo: Photo) => {
@@ -128,7 +101,6 @@ const Gallery = () => {
       : { src: "/placeholder-image.jpg", alt: photo.title };
   };
 
-  // Updated navigation functions
   const handlePhotoClick = (photo: Photo) => {
     navigate(`/view/photo/${photo._id}`);
   };
@@ -202,18 +174,21 @@ const Gallery = () => {
   }
 
   // Extract data with proper error handling
-  const photos = selectedCategory
-    ? categoryPhotosData?.data?.photos || []
-    : photosData?.data?.photos || [];
-  const videos = selectedCategory
-    ? categoryVideosData?.data?.videos || []
-    : videosData?.data?.videos || [];
+  const photos =
+    selectedCategory && activeTab === "photos"
+      ? categoryPhotosData?.data?.photos || []
+      : photosData?.data?.photos || [];
+
+  const videos =
+    selectedCategory && activeTab === "videos"
+      ? categoryVideosData?.data?.videos || []
+      : videosData?.data?.videos || [];
 
   // Get category name for filtered view
   const selectedCategoryName = selectedCategory
-    ? photos[0]
+    ? activeTab === "photos" && photos[0]
       ? getPhotoCategoryName(photos[0].category)
-      : videos[0]
+      : activeTab === "videos" && videos[0]
       ? getVideoCategoryName(videos[0].category)
       : "Category"
     : null;
@@ -245,7 +220,7 @@ const Gallery = () => {
               className='mt-4 inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors'
             >
               <X className='w-4 h-4' />
-              Back to All {activeTab === "photos" ? "Photos" : "Videos"}
+              Back to {activeTab === "photos" ? "Photos" : "Videos"}
             </button>
           )}
         </div>
@@ -253,7 +228,8 @@ const Gallery = () => {
         {selectedCategory ? (
           // Category filtered view
           <div className='w-full'>
-            {loadingCategoryPhotos || loadingCategoryVideos ? (
+            {(loadingCategoryPhotos && activeTab === "photos") ||
+            (loadingCategoryVideos && activeTab === "videos") ? (
               <div className='flex justify-center'>
                 <Loader2 className='w-8 h-8 animate-spin text-[#138808]' />
               </div>
@@ -282,7 +258,6 @@ const Gallery = () => {
                               hovered !== index &&
                               "blur-sm scale-[0.98]"
                           )}
-                          whileHover={{ scale: 1.02 }}
                           transition={{ duration: 0.2 }}
                         >
                           <div className='absolute inset-0'>
@@ -462,7 +437,7 @@ const Gallery = () => {
                   {photos.map((photo, index) => {
                     const mainImage = getPhotoMainImage(photo);
                     const categoryName = getPhotoCategoryName(photo.category);
-                    const categoryId = getPhotoCategoryId(photo.category);
+                    // const categoryId = getPhotoCategoryId(photo.category);
 
                     return (
                       <motion.div
@@ -490,7 +465,7 @@ const Gallery = () => {
                           />
                         </div>
 
-                        {/* Modified Category badge with flex layout */}
+                        {/* Category badge with view all button */}
                         <div className='absolute top-4 left-4 flex items-center gap-2'>
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(
@@ -501,13 +476,14 @@ const Gallery = () => {
                               categoryName.slice(1)}
                           </span>
                           <button
-                            className='text-xs text-white bg-black/50 px-2 py-1 rounded cursor-pointer underline hover:bg-black/70 transition-colors'
+                            className='text-xs text-white bg-black/80 px-2 py-1 rounded-lg cursor-pointer hover:bg-black/70 transition-colors'
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleCategoryFilter(categoryId);
+                              // For photos, send category name instead of ID to match API expectation
+                              handleCategoryFilter(categoryName);
                             }}
                           >
-                            view all
+                            view All
                           </button>
                         </div>
 
@@ -567,7 +543,6 @@ const Gallery = () => {
                     return (
                       <motion.div
                         key={video._id}
-                        onClick={() => handleVideoClick(video)}
                         onMouseEnter={() => setHovered(index + 1000)} // Offset to avoid conflicts with photos
                         onMouseLeave={() => setHovered(null)}
                         className={cn(
@@ -579,7 +554,10 @@ const Gallery = () => {
                         whileHover={{ scale: 1.02 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <div className='absolute inset-0'>
+                        <div
+                          className='absolute inset-0'
+                          onClick={() => handleVideoClick(video)}
+                        >
                           <img
                             src={video.thumbnail}
                             alt={video.title}
@@ -598,7 +576,7 @@ const Gallery = () => {
                           </div>
                         </div>
 
-                        {/* Category and view all */}
+                        {/* Category badge with view all button */}
                         <div className='absolute top-4 left-4 flex items-center gap-2'>
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(
@@ -609,13 +587,13 @@ const Gallery = () => {
                               categoryName.slice(1)}
                           </span>
                           <button
-                            className='text-xs text-white bg-black/50 px-2 py-1 rounded cursor-pointer underline hover:bg-black/70 transition-colors'
+                            className='text-xs text-white bg-black/50 px-2 py-1 rounded-lg  cursor-pointer  hover:bg-black/70 transition-colors'
                             onClick={(e) => {
                               e.stopPropagation();
                               handleCategoryFilter(categoryId);
                             }}
                           >
-                            view all
+                            view All
                           </button>
                         </div>
 
@@ -644,11 +622,6 @@ const Gallery = () => {
                                 </div>
                               )}
                             </div>
-                            {video.description && (
-                              <p className='mt-2 text-xs opacity-75 line-clamp-2'>
-                                {video.description}
-                              </p>
-                            )}
                           </div>
                         </div>
                       </motion.div>
@@ -668,7 +641,7 @@ const Gallery = () => {
                     navigate("/video-gallery");
                   }
                 }}
-                className='px-6 py-3 bg-gradient-to-r from-[#FF9933] to-[#138808] text-white font-medium rounded-lg hover:from-[#FF9933]/90 hover:to-[#138808]/90 transition-all duration-300 shadow-lg hover:shadow-xl'
+                className='px-6 py-3 bg-white text-black font-medium rounded-lg hover:from-[#FF9933]/90 hover:to-[#138808]/90 transition-all duration-300 shadow-lg hover:shadow-xl'
               >
                 See More {activeTab === "photos" ? "Photos" : "Videos"}
               </button>
