@@ -12,8 +12,8 @@ import {
   X,
   Upload,
   ImagePlus,
-  Plus,
   Check,
+  Plus,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -592,7 +592,7 @@ const EditPhoto: React.FC = () => {
                       <Button
                         type='button'
                         onClick={() => setShowAddCategory(!showAddCategory)}
-                        className='px-3 py-2 bg-green-600 hover:bg-green-700'
+                        className='px-3 py-2 bg-gray-600 hover:bg-green-700'
                         title='Add new category'
                       >
                         <Plus className='w-4 h-4' />
@@ -716,7 +716,7 @@ const EditPhoto: React.FC = () => {
                   <Button
                     type='submit'
                     disabled={isUpdating || isUploading}
-                    className='flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800'
+                    className='flex-1 bg-gray-500 hover:from-blue-700 hover:to-blue-800'
                   >
                     {isUpdating || isUploading ? (
                       <>
