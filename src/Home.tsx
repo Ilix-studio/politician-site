@@ -21,7 +21,6 @@ const Home = () => {
         <main className='flex-1'>
           <HeroSection />
           <About />
-
           <Timeline />
           <Achievement />
           <Initiatives />

@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useGetPressQuery } from "@/redux-store/services/pressApi";
 import { Press as PressType } from "@/types/press.types";
+import { getCategoryColor } from "../Gallery/getColor";
+import { getContentPreview } from "@/lib/helperfn";
 
 const Press = () => {
   const navigate = useNavigate();
@@ -32,21 +34,6 @@ const Press = () => {
       return category;
     }
     return category.name;
-  };
-
-  const getCategoryColor = (categoryName: string) => {
-    const colors: Record<string, string> = {
-      politics: "bg-red-100 text-red-800",
-      economy: "bg-green-100 text-green-800",
-      development: "bg-blue-100 text-blue-800",
-      social: "bg-purple-100 text-purple-800",
-      environment: "bg-emerald-100 text-emerald-800",
-      education: "bg-yellow-100 text-yellow-800",
-      healthcare: "bg-pink-100 text-pink-800",
-      infrastructure: "bg-gray-100 text-gray-800",
-      other: "bg-orange-100 text-orange-800",
-    };
-    return colors[categoryName.toLowerCase()] || colors.other;
   };
 
   const handleShare = async (press: PressType, e: React.MouseEvent) => {
@@ -224,6 +211,9 @@ const Press = () => {
                         <h3 className='font-semibold text-lg mb-2 line-clamp-2 leading-tight'>
                           {press.title}
                         </h3>
+                        <p className='text-gray-600 text-sm line-clamp-2'>
+                          {getContentPreview(press.content)}
+                        </p>
                       </div>
 
                       <div className='flex items-center gap-2 text-xs text-gray-500 mb-4'>

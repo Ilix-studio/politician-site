@@ -68,6 +68,8 @@ const CategoryManager = lazy(
   () => import("../mainComponents/Admin/AdminCategory/CategoryManager")
 );
 
+const SeeAllPress = lazy(() => import("@/mainComponents/Press/SeeAllPress"));
+
 // Route configuration
 export const immediateRoutes = [
   { path: "/", component: Home },
@@ -75,15 +77,16 @@ export const immediateRoutes = [
   { path: "/contact", component: ContactUs },
   { path: "/admin/login", component: LoginUser },
 ];
-
+// Lazy routes
 export const publicRoutes = [
   { path: "/photo-gallery", component: PhotoGallery },
   { path: "/video-gallery", component: VideoGallery },
   { path: "/view/photo/:id", component: ViewPhotoId },
   { path: "/view/video/:id", component: ViewVideoId },
   { path: "/press/:id", component: ShowPressById },
+  { path: "/see-all-press", component: SeeAllPress },
 ];
-
+// Lazy routes
 export const adminRoutes = [
   { path: "/admin/dashboard", component: AdminDash },
   { path: "/admin/photoDashboard", component: PhotoDash },
