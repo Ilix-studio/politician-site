@@ -120,26 +120,44 @@ const Footer = () => {
                 </p>
 
                 <div className='flex gap-2 mb-3'>
+                  {/* Phone */}
                   <Button
                     size='sm'
                     variant='outline'
                     className='h-6 w-6 p-0 hover:bg-[#FF9933]/10 hover:border-[#FF9933] transition-all duration-200'
+                    asChild
                   >
-                    <PhoneCall className='h-4 w-4' />
+                    <a href='tel:+919101035038'>
+                      <PhoneCall className='h-4 w-4' />
+                    </a>
                   </Button>
+
+                  {/* Website */}
                   <Button
                     size='sm'
                     variant='outline'
                     className='h-6 w-6 p-0 hover:bg-blue-50 hover:border-blue-400 transition-all duration-200'
+                    asChild
                   >
-                    <Globe2 className='h-4 w-4' />
+                    <a
+                      href='https://ilix-hazarika.vercel.app/'
+                      target='_blank'
+                      rel='noopener noreferrer'
+                    >
+                      <Globe2 className='h-4 w-4' />
+                    </a>
                   </Button>
+
+                  {/* Email */}
                   <Button
                     size='sm'
                     variant='outline'
                     className='h-6 w-6 p-0 hover:bg-green-50 hover:border-green-400 transition-all duration-200'
+                    asChild
                   >
-                    <Mail className='h-4 w-4' />
+                    <a href='mailto:ilishjyoti17@gmail.com'>
+                      <Mail className='h-4 w-4' />
+                    </a>
                   </Button>
                 </div>
               </div>
