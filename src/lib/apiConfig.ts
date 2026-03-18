@@ -1,7 +1,7 @@
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const API_CONFIG = {
-  BASE_URL: "https://biswajitphukan.com/api",
+  BASE_URL: import.meta.env.DEV ? "/api" : "https://biswajitphukan.com/api",
   TIMEOUT: 15000, // 15 second timeout
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000,
@@ -24,20 +24,29 @@ const retry = async (
 export const baseQuery = fetchBaseQuery({
   baseUrl: API_CONFIG.BASE_URL,
   timeout: API_CONFIG.TIMEOUT,
-  prepareHeaders: (headers, { getState }) => {
-    // Get token from Redux state
-    const token = (getState() as any).auth.token;
-    // Debug logging
-    console.log("Token from Redux state:", token);
+  prepareHeaders: (headers, { getState, endpoint }) => {
+    // Only add auth token for protected endpoints
+    const protectedEndpoints = ["/visitor/stats", "/visitor/reset"];
+    const isProtectedEndpoint = protectedEndpoints.some((ep) =>
+      endpoint?.includes(ep),
+    );
 
-    if (token) {
-      headers.set("Authorization", `Bearer ${token}`);
-      // Add performance headers
-      headers.set("Accept-Encoding", "gzip, deflate, br");
-      headers.set("Cache-Control", "public, max-age=300"); // 5 minute cache for GET requests
-    } else {
-      console.warn("No token found in Redux state");
+    if (isProtectedEndpoint) {
+      // Get token from Redux state
+      const token = (getState() as any).auth.token;
+      // Debug logging
+      console.log("Token from Redux state:", token);
+
+      if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
+      } else {
+        console.warn("No token found in Redux state for protected endpoint");
+      }
     }
+
+    // Add performance headers for all requests
+    headers.set("Accept-Encoding", "gzip, deflate, br");
+    headers.set("Cache-Control", "public, max-age=300"); // 5 minute cache for GET requests
 
     return headers;
   },
@@ -67,6 +76,13 @@ export const getCachedData = (args: any) => {
 
 // Helper function to handle API errors
 export const handleApiError = (error: any): string => {
+  // Log detailed error for debugging
+  console.error("API Error Details:", {
+    status: error.status,
+    data: error.data,
+    error: error.error,
+  });
+
   // Network error
   if (error.status === "FETCH_ERROR") {
     return "Network error. Please check your connection and try again.";
@@ -75,6 +91,11 @@ export const handleApiError = (error: any): string => {
   // Timeout error
   if (error.status === "TIMEOUT_ERROR") {
     return "Request timed out. Please try again.";
+  }
+
+  // CORS error
+  if (error.status === 403 || error.error?.message?.includes("CORS")) {
+    return "CORS error. Please check server configuration.";
   }
 
   // Server error with message
