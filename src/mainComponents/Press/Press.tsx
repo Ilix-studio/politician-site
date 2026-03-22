@@ -1,10 +1,11 @@
-import { Share2, Loader2, AlertCircle } from "lucide-react";
+import { Share2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useGetPressQuery } from "@/redux-store/services/pressApi";
 import { Press as PressType } from "@/types/press.types";
 import { getCategoryColor } from "../Gallery/getColor";
 import { getContentPreview } from "@/lib/helperfn";
+import FallbackPressSection from "@/Fallback/for_press/FallbackPress";
 
 const Press = () => {
   const navigate = useNavigate();
@@ -104,39 +105,7 @@ const Press = () => {
   }
 
   if (error) {
-    return (
-      <section id='press' className='py-16 md:py-24 bg-slate-50'>
-        <div className='container mx-auto'>
-          <div className='text-center max-w-3xl mx-auto mb-12'>
-            <div className='inline-block px-3 py-1 rounded-full bg-[#FF9933]/10 text-[#FF9933] font-medium text-sm mb-4'>
-              Press Coverage
-            </div>
-            <h2 className='text-3xl md:text-4xl font-bold tracking-tight'>
-              Media Highlights
-            </h2>
-            <p className='text-muted-foreground mt-4'>
-              Recent news articles and press coverage of our initiatives and
-              accomplishments.
-            </p>
-          </div>
-
-          <div className='flex justify-center items-center py-12'>
-            <div className='text-center'>
-              <AlertCircle className='w-12 h-12 text-red-500 mx-auto mb-4' />
-              <p className='text-muted-foreground mb-4'>
-                Unable to load press articles at the moment.
-              </p>
-              <Button
-                variant='outline'
-                onClick={() => window.location.reload()}
-              >
-                Try Again
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-    );
+    return <FallbackPressSection />;
   }
 
   const pressArticles = pressData?.data?.press || [];
@@ -193,7 +162,7 @@ const Press = () => {
                         <div className='absolute top-2 right-2'>
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(
-                              categoryName
+                              categoryName,
                             )}`}
                           >
                             {categoryName.charAt(0).toUpperCase() +

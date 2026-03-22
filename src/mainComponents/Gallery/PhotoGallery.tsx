@@ -330,7 +330,7 @@ const PhotoGallery: React.FC = () => {
                       onClick={() => handlePhotoClick(photo._id)}
                       className={cn(
                         "cursor-pointer rounded-xl overflow-hidden bg-white shadow-md hover:shadow-xl transition-all duration-300 group",
-                        hovered === index && "scale-105 shadow-2xl"
+                        hovered === index && "scale-105 shadow-2xl",
                       )}
                     >
                       <div className='relative aspect-[4/3] overflow-hidden'>
@@ -447,7 +447,7 @@ const PhotoGallery: React.FC = () => {
                             {pageNum}
                           </Button>
                         );
-                      }
+                      },
                     )}
                   </div>
 

@@ -1,17 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import {
-  Calendar,
-  MapPin,
-  Loader2,
-  Play,
-  Clock,
-  AlertCircle,
-  X,
-} from "lucide-react";
+import { Calendar, MapPin, Loader2, Play, Clock, X } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Import API hooks from project knowledge
 import {
@@ -33,6 +24,7 @@ import { Photo } from "@/types/photo.types";
 import { getCategoryColor } from "./getColor";
 import { formatDate, getPhotoCategoryName } from "./galleryHelper";
 import { cn } from "@/lib/utils";
+import FallbackGallery from "@/Fallback/for_gallery/FallbackGallery";
 
 const Gallery = () => {
   const navigate = useNavigate();
@@ -64,7 +56,7 @@ const Gallery = () => {
     },
     {
       skip: !selectedCategory || activeTab !== "photos",
-    }
+    },
   );
 
   // API hooks for videos
@@ -91,7 +83,7 @@ const Gallery = () => {
     },
     {
       skip: !selectedCategory || activeTab !== "videos",
-    }
+    },
   );
 
   // Helper function to get photo primary image
@@ -157,26 +149,7 @@ const Gallery = () => {
 
   // Error state
   if (hasError) {
-    return (
-      <section id='gallery' className='py-12 md:py-16 lg:py-24 bg-slate-50'>
-        <div className='container px-4 sm:px-6'>
-          <div className='text-center max-w-3xl mx-auto mb-10 md:mb-12'>
-            <div className='inline-block px-4 py-1.5 rounded-full bg-[#138808]/10 text-[#138808] font-medium text-sm mb-4'>
-              Gallery
-            </div>
-            <h2 className='text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight'>
-              Moments from the Journey
-            </h2>
-          </div>
-          <Alert variant='destructive' className='max-w-md mx-auto'>
-            <AlertCircle className='h-4 w-4' />
-            <AlertDescription>
-              Failed to load gallery content. Please try again later.
-            </AlertDescription>
-          </Alert>
-        </div>
-      </section>
-    );
+    return <FallbackGallery limit={4} />;
   }
 
   // Extract data with proper error handling
@@ -195,8 +168,8 @@ const Gallery = () => {
     ? activeTab === "photos" && photos[0]
       ? getPhotoCategoryName(photos[0].category)
       : activeTab === "videos" && videos[0]
-      ? getVideoCategoryName(videos[0].category)
-      : "Category"
+        ? getVideoCategoryName(videos[0].category)
+        : "Category"
     : null;
 
   return (
@@ -262,7 +235,7 @@ const Gallery = () => {
                             "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out cursor-pointer",
                             hovered !== null &&
                               hovered !== index &&
-                              "blur-sm scale-[0.98]"
+                              "blur-sm scale-[0.98]",
                           )}
                           whileHover={{ scale: 1.02 }}
                           transition={{ duration: 0.2 }}
@@ -280,7 +253,7 @@ const Gallery = () => {
                           <div className='absolute top-4 left-4'>
                             <span
                               className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(
-                                categoryName
+                                categoryName,
                               )}`}
                             >
                               {categoryName.charAt(0).toUpperCase() +
@@ -292,7 +265,7 @@ const Gallery = () => {
                           <div
                             className={cn(
                               "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300",
-                              hovered === index ? "opacity-100" : "opacity-0"
+                              hovered === index ? "opacity-100" : "opacity-0",
                             )}
                           >
                             <div className='text-white'>
@@ -336,7 +309,7 @@ const Gallery = () => {
                             "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out cursor-pointer group",
                             hovered !== null &&
                               hovered !== index + 1000 &&
-                              "blur-sm scale-[0.98]"
+                              "blur-sm scale-[0.98]",
                           )}
                           whileHover={{ scale: 1.02 }}
                           transition={{ duration: 0.2 }}
@@ -364,7 +337,7 @@ const Gallery = () => {
                           <div className='absolute top-4 left-4'>
                             <span
                               className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(
-                                categoryName
+                                categoryName,
                               )}`}
                             >
                               {categoryName.charAt(0).toUpperCase() +
@@ -378,7 +351,7 @@ const Gallery = () => {
                               "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300",
                               hovered === index + 1000
                                 ? "opacity-100"
-                                : "opacity-0"
+                                : "opacity-0",
                             )}
                           >
                             <div className='text-white'>
@@ -455,7 +428,7 @@ const Gallery = () => {
                           "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out",
                           hovered !== null &&
                             hovered !== index &&
-                            "blur-sm scale-[0.98]"
+                            "blur-sm scale-[0.98]",
                         )}
                         whileHover={{ scale: 1.02 }}
                         transition={{ duration: 0.2 }}
@@ -476,7 +449,7 @@ const Gallery = () => {
                         <div className='absolute top-4 left-4 flex items-center gap-2'>
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(
-                              categoryName
+                              categoryName,
                             )}`}
                           >
                             {categoryName.charAt(0).toUpperCase() +
@@ -498,7 +471,7 @@ const Gallery = () => {
                         <div
                           className={cn(
                             "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300 pointer-events-none",
-                            hovered === index ? "opacity-100" : "opacity-0"
+                            hovered === index ? "opacity-100" : "opacity-0",
                           )}
                         >
                           <div className='text-white'>
@@ -556,7 +529,7 @@ const Gallery = () => {
                           "rounded-xl relative bg-gray-100 overflow-hidden h-60 md:h-80 w-full transition-all duration-300 ease-out cursor-pointer group",
                           hovered !== null &&
                             hovered !== index + 1000 &&
-                            "blur-sm scale-[0.98]"
+                            "blur-sm scale-[0.98]",
                         )}
                         whileHover={{ scale: 1.02 }}
                         transition={{ duration: 0.2 }}
@@ -584,7 +557,7 @@ const Gallery = () => {
                         <div className='absolute top-4 left-4 flex items-center gap-2'>
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(
-                              categoryName
+                              categoryName,
                             )}`}
                           >
                             {categoryName.charAt(0).toUpperCase() +
@@ -595,7 +568,7 @@ const Gallery = () => {
                             onClick={(e) => {
                               e.stopPropagation();
                               const categoryId = getVideoCategoryId(
-                                video.category
+                                video.category,
                               );
                               console.log("Video View All clicked:", {
                                 categoryName,
@@ -614,7 +587,7 @@ const Gallery = () => {
                             "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 transition-opacity duration-300",
                             hovered === index + 1000
                               ? "opacity-100"
-                              : "opacity-0"
+                              : "opacity-0",
                           )}
                         >
                           <div className='text-white'>

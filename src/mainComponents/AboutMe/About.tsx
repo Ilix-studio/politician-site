@@ -96,7 +96,7 @@ const About = () => {
       icon: <Calendar className='w-6 h-6' />,
     },
     {
-      number: "3+",
+      number: "4+",
       label: "Years of Service",
       icon: <Users className='w-6 h-6' />,
     },

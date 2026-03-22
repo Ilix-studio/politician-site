@@ -21,6 +21,11 @@ import Image1 from "./../assets/carousel/A.webp";
 import Image2 from "./../assets/carousel/B.webp";
 import Image3 from "./../assets/carousel/C.webp";
 
+// Format number with Indian commas (no abbreviations)
+const formatIndianNumberWithCommas = (num: number): string => {
+  return num.toLocaleString("en-IN");
+};
+
 const HeroSection = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
@@ -35,8 +40,11 @@ const HeroSection = () => {
   const [getVisitorCount, { isLoading: getCountLoading }] =
     useLazyGetVisitorCountQuery();
 
-  const { data: currentVisitorData, isLoading: visitorCountLoading } =
-    useGetVisitorCountQuery();
+  const {
+    data: currentVisitorData,
+    isLoading: visitorCountLoading,
+    error: visitorCountError,
+  } = useGetVisitorCountQuery();
 
   // Check if user has visited before
   const isReturningVisitor = (): boolean => {
@@ -134,7 +142,7 @@ const HeroSection = () => {
 
   const prevSlide = () => {
     setCurrentIndex((prevIndex) =>
-      prevIndex === 0 ? carouselImages.length - 1 : prevIndex - 1
+      prevIndex === 0 ? carouselImages.length - 1 : prevIndex - 1,
     );
     setIsAutoPlaying(false);
     setTimeout(() => setIsAutoPlaying(true), 10000);
@@ -184,7 +192,10 @@ const HeroSection = () => {
                 <span className='animate-pulse'>Loading...</span>
               ) : (
                 <>
-                  {currentVisitorData?.count?.toLocaleString() || "0"} visitors
+                  {formatIndianNumberWithCommas(
+                    currentVisitorData?.count || 200000,
+                  )}{" "}
+                  visitors
                 </>
               )}
             </span>
@@ -239,7 +250,7 @@ const HeroSection = () => {
                     </div>
                   </motion.div>
                 </motion.div>
-              )
+              ),
           )}
         </AnimatePresence>
       </div>
@@ -318,14 +329,14 @@ const HeroSection = () => {
             <div className='w-px h-12 bg-white/30'></div>
             <div className='text-center'>
               <div className='text-2xl md:text-3xl font-bold text-orange-300'>
-                3+
+                4+
               </div>
               <div className='text-sm text-white/70'>Years Serving</div>
             </div>
             <div className='w-px h-12 bg-white/30'></div>
             <div className='text-center'>
               <div className='text-2xl md:text-3xl font-bold text-orange-300'>
-                100K+
+                500K+
               </div>
               <div className='text-sm text-white/70'>Lives Impacted</div>
             </div>
@@ -373,7 +384,7 @@ const HeroSection = () => {
             </motion.div>
           )}
 
-          {incrementError && (
+          {(incrementError || visitorCountError) && (
             <motion.div
               variants={textVariants}
               className='text-red-400 text-sm'
