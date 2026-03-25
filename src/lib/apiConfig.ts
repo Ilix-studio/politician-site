@@ -1,7 +1,7 @@
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.DEV ? "/api" : "https://biswajitphukan.com/api",
+  BASE_URL: import.meta.env.DEV ? "https://biswajit-be-34098913955.europe-west1.run.app/api" : "https://biswajit-be-34098913955.europe-west1.run.app/api",
   TIMEOUT: 15000, // 15 second timeout
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000,
