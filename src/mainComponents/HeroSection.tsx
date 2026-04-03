@@ -193,7 +193,7 @@ const HeroSection = () => {
               ) : (
                 <>
                   {formatIndianNumberWithCommas(
-                    currentVisitorData?.count || 200000,
+                    (currentVisitorData?.count || 0) + 2678,
                   )}{" "}
                   visitors
                 </>
