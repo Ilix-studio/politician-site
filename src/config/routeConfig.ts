@@ -6,66 +6,67 @@ import ExtendAbout from "../mainComponents/AboutMe/ExtendAbout";
 import ContactUs from "../mainComponents/Contact";
 import LoginUser from "../mainComponents/Admin/LoginUser";
 import NotFound from "../mainComponents/NotFound";
+import ProjectFeatures from "@/mainComponents/ProjectFeatures";
 
 // Lazy load components (loaded only when needed)
 const PhotoGallery = lazy(
-  () => import("../mainComponents/Gallery/PhotoGallery")
+  () => import("../mainComponents/Gallery/PhotoGallery"),
 );
 const VideoGallery = lazy(
-  () => import("../mainComponents/Gallery/VideoGallery")
+  () => import("../mainComponents/Gallery/VideoGallery"),
 );
 const ViewPhotoId = lazy(() => import("../mainComponents/Gallery/ViewPhotoId"));
 const ViewVideoId = lazy(() => import("../mainComponents/Gallery/ViewVideoId"));
 const ShowPressById = lazy(
-  () => import("../mainComponents/Press/ShowPressById")
+  () => import("../mainComponents/Press/ShowPressById"),
 );
 
 // Admin components (lazy loaded)
 const AdminDash = lazy(() => import("../mainComponents/Admin/AdminDash"));
 const PhotoDash = lazy(
-  () => import("../mainComponents/Admin/AdminPhoto/PhotoDash")
+  () => import("../mainComponents/Admin/AdminPhoto/PhotoDash"),
 );
 const AddPhoto = lazy(
-  () => import("../mainComponents/Admin/AdminPhoto/AddPhoto")
+  () => import("../mainComponents/Admin/AdminPhoto/AddPhoto"),
 );
 const PhotoViewPage = lazy(
-  () => import("../mainComponents/Admin/AdminPhoto/PhotoCardWrapper")
+  () => import("../mainComponents/Admin/AdminPhoto/PhotoCardWrapper"),
 );
 const EditPhoto = lazy(
-  () => import("../mainComponents/Admin/AdminPhoto/EditPhoto")
+  () => import("../mainComponents/Admin/AdminPhoto/EditPhoto"),
 );
 const VideoDash = lazy(
-  () => import("../mainComponents/Admin/AdminVideo/VideoDash")
+  () => import("../mainComponents/Admin/AdminVideo/VideoDash"),
 );
 const AddVideo = lazy(
-  () => import("../mainComponents/Admin/AdminVideo/AddVideo")
+  () => import("../mainComponents/Admin/AdminVideo/AddVideo"),
 );
 const PlayVideo = lazy(
-  () => import("../mainComponents/Admin/AdminVideo/PlayVideo")
+  () => import("../mainComponents/Admin/AdminVideo/PlayVideo"),
 );
 const EditVideo = lazy(
-  () => import("../mainComponents/Admin/AdminVideo/EditVideo")
+  () => import("../mainComponents/Admin/AdminVideo/EditVideo"),
 );
 const PressDash = lazy(
-  () => import("../mainComponents/Admin/AdminPress/PressDash")
+  () => import("../mainComponents/Admin/AdminPress/PressDash"),
 );
 const AddPress = lazy(
-  () => import("../mainComponents/Admin/AdminPress/AddPress")
+  () => import("../mainComponents/Admin/AdminPress/AddPress"),
 );
 const ReadPress = lazy(
-  () => import("../mainComponents/Admin/AdminPress/ReadPress")
+  () => import("../mainComponents/Admin/AdminPress/ReadPress"),
 );
 const EditPress = lazy(
-  () => import("../mainComponents/Admin/AdminPress/EditPress")
+  () => import("../mainComponents/Admin/AdminPress/EditPress"),
 );
 const ViewMessage = lazy(
-  () => import("../mainComponents/Admin/AdminMessage/ViewMessage")
+  () => import("../mainComponents/Admin/AdminMessage/ViewMessage"),
 );
 const ViewAllMessage = lazy(
-  () => import("../mainComponents/Admin/AdminMessage/ViewAllMessage")
+  () => import("../mainComponents/Admin/AdminMessage/ViewAllMessage"),
 );
 const CategoryManager = lazy(
-  () => import("../mainComponents/Admin/AdminCategory/CategoryManager")
+  () => import("../mainComponents/Admin/AdminCategory/CategoryManager"),
 );
 
 const SeeAllPress = lazy(() => import("@/mainComponents/Press/SeeAllPress"));
@@ -85,6 +86,7 @@ export const publicRoutes = [
   { path: "/view/video/:id", component: ViewVideoId },
   { path: "/press/:id", component: ShowPressById },
   { path: "/see-all-press", component: SeeAllPress },
+  { path: "/see-bill-memo", component: ProjectFeatures },
 ];
 // Lazy routes
 export const adminRoutes = [

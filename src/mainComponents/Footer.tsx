@@ -95,6 +95,12 @@ const Footer = () => {
               >
                 Constituency Map
               </Link>
+              <Link
+                to='/see-bill-memo'
+                className='text-sm text-muted-foreground hover:text-primary'
+              >
+                see bill memo
+              </Link>
             </nav>
           </div>
 
