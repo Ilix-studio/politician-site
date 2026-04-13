@@ -45,85 +45,80 @@ const FRONTEND_ITEMS: LineItem[] = [
   {
     name: "Public Interface & Core Pages",
     components:
-      "Home, AboutUs, ContactUs, SupportUs, GalleryPage, ViewAllAwards",
-    scope: "Responsive layouts, intuitive navigation, and Foundation branding",
+      "Home, AboutMe, ContactUs, SupportUs, GalleryPage, ViewAllAchievements",
+    scope: "Responsive layouts, intuitive navigation, and Political branding",
     complexity: "Medium",
-    charge: 3500,
-    tag: "fe",
-  },
-  {
-    name: "Media & Gallery System",
-    components: "GalleryPage, ViewPhotoId, ViewVideoId",
-    scope: "Photo & video grids, detailed media view layouts",
-    complexity: "Simple",
-    charge: 2500,
-    tag: "fe",
-  },
-  {
-    name: "Community & Engagement",
-    components: "SeeBlogs, BlogPostPage, VolunteerPage, WriteTestimonial",
-    scope: "Blog feeds, volunteer applications, testimonial submission UI",
-    complexity: "Medium",
-    charge: 3000,
-    tag: "fe",
-  },
-  {
-    name: "Programs & Initiatives",
-    components: "AdoptionForm, RescuePage, ViewAllRescue, Awards, ReportPage",
-    scope: "Complex forms for adoption/rescue reporting, awards showcase",
-    complexity: "Complex",
-    charge: 3500,
-    tag: "fe",
-  },
-  {
-    name: "Admin Dashboards & Management UI",
-    components:
-      "NewDashAdmin, PhotoDash, VideoDash, RescueDash, AwardDash, BlogsDash",
-    scope: "Secure admin portal, CRUD interfaces, statistics dashboards",
-    complexity: "Complex",
     charge: 4000,
+    tag: "fe",
+  },
+  {
+    name: "Political Initiatives &  Operations",
+    components: "Form, DisasterReliefPage, ViewAll, View",
+    scope: "Multi-step forms for political initiatives,  operations handling",
+    complexity: "Medium",
+    charge: 3500,
+    tag: "fe",
+  },
+  {
+    name: "Community & Press Engagement",
+    components: "Page Detail, WriteTestimonial, SeePress, PressArticle",
+    scope: "Press catalog, testimonial forms,  registration flow",
+    complexity: "Medium",
+    charge: 3500,
+    tag: "fe",
+  },
+  {
+    name: "Admin Dashboard Interface",
+    components: "AdminDash, PhotoDash, VideoDash,  AchievementDash",
+    scope:
+      "Data visualization for political impact, management tables for records",
+    complexity: "Complex",
+    charge: 5000,
     tag: "admin",
   },
 ];
 
 const BACKEND_ITEMS: LineItem[] = [
   {
-    name: "Core System & Auth",
-    components: "Admin Auth, JWT implementation, Category Management API",
-    scope: "Role-based access, token management, core data categorization",
+    name: "Core Server & Auth System",
+    components:
+      "Admin login (JWT), role verification, route protection middleware",
+    scope:
+      "Secure routing for admin dashboards, general API health and error handling",
     complexity: "Medium",
     charge: 3000,
     tag: "be",
   },
   {
-    name: "Content Management API",
-    components: "Blogs API, Photos/Videos upload, Testimonial API",
-    scope: "Image/Video cloud integration (Cloudinary), blog CRUD operations",
-    complexity: "Medium",
-    charge: 3000,
-    tag: "be",
-  },
-  {
-    name: "Operations & Impact API",
-    components: "Rescue API, Adoption API, Awards API, Volunteers API",
-    scope: "Complex multi-model relationships, form submissions processing",
+    name: "Media & Press APIs",
+    components: "Photo, Video, Press, Category, Awards Controllers",
+    scope:
+      "Cloudinary/AWS S3 integration, CRUD logic for press and media files",
     complexity: "Complex",
-    charge: 4000,
+    charge: 4500,
     tag: "be",
   },
   {
-    name: "Infrastructure & DevOps",
-    components: "Deployment config, CORS, Database connection, Error Handling",
-    scope: "Production environment setup, server hosting configuration",
+    name: " Political Initiatives Engine",
+    components: " DisasterRelief, PoliticalInitiative Controllers & Models",
+    scope: "Handling  political initiatives, status tracking updates",
     complexity: "Medium",
     charge: 3500,
-    tag: "infra",
+    tag: "be",
+  },
+  {
+    name: "Community Management APIs",
+    components: ", Testimonial, Impact, Messages Controllers",
+    scope: " applications, real-time message handling, and impact statistics",
+    complexity: "Medium",
+    charge: 3000,
+    tag: "be",
   },
 ];
 
 const TOTALS: TotalRow[] = [
-  { label: "Frontend Subtotal", value: "₹16,500" },
-  { label: "Backend Subtotal", value: "₹13,500" },
+  { label: "Frontend Subtotal", value: "₹16,000" },
+  { label: "Backend Subtotal", value: "₹14,000" },
   { label: "Gross Total", value: "₹30,000" },
   { label: "Grand Total", value: "₹30,000", variant: "grand" },
 ];
@@ -143,10 +138,10 @@ const SectionTitle: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => (
   <div
-    className='flex items-center gap-2 border-b-2 border-green-600 uppercase font-bold text-green-600 tracking-widest'
+    className='flex items-center gap-2 border-b-2 border-indigo-600 uppercase font-bold text-indigo-600 tracking-widest'
     style={{ fontSize: 10, paddingTop: 24, paddingBottom: 12 }}
   >
-    <span className='w-1.5 h-1.5 rounded-full bg-green-600 flex-shrink-0' />
+    <span className='w-1.5 h-1.5 rounded-full bg-indigo-600 flex-shrink-0' />
     {children}
   </div>
 );
@@ -158,7 +153,7 @@ const MetaItem: React.FC<{
 }> = ({ label, value, valueClass = "text-white" }) => (
   <div>
     <span
-      className='block text-gray-500 uppercase tracking-widest mb-1'
+      className='block text-gray-400 uppercase tracking-widest mb-1'
       style={{ fontSize: 10 }}
     >
       {label}
@@ -196,8 +191,8 @@ const ItemRow: React.FC<{ item: LineItem }> = ({ item }) => (
           item.complexity === "Simple"
             ? "bg-green-100 text-green-800"
             : item.complexity === "Medium"
-            ? "bg-yellow-100 text-yellow-800"
-            : "bg-red-100 text-red-800"
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-red-100 text-red-800"
         }`}
       >
         {item.complexity}
@@ -231,8 +226,8 @@ const TableSection: React.FC<{ title: string; items: LineItem[] }> = ({
                   i === 0 || i === 1
                     ? "text-left"
                     : i === 2
-                    ? "text-center"
-                    : "text-right"
+                      ? "text-center"
+                      : "text-right"
                 } ${i === 1 ? "hidden sm:table-cell" : ""}`}
                 style={{ fontSize: 10 }}
               >
@@ -254,8 +249,8 @@ const TableSection: React.FC<{ title: string; items: LineItem[] }> = ({
 // ─── Copy Function ──────────────────────────────────────────────────────────────
 
 const formatBillForCopy = () => {
-  let billText = `PRAPTI FOUNDATION - PROJECT FEATURES\n`;
-  billText += `================================\n\n`;
+  let billText = `BISWAJIT PHUKAN - PROJECT ESTIMATE\n`;
+  billText += `====================================\n\n`;
 
   // Frontend Section
   billText += `FRONTEND DEVELOPMENT\n`;
@@ -268,7 +263,7 @@ const formatBillForCopy = () => {
     billText += `  Charge: ₹${item.charge.toLocaleString("en-IN")}\n\n`;
   });
 
-  // Backend Section
+  // Backend
   billText += `BACKEND DEVELOPMENT\n`;
   billText += `------------------\n`;
   BACKEND_ITEMS.forEach((item) => {
@@ -286,7 +281,7 @@ const formatBillForCopy = () => {
     billText += `${row.label}: ${row.value}\n`;
   });
 
-  billText += `\nPayment Terms: 50% advance, 50% on delivery\n`;
+  billText += `\nPayment Terms: 50% advance, 50% on completion\n`;
   billText += `Generated: ${new Date().toLocaleDateString("en-IN")}\n`;
 
   return billText;
@@ -302,9 +297,9 @@ const NOTE_BOXES: NoteBox[] = [
       <p className='text-sm text-gray-600 leading-relaxed'>
         50% advance (₹15,000) before development start.
         <br />
-        50% balance (₹15,000) on final delivery.
+        50% balance (₹15,000) upon final delivery.
         <br />
-        Payment via NEFT/UPI.
+        Payment via Bank Transfer/UPI.
       </p>
     ),
   },
@@ -312,11 +307,11 @@ const NOTE_BOXES: NoteBox[] = [
     title: "What's Included",
     content: (
       <ul className='text-sm text-gray-600 list-disc pl-4 leading-loose'>
-        <li>Full Full-Stack codebase (MERN Stack)</li>
-        <li>Deployed on Vercel + suitable backend platform</li>
-        <li>Cloudinary image management</li>
-        <li>Admin tracking and dashboard</li>
-        <li>Bug support post-delivery</li>
+        <li>Custom React + Node.js Web Application</li>
+        <li>Admin Content Management System</li>
+        <li>Initial Server Deployment Setup</li>
+        <li>Image Processing / Web Optimization</li>
+        <li>Free bug resolution for 30 days</li>
       </ul>
     ),
   },
@@ -324,26 +319,25 @@ const NOTE_BOXES: NoteBox[] = [
     title: "Not Included",
     content: (
       <ul className='text-sm text-gray-600 list-disc pl-4 leading-loose'>
-        <li>Domain / hosting subscription fees</li>
-        <li>Cloudinary or other paid service plan costs</li>
-        <li>Future feature additions post-delivery</li>
-        <li>Content creation / data entry</li>
+        <li>Domain name and monthly hosting fees</li>
+        <li>Third-party API pricing (Emails, SMS)</li>
+        <li>Major architectural changes post-approval</li>
+        <li>Content creation / Manual data entry</li>
       </ul>
     ),
   },
   {
-    title: "Additional Services",
+    title: "Support Scope",
     content: (
       <ul className='text-sm text-gray-600 list-disc pl-4 leading-loose'>
-        <li>Payment Gateway Integration (Razorpay/Stripe)</li>
-        <li>Advanced Analytics and SEO optimization</li>
-        <li>Custom email system and bulk mailing</li>
+        <li>Email support during business hours</li>
+        <li>On-demand feature additions (billed separately)</li>
       </ul>
     ),
   },
 ];
 
-const ProjectFeatures: React.FC = () => {
+const BudgetedBillMemo: React.FC = () => {
   const [copied, setCopied] = useState(false);
 
   const handleCopyBill = async () => {
@@ -353,160 +347,150 @@ const ProjectFeatures: React.FC = () => {
       setCopied(true);
       setTimeout(() => setCopied(false), 3000);
     } catch (err) {
-      console.error("Failed to copy features:", err);
+      console.error("Failed to copy bill:", err);
       alert("Failed to copy to clipboard");
     }
   };
 
   return (
-    <>
-    <div className='min-h-screen bg-gray-200 flex justify-center items-start py-6 sm:py-8 lg:py-10 px-3 sm:px-5 lg:px-5'>
-      <div className='w-full max-w-4xl bg-white shadow-2xl rounded-lg sm:rounded-xl'>
+    <div className='min-h-screen bg-indigo-50 flex justify-center items-start py-6 sm:py-8 lg:py-10 px-3 sm:px-5 lg:px-5'>
+      <div className='w-full max-w-4xl bg-white shadow-2xl rounded-lg sm:rounded-xl overflow-hidden border border-gray-100'>
         {/* ── Header ── */}
-        <div className='bg-green-900 text-white px-6 sm:px-8 lg:px-12 pt-6 sm:pt-8 lg:pt-9 pb-4 sm:pb-6 lg:pb-7 relative overflow-hidden'>
+        <div className='bg-indigo-950 text-white px-6 sm:px-8 lg:px-12 pt-6 sm:pt-8 lg:pt-9 pb-4 sm:pb-6 lg:pb-7 relative overflow-hidden'>
           <div
-            className='absolute rounded-full pointer-events-none'
+            className='absolute rounded-full pointer-events-none opacity-20'
             style={{
-              right: -40,
-              top: -40,
-              width: 240,
-              height: 240,
-              border: "60px solid rgba(255,255,255,0.08)",
+              right: -60,
+              top: -60,
+              width: 300,
+              height: 300,
+              border: "60px solid #4f46e5",
             }}
           />
 
           <div className='flex flex-col sm:flex-row sm:justify-between sm:items-start relative z-10 gap-4 sm:gap-0'>
             {/* Brand */}
             <div className='flex items-center gap-2 sm:gap-3'>
-              <div
-                className='w-8 h-8 sm:w-11 sm:h-11 bg-green-600 rounded-lg flex items-center justify-center text-white text-lg sm:text-xl font-bold flex-shrink-0'
-                style={{ fontFamily: "Georgia, serif" }}
-              >
-                P
+              <div className='w-10 h-10 sm:w-12 sm:h-12 bg-indigo-600 rounded-lg flex items-center justify-center text-white text-xl sm:text-2xl font-bold flex-shrink-0'>
+                PF
               </div>
               <div>
-                <h1
-                  className='text-lg sm:text-xl font-semibold tracking-wide text-white'
-                  style={{ fontFamily: "Georgia, serif" }}
-                >
-                  Prapti Foundation
+                <h1 className='text-xl sm:text-2xl font-semibold tracking-wide text-white font-sans'>
+                  Biswajit Phukan
                 </h1>
-
                 <span
-                  className='text-green-200 font-bold uppercase tracking-widest'
-                  style={{ fontSize: "9px" }}
+                  className='text-indigo-200 font-medium uppercase tracking-widest'
+                  style={{ fontSize: "10px" }}
                 >
-                  Non-Profit Organization Project
+                  Personal Portfolio
                 </span>
               </div>
             </div>
 
             {/* Invoice label */}
-                Project Features
+            <div className='text-right sm:text-left'>
+              <div
+                className='text-white font-light mt-2 sm:mt-0'
+                style={{
+                  fontSize: "clamp(20px, 4vw, 32px)",
+                  letterSpacing: "-0.01em",
+                  lineHeight: 1,
+                }}
+              >
+                Project Estimate
               </div>
             </div>
           </div>
 
           {/* Meta row */}
           <div
-            className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-6 lg:gap-10 mt-6 sm:mt-7 pt-4 sm:pt-6 relative z-10'
+            className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 lg:gap-10 mt-6 sm:mt-7 pt-4 sm:pt-6 relative z-10'
             style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}
           >
             <MetaItem
-              label='Issue Date'
+              label='Date'
               value={new Date().toLocaleDateString("en-IN", {
                 day: "numeric",
                 month: "short",
                 year: "numeric",
               })}
             />
-            <MetaItem label='Valid Until' value='30 Days' />
-            <MetaItem label='Project' value='Prapti Foundation Web' />
+            <MetaItem label='Project Type' value='Full-Stack App' />
             <MetaItem label='Currency' value='INR (₹)' />
             <MetaItem
               label='Status'
-              value='PROPOSED'
-              valueClass='text-yellow-400'
+              value='PROPOSAL'
+              valueClass='text-indigo-400 font-bold'
             />
           </div>
         </div>
 
-    
+        {/* ── Parties ── */}
         <div
-          className='grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-0 px-6 sm:px-8 lg:px-12 py-6 sm:py-8 border-b border-gray-200'
+          className='grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-0 px-6 sm:px-8 lg:px-12 py-6 sm:py-8 border-b border-gray-100 bg-gray-50'
           style={{ gridTemplateColumns: "1fr 1px 1fr" }}
         >
           <div className='pr-0 lg:pr-6'>
             <p
-              className='text-gray-400 uppercase tracking-widest mb-2.5'
+              className='text-indigo-600 uppercase font-semibold tracking-widest mb-2.5'
               style={{ fontSize: 10 }}
             >
-              Proposed By
+              Developed By
             </p>
             <h3 className='text-base font-black mb-1.5 text-gray-900'>
-              Himanku Borah and Ilish Hazarika
+              Himanku Borah & Ilish Hazarika
             </h3>
             <p className='text-sm text-gray-600 leading-7'>
               Full-Stack Developers
               <br />
-              India
+              Golaghat, Assam, India
             </p>
-            <div className='mt-4'>
-              <h4 className='text-sm font-semibold text-gray-900'>
-                Development Scope
-              </h4>
-              <p className='text-sm text-gray-600'>Complete Web Application</p>
-            </div>
           </div>
           <div className='hidden lg:block bg-gray-200' />
           <div className='pl-0 lg:pl-6'>
             <p
-              className='text-gray-400 uppercase tracking-widest mb-2.5'
+              className='text-indigo-600 uppercase font-semibold tracking-widest mb-2.5'
               style={{ fontSize: 10 }}
             >
-              Project Client
+              Prepared For
             </p>
             <h3 className='text-base font-black mb-1.5 text-gray-900'>
-              Prapti Foundation
+              Personal Portfolio
             </h3>
-            <p className='text-sm text-gray-600 leading-7'>
-              Non-Profit Organization
-              <br />
-              <br />
-              Foundation web platform
-            </p>
           </div>
         </div>
 
         {/* ── Line Item Tables ── */}
-        <TableSection
-          title='Frontend Development — React · TypeScript'
-          items={FRONTEND_ITEMS}
-        />
-        <div className='mt-2'>
+        <div className='py-2'>
           <TableSection
-            title='Backend Development — Node.js · Express · MongoDB'
-            items={BACKEND_ITEMS}
+            title='Frontend Development (React, Vite, TailwindCSS)'
+            items={FRONTEND_ITEMS}
           />
+          <div className='mt-4'>
+            <TableSection
+              title='Backend Development (Node.js, Express, MongoDB)'
+              items={BACKEND_ITEMS}
+            />
+          </div>
         </div>
 
         {/* ── Totals ── */}
-        <div className='flex justify-end px-12 pb-8'>
+        <div className='flex justify-end px-12 pb-8 pt-4'>
           <div className='w-80 mt-2'>
             {TOTALS.map((row) =>
               row.variant === "grand" ? (
                 <div
                   key={row.label}
-                  className='flex justify-between items-center bg-green-900 text-white px-4 py-3.5 mt-2 rounded'
+                  className='flex justify-between items-center bg-indigo-950 text-white px-4 py-3.5 mt-3 rounded-md shadow-md'
                 >
                   <span
                     className='font-black uppercase tracking-wide'
-                    style={{ fontSize: 11 }}
+                    style={{ fontSize: 12 }}
                   >
                     {row.label}
                   </span>
                   <span
-                    className='text-green-300 font-bold'
+                    className='text-indigo-300 font-bold'
                     style={{
                       fontFamily: "monospace",
                       fontSize: 20,
@@ -521,26 +505,24 @@ const ProjectFeatures: React.FC = () => {
                   key={row.label}
                   className='flex justify-between items-center py-2 border-b border-gray-100 text-sm'
                 >
-                  <span className='text-gray-600'>{row.label}</span>
+                  <span className='text-gray-600 font-medium'>{row.label}</span>
                   <span
-                    className={`font-medium ${
-                      row.variant === "discount"
-                        ? "text-green-700"
-                        : "text-gray-800"
-                    }`}
+                    className={`font-semibold ${row.variant === "discount" ? "text-green-700" : "text-gray-900"}`}
                     style={{ fontFamily: "monospace" }}
                   >
                     {row.value}
                   </span>
                 </div>
-              )
+              ),
             )}
           </div>
         </div>
-        <div className='bg-gray-100 px-3 sm:px-4 py-3 flex justify-center border-b'>
+
+        {/* Action Bar */}
+        <div className='bg-white px-4 sm:px-6 py-4 flex justify-center border-t border-b border-gray-100'>
           <button
             onClick={handleCopyBill}
-            className='flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors duration-200'
+            className='flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 sm:px-6 py-2.5 rounded-lg text-xs sm:text-sm font-semibold shadow-sm transition-all duration-200 hover:shadow-md'
           >
             {copied ? (
               <>
@@ -557,7 +539,7 @@ const ProjectFeatures: React.FC = () => {
                     d='M5 13l4 4L19 7'
                   />
                 </svg>
-                Copied!
+                Details Copied!
               </>
             ) : (
               <>
@@ -574,23 +556,21 @@ const ProjectFeatures: React.FC = () => {
                     d='M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z'
                   />
                 </svg>
-                Copy Features for Review
+                Copy Estimate Details
               </>
             )}
           </button>
         </div>
 
         {/* ── Notes ── */}
-        <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 px-4 sm:px-6 lg:px-12 pb-6 sm:pb-8 mt-6'>
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 px-4 sm:px-6 lg:px-12 py-8 bg-gray-50'>
           {NOTE_BOXES.map((box: NoteBox) => (
             <div
               key={box.title}
-              className={`bg-gray-50 p-4 sm:p-5 border-l-4 ${
-                box.highlight ? "border-green-600" : "border-gray-300"
-              }`}
+              className={`bg-white p-4 sm:p-5 border-l-4 shadow-sm ${box.highlight ? "border-indigo-600" : "border-gray-300"}`}
             >
               <h4
-                className='text-gray-400 font-bold uppercase tracking-widest mb-2'
+                className='text-indigo-900 font-bold uppercase tracking-widest mb-3'
                 style={{ fontSize: 10 }}
               >
                 {box.title}
@@ -601,25 +581,23 @@ const ProjectFeatures: React.FC = () => {
         </div>
 
         {/* ── Footer ── */}
-        <div className='bg-green-900 text-green-500 px-4 sm:px-6 lg:px-12 py-4 sm:py-5 flex flex-col sm:flex-row justify-between items-center text-xs gap-2 sm:gap-0'>
-          <div className='text-center sm:text-left text-green-100'>
-            Project Features curated for{" "}
-            <strong className='text-white'>Prapti Foundation</strong>
+        <div className='bg-indigo-950 text-indigo-400 px-4 sm:px-6 lg:px-12 py-5 flex flex-col sm:flex-row justify-between items-center text-xs gap-2 sm:gap-0'>
+          <div className='text-center sm:text-left text-indigo-200'>
+            Developed specifically for
+            <strong className='text-white font-medium ml-1'>
+              Political Platform with Services
+            </strong>
           </div>
           <div
-            className='text-white uppercase tracking-widest text-center sm:text-right'
-            style={{
-              fontFamily: "Georgia, serif",
-              fontSize: 13,
-              opacity: 0.15,
-            }}
+            className='text-white font-mono uppercase tracking-widest text-center sm:text-right'
+            style={{ fontSize: 11, opacity: 0.5 }}
           >
-            Prapti Foundation Web Application
+            CONFIDENTIAL ESTIMATE
           </div>
         </div>
- 
-   </>
+      </div>
+    </div>
   );
 };
 
-export default ProjectFeatures;
+export default BudgetedBillMemo;
