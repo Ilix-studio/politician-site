@@ -1,10 +1,12 @@
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.DEV ? "https://biswajit-be-34098913955.europe-west1.run.app/api" : "https://biswajit-be-34098913955.europe-west1.run.app/api",
-  TIMEOUT: 15000, // 15 second timeout
+  BASE_URL: import.meta.env.DEV
+    ? "https://biswajit-be-34098913955.europe-west1.run.app/api"
+    : "https://biswajit-be-34098913955.europe-west1.run.app/api",
+
   RETRY_ATTEMPTS: 3,
-  RETRY_DELAY: 1000,
+  RETRY_DELAY: 3000,
 };
 
 // Create a retry function
@@ -23,30 +25,14 @@ const retry = async (
 
 export const baseQuery = fetchBaseQuery({
   baseUrl: API_CONFIG.BASE_URL,
-  timeout: API_CONFIG.TIMEOUT,
-  prepareHeaders: (headers, { getState, endpoint }) => {
-    // Only add auth token for protected endpoints
-    const protectedEndpoints = ["/visitor/stats", "/visitor/reset"];
-    const isProtectedEndpoint = protectedEndpoints.some((ep) =>
-      endpoint?.includes(ep),
-    );
 
-    if (isProtectedEndpoint) {
-      // Get token from Redux state
-      const token = (getState() as any).auth.token;
-      // Debug logging
-      console.log("Token from Redux state:", token);
-
-      if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
-      } else {
-        console.warn("No token found in Redux state for protected endpoint");
-      }
+  prepareHeaders: (headers, { getState }) => {
+    const token = (getState() as any).auth?.token;
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
     }
 
-    // Add performance headers for all requests
     headers.set("Accept-Encoding", "gzip, deflate, br");
-    headers.set("Cache-Control", "public, max-age=300"); // 5 minute cache for GET requests
 
     return headers;
   },

@@ -38,6 +38,10 @@ import { useGetPressQuery } from "@/redux-store/services/pressApi";
 // Import Visitor API hooks
 import { useGetVisitorStatsQuery } from "@/redux-store/services/visitorApi";
 
+// Shared offset constant — keep in sync with the public visitor count display
+
+export const VISITOR_COUNT_OFFSET = 2678;
+
 const AdminDash = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -52,26 +56,24 @@ const AdminDash = () => {
     refetch: refetchMessages,
   } = useGetContactMessagesQuery({
     page: 1,
-    limit: 4, // Show 4 recent messages in dashboard
+    limit: 4,
   });
 
-  // Get counts for photos, videos, and press articles
   const { data: photosData } = useGetPhotosQuery({
     page: 1,
-    limit: 1, // We only need the count
+    limit: 1,
   });
 
   const { data: videosData } = useGetVideosQuery({
     page: "1",
-    limit: "1", // We only need the count
+    limit: "1",
   });
 
   const { data: pressData } = useGetPressQuery({
     page: 1,
-    limit: 1, // We only need the count
+    limit: 1,
   });
 
-  // Visitor API hooks
   const {
     data: visitorStatsData,
     isLoading: visitorStatsLoading,
@@ -82,16 +84,18 @@ const AdminDash = () => {
     return <Navigate to='/admin/login' />;
   }
 
+  // Apply the same offset used in the public-facing visitor count
+  const adjustedTotalVisitors =
+    (visitorStatsData?.data?.totalVisitors || 0) + VISITOR_COUNT_OFFSET;
+
   const handleLogout = () => {
     dispatch(logout());
   };
 
   const handleViewMessage = (id: string) => {
     navigate(`/admin/messages/${id}`);
-    console.log("View message:", id);
   };
 
-  // Dynamic stats with real data from APIs
   const stats = [
     {
       title: "Total Contact Messages",
@@ -186,7 +190,6 @@ const AdminDash = () => {
           </div>
 
           <div className='flex items-center gap-2'>
-            {/* Refresh Visitor Stats Button */}
             <Button
               onClick={() => refetchVisitorStats()}
               variant='ghost'
@@ -274,6 +277,7 @@ const AdminDash = () => {
             </Card>
           ))}
         </motion.div>
+
         {/* Visitor Analytics Section */}
         {visitorStatsData?.data && (
           <motion.div
@@ -293,8 +297,7 @@ const AdminDash = () => {
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
                   <div className='text-center p-4 bg-orange-50 rounded-lg'>
                     <p className='text-2xl font-bold text-orange-900'>
-                      {visitorStatsData.data.totalVisitors?.toLocaleString() ||
-                        "0"}
+                      {adjustedTotalVisitors.toLocaleString("en-IN")}
                     </p>
                     <p className='text-orange-600 text-sm'>Total Visitors</p>
                   </div>
@@ -335,6 +338,7 @@ const AdminDash = () => {
             </Card>
           </motion.div>
         )}
+
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
           {/* Recent Messages */}
           <motion.div

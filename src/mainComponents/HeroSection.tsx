@@ -88,7 +88,7 @@ const HeroSection = () => {
     };
 
     // Track visitor after a short delay to ensure proper loading
-    const timer = setTimeout(trackVisitor, 1000);
+    const timer = setTimeout(trackVisitor, 10000);
     return () => clearTimeout(timer);
   }, [incrementVisitorCounter, getVisitorCount, visitorTracked]);
 
