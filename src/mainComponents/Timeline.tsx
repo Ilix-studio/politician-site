@@ -3,11 +3,18 @@ import {
   useScroll,
   useTransform,
   useSpring,
-  useInView,
+  MotionValue,
 } from "framer-motion";
-import { useRef, useState } from "react";
+import { useRef, useState, useLayoutEffect } from "react";
 
-const timelineEvents = [
+interface TimelineEventData {
+  year: number;
+  title: string;
+  description: string;
+  details: string;
+}
+
+const timelineEvents: readonly TimelineEventData[] = [
   {
     year: 1997,
     title: "Educational Achievement",
@@ -51,94 +58,104 @@ const timelineEvents = [
     details:
       "Initiated several development projects focusing on infrastructure, education, and healthcare to address the needs of constituents in Sarupathar and surrounding areas.",
   },
+  {
+    year: 2026,
+    title: "Re-election Victory",
+    description:
+      "Won Assam Legislative Assembly election from Sarupathar again",
+    details:
+      "Secured re-election in the 2026 Assam Legislative Assembly elections, winning the Sarupathar (Golaghat) constituency once again on a BJP ticket, continuing the mandate of service to constituents.",
+  },
 ];
-
-const LeafIcon = ({ progress }: { progress: number }) => (
-  <svg
-    viewBox='0 0 24 24'
-    fill='none'
-    xmlns='http://www.w3.org/2000/svg'
-    className='w-6 h-6'
-    style={{ transform: `scale(${progress})` }}
-  >
-    <path
-      d='M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z'
-      stroke='#FF9933'
-      strokeWidth='2'
-    />
-    <path
-      d='M12 8C12 8 14 10 14 12C14 14 12 16 12 16C12 16 10 14 10 12C10 10 12 8 12 8Z'
-      stroke='#FF9933'
-      strokeWidth='2'
-    />
-  </svg>
-);
 
 const Timeline = () => {
   const [expandedEvent, setExpandedEvent] = useState<number | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Wrapper provides the vertical scroll distance; sticky child is pinned.
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  // Track holds the horizontal row; we measure its overflow to compute travel.
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  // Distance (in px) the track must move left so its end aligns with viewport end.
+  const [travelDistance, setTravelDistance] = useState(0);
+
+  useLayoutEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    const measure = () => {
+      // scrollWidth = full content width; clientWidth = visible width.
+      const overflow = track.scrollWidth - track.clientWidth;
+      setTravelDistance(overflow > 0 ? overflow : 0);
+    };
+
+    measure();
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(track);
+    return () => observer.disconnect();
+  }, []);
+
   const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start end", "end start"],
+    target: wrapperRef,
+    offset: ["start start", "end end"],
   });
 
-  const scaleX = useSpring(scrollYProgress, {
+  const smoothProgress = useSpring(scrollYProgress, {
     stiffness: 100,
     damping: 30,
     restDelta: 0.001,
   });
+
+  const x = useTransform(smoothProgress, [0, 1], [0, -travelDistance]);
+
   return (
-    <section
-      id='timeline'
-      ref={containerRef}
-      className='py-20 bg-background overflow-hidden'
-    >
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-        <motion.div
-          className='text-center mb-12'
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <div className='inline-block px-3 py-1 rounded-full bg-[#138808]/10 text-[#138808] font-medium text-sm mb-4'>
-            Timeline
-          </div>
-          <h2 className='text-3xl font-bold text-foreground sm:text-4xl'>
-            My Political Journey
-          </h2>
-          <p className='mt-4 text-lg text-muted-foreground'>
-            The path of service and leadership in Assam
-          </p>
-        </motion.div>
-
-        <div className='relative'>
-          {/* Vertical line */}
+    // Wrapper height controls scroll length: 100vh pin + extra per horizontal travel.
+    // Using vh keeps it responsive; the sticky child pins within it.
+    <section id='timeline' className='bg-background'>
+      <div ref={wrapperRef} className='relative h-[300vh]'>
+        <div className='sticky top-0 h-screen flex flex-col justify-center overflow-hidden'>
           <motion.div
-            className='absolute left-1/2 transform -translate-x-1/2 w-0.5 h-full bg-[#FF9933]/20'
-            style={{ scaleY: scaleX }}
-          />
-
-          {/* Icon */}
-          <motion.div
-            className='sticky top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 text-[#FF9933]'
-            style={{ y: useTransform(scrollYProgress, [0, 1], [0, 100]) }}
+            className='text-center mb-12 px-4'
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
           >
-            <LeafIcon
-              progress={useTransform(scrollYProgress, [0, 1], [0.5, 1]) as any}
-            />
+            <div className='inline-block px-3 py-1 rounded-full bg-[#138808]/10 text-[#138808] font-medium text-sm mb-4'>
+              Timeline
+            </div>
+            <h2 className='text-3xl font-bold text-foreground sm:text-4xl'>
+              My Political Journey
+            </h2>
+            <p className='mt-4 text-lg text-muted-foreground'>
+              The path of service and leadership in Assam
+            </p>
           </motion.div>
 
-          {timelineEvents.map((event, index) => (
-            <TimelineEvent
-              key={event.year}
-              event={event}
-              index={index}
-              isExpanded={expandedEvent === index}
-              onToggle={() =>
-                setExpandedEvent(expandedEvent === index ? null : index)
-              }
-            />
-          ))}
+          {/* Hidden-scrollbar horizontal track, moved via scroll-driven x. */}
+          <motion.div
+            ref={trackRef}
+            style={{ x }}
+            className='flex gap-36 px-[15vw] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden'
+          >
+            {/* Horizontal connector line behind the cards */}
+            <div className='absolute top-1/2 left-0 h-0.5 w-full bg-[#FF9933]/20 -z-0' />
+
+            {timelineEvents.map((event, index) => (
+              <TimelineEvent
+                key={event.year}
+                event={event}
+                index={index}
+                progress={smoothProgress}
+                total={timelineEvents.length}
+                isExpanded={expandedEvent === index}
+                onToggle={() =>
+                  setExpandedEvent(expandedEvent === index ? null : index)
+                }
+              />
+            ))}
+          </motion.div>
         </div>
       </div>
     </section>
@@ -150,56 +167,96 @@ export default Timeline;
 function TimelineEvent({
   event,
   index,
+  progress,
+  total,
   isExpanded,
   onToggle,
 }: {
-  event: (typeof timelineEvents)[0];
+  event: TimelineEventData;
   index: number;
+  progress: MotionValue<number>;
+  total: number;
   isExpanded: boolean;
   onToggle: () => void;
 }) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, amount: 0.5 });
+  // Reveal each card as the scroll progress reaches its slot.
+  const slotStart = index / total;
+  const slotEnd = (index + 1) / total;
+  const opacity = useTransform(
+    progress,
+    [slotStart - 0.1, slotStart, slotEnd],
+    [0, 1, 1],
+  );
+  const y = useTransform(progress, [slotStart - 0.1, slotStart], [50, 0]);
 
   return (
     <motion.div
-      ref={ref}
-      className={`mb-8 flex justify-between items-center w-full ${
-        index % 2 === 0 ? "flex-row-reverse" : ""
-      }`}
-      initial={{ opacity: 0, y: 50 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-      transition={{ duration: 0.8, delay: index * 0.1 }}
+      style={{ opacity, y }}
+      className='relative z-10 flex-shrink-0 w-96 flex flex-col items-center'
     >
-      <div className='w-5/12' />
-      <div className='z-20'>
-        <div className='flex items-center justify-center w-8 h-8 bg-[#FF9933] rounded-full'>
-          <div className='w-3 h-3 bg-background rounded-full' />
-        </div>
+      {/* Node marker on the connector line */}
+      <div className='flex items-center justify-center w-8 h-8 bg-[#FF9933] rounded-full mb-6 ring-4 ring-[#FF9933]/15'>
+        <div className='w-3 h-3 bg-background rounded-full' />
       </div>
+
       <motion.div
-        className='w-5/12 cursor-pointer'
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        className='w-96 cursor-pointer'
+        whileHover={{ scale: 1.09, y: -6 }}
+        whileTap={{ scale: 0.97 }}
+        transition={{ type: "spring", stiffness: 300, damping: 22 }}
         onClick={onToggle}
       >
-        <div className='p-4 bg-background rounded-lg shadow-md border border-[#FF9933]/10'>
-          <span className='font-bold text-[#FF9933]'>{event.year}</span>
-          <h3 className='text-lg font-semibold mb-1'>{event.title}</h3>
-          <p className='text-muted-foreground'>{event.description}</p>
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{
-              height: isExpanded ? "auto" : 0,
-              opacity: isExpanded ? 1 : 0,
-            }}
-            transition={{ duration: 0.3 }}
-            className='overflow-hidden'
-          >
-            <p className='mt-2 text-sm text-muted-foreground'>
-              {event.details}
-            </p>
-          </motion.div>
+        {/* Card surface: gradient border + glassy fill */}
+        <div className='group relative overflow-hidden rounded-2xl p-[1.5px] bg-gradient-to-br from-[#FF9933]/40 via-[#FF9933]/10 to-[#138808]/30 shadow-lg shadow-[#FF9933]/5'>
+          <div className='relative overflow-hidden rounded-2xl bg-background/80 backdrop-blur-sm p-10'>
+            {/* Abstract decoration: soft gradient blobs */}
+            <div
+              aria-hidden
+              className='pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-[#FF9933]/15 blur-2xl'
+            />
+            <div
+              aria-hidden
+              className='pointer-events-none absolute -bottom-12 -left-8 h-28 w-28 rounded-full bg-[#138808]/15 blur-2xl'
+            />
+
+            {/* Abstract decoration: oversized year watermark */}
+            <span
+              aria-hidden
+              className='pointer-events-none absolute -top-3 right-3 select-none text-7xl font-black leading-none text-[#EC6530]/13'
+            >
+              {event.year}
+            </span>
+
+            {/* Content */}
+            <div className='relative'>
+              <span className='inline-block rounded-full bg-[#FF9933]/10 px-3 py-1 text-sm font-bold tracking-wide text-[#FF9933]'>
+                {event.year}
+              </span>
+              <h3 className='mt-3 text-xl font-semibold text-foreground'>
+                {event.title}
+              </h3>
+              <p className='mt-2 text-muted-foreground'>{event.description}</p>
+
+              <motion.div
+                initial={false}
+                animate={{
+                  height: isExpanded ? "auto" : 0,
+                  opacity: isExpanded ? 1 : 0,
+                }}
+                transition={{ duration: 0.3 }}
+                className='overflow-hidden'
+              >
+                <p className='mt-3 border-t border-[#FF9933]/10 pt-3 text-sm leading-relaxed text-muted-foreground'>
+                  {event.details}
+                </p>
+              </motion.div>
+
+              {/* Subtle expand affordance */}
+              <span className='mt-3 inline-block text-xs font-medium text-[#138808]/80'>
+                {isExpanded ? "Show less" : "Read more"}
+              </span>
+            </div>
+          </div>
         </div>
       </motion.div>
     </motion.div>

@@ -2,7 +2,7 @@
 
 import "./App.css";
 import { useEffect } from "react";
-import { Routes, useLocation } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
 // Import route configurations
@@ -19,6 +19,7 @@ import {
   createImmediateRoute,
   createPublicRoute,
 } from "./config/routeHelpers";
+import BudgetedBillMemo from "./mainComponents/ProjectFeatures";
 
 // Import helper functions
 
@@ -95,24 +96,25 @@ const App = () => {
       />
 
       <Routes>
+        <Route path='/see-bill-memo' element={<BudgetedBillMemo />} />
         {/* Step 1: Immediate routes (no lazy loading) */}
         {immediateRoutes.map(({ path, component }) =>
-          createImmediateRoute(path, component)
+          createImmediateRoute(path, component),
         )}
 
         {/* Step 2: Public routes (with lazy loading) */}
         {publicRoutes.map(({ path, component }) =>
-          createPublicRoute(path, component)
+          createPublicRoute(path, component),
         )}
 
         {/* Step 3: Admin routes (with protection + lazy loading) */}
         {adminRoutes.map(({ path, component }) =>
-          createAdminRoute(path, component)
+          createAdminRoute(path, component),
         )}
 
         {/* Step 4: Admin Specific Dashboard routes (with protection + lazy loading) */}
         {adSpecificRoutes.map(({ path, component }) =>
-          createAdSpecificRoute(path, component)
+          createAdSpecificRoute(path, component),
         )}
 
         {/* Step 4: Fallback route */}

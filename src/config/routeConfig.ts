@@ -6,7 +6,7 @@ import ExtendAbout from "../mainComponents/AboutMe/ExtendAbout";
 import ContactUs from "../mainComponents/Contact";
 import LoginUser from "../mainComponents/Admin/LoginUser";
 import NotFound from "../mainComponents/NotFound";
-import ProjectFeatures from "@/mainComponents/ProjectFeatures";
+// import ProjectFeatures from "@/mainComponents/ProjectFeatures";
 
 // Lazy load components (loaded only when needed)
 const PhotoGallery = lazy(
@@ -86,7 +86,7 @@ export const publicRoutes = [
   { path: "/view/video/:id", component: ViewVideoId },
   { path: "/press/:id", component: ShowPressById },
   { path: "/see-all-press", component: SeeAllPress },
-  { path: "/see-bill-memo", component: ProjectFeatures },
+  // { path: "/see-bill-memo", component: ProjectFeatures },
 ];
 // Lazy routes
 export const adminRoutes = [
