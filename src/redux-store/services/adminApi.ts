@@ -1,6 +1,7 @@
-import { createApi } from "@reduxjs/toolkit/query/react";
-import { baseQuery } from "../../lib/apiConfig";
+// adminApi.ts
+import { apiSlice } from "./apiSlice";
 import { User, loginSuccess, logout } from "../slices/authSlice";
+import { USER_ROLES } from "@/types/editor.types";
 
 export interface LoginRequest {
   email: string;
@@ -15,12 +16,12 @@ export interface LoginResponse {
     name: string;
     email: string;
     token: string;
+    role?: string; // present if backend is updated; optional otherwise
   };
 }
 
-export const adminAuthApi = createApi({
-  reducerPath: "adminAuthApi",
-  baseQuery,
+export const adminApi = apiSlice.injectEndpoints({
+  overrideExisting: false,
   endpoints: (builder) => ({
     loginAdmin: builder.mutation<LoginResponse, LoginRequest>({
       query: (credentials) => ({
@@ -36,11 +37,13 @@ export const adminAuthApi = createApi({
               id: data.data.id,
               name: data.data.name,
               email: data.data.email,
+              // Use backend role if provided; otherwise this endpoint is
+              // super-admin only, so default to SUPER_ADMIN.
+              role: (data.data.role as User["role"]) ?? USER_ROLES.SUPER_ADMIN,
             };
             dispatch(loginSuccess({ user: userData, token: data.data.token }));
           }
         } catch (error) {
-          // Handle error if needed
           console.error("Login failed:", error);
         }
       },
@@ -63,4 +66,4 @@ export const adminAuthApi = createApi({
   }),
 });
 
-export const { useLoginAdminMutation, useLogoutAdminMutation } = adminAuthApi;
+export const { useLoginAdminMutation, useLogoutAdminMutation } = adminApi;

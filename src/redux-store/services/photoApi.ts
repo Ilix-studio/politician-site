@@ -1,32 +1,25 @@
-import { createApi } from "@reduxjs/toolkit/query/react";
-import { baseQuery } from "../../lib/apiConfig";
+import { apiSlice } from "./apiSlice";
 import {
   PhotoCreateData,
   PhotoMultipleUploadData,
   PhotoResponse,
-  // Add this new type
   PhotosQueryParams,
   PhotosResponse,
   PhotoUpdateData,
   PhotoUploadData,
 } from "@/types/photo.types";
 
-export const photoApi = createApi({
-  reducerPath: "photoApi",
-  baseQuery,
-  tagTypes: ["Photo"],
+export const photoApi = apiSlice.injectEndpoints({
+  overrideExisting: false,
   endpoints: (builder) => ({
-    // Get photos with pagination and filtering (Public)
     getPhotos: builder.query<PhotosResponse, PhotosQueryParams>({
       query: (params = {}) => {
         const searchParams = new URLSearchParams();
-
         Object.entries(params).forEach(([key, value]) => {
           if (value !== undefined && value !== null && value !== "") {
             searchParams.append(key, value.toString());
           }
         });
-
         return `/photos?${searchParams.toString()}`;
       },
       providesTags: (result) => [
@@ -38,14 +31,12 @@ export const photoApi = createApi({
       ],
     }),
 
-    // Get single photo by ID (Public)
     getPhoto: builder.query<PhotoResponse, string>({
       query: (id) => `/photos/${id}`,
       transformResponse: (response: PhotoResponse) => response,
       providesTags: (_result, _error, id) => [{ type: "Photo", id }],
     }),
 
-    // Create photo with existing URLs (Admin only)
     createPhoto: builder.mutation<PhotoResponse, PhotoCreateData>({
       query: (data) => ({
         url: "/photos",
@@ -56,7 +47,6 @@ export const photoApi = createApi({
       invalidatesTags: ["Photo"],
     }),
 
-    // Upload single photo (Admin only) - Use PhotoUploadResponse
     uploadPhoto: builder.mutation<
       PhotoResponse,
       { file: File; data: PhotoUploadData }
@@ -64,13 +54,11 @@ export const photoApi = createApi({
       query: ({ file, data }) => {
         const formData = new FormData();
         formData.append("photo", file);
-
         Object.entries(data).forEach(([key, value]) => {
           if (value !== undefined && value !== null) {
             formData.append(key, value.toString());
           }
         });
-
         return {
           url: "/photos/upload",
           method: "POST",
@@ -81,18 +69,13 @@ export const photoApi = createApi({
       invalidatesTags: ["Photo"],
     }),
 
-    // Upload multiple photos (Admin only) - Use PhotoUploadResponse
     uploadMultiplePhotos: builder.mutation<
       PhotoResponse,
       { files: File[]; data: PhotoMultipleUploadData }
     >({
       query: ({ files, data }) => {
         const formData = new FormData();
-
-        files.forEach((file) => {
-          formData.append("photos", file);
-        });
-
+        files.forEach((file) => formData.append("photos", file));
         Object.entries(data).forEach(([key, value]) => {
           if (value !== undefined && value !== null) {
             if (key === "altTexts" && Array.isArray(value)) {
@@ -102,7 +85,6 @@ export const photoApi = createApi({
             }
           }
         });
-
         return {
           url: "/photos/upload-multiple",
           method: "POST",
@@ -113,7 +95,6 @@ export const photoApi = createApi({
       invalidatesTags: ["Photo"],
     }),
 
-    // Update photo (Admin only)
     updatePhoto: builder.mutation<
       PhotoResponse,
       { id: string; data: PhotoUpdateData }
@@ -130,7 +111,6 @@ export const photoApi = createApi({
       ],
     }),
 
-    // Update photo with file upload (form-data)
     updatePhotoWithFile: builder.mutation<
       PhotoResponse,
       {
@@ -141,23 +121,12 @@ export const photoApi = createApi({
     >({
       query: ({ id, file, data }) => {
         const formData = new FormData();
-
-        // Add file if provided
-        if (file) {
-          formData.append("photo", file);
-        }
-
-        // Add other data fields
+        if (file) formData.append("photo", file);
         Object.entries(data).forEach(([key, value]) => {
           if (value !== undefined && value !== null) {
-            if (typeof value === "boolean") {
-              formData.append(key, value.toString());
-            } else {
-              formData.append(key, value.toString());
-            }
+            formData.append(key, value.toString());
           }
         });
-
         return {
           url: `/photos/${id}/upload`,
           method: "PATCH",
@@ -171,7 +140,6 @@ export const photoApi = createApi({
       ],
     }),
 
-    // Delete photo (Admin only)
     deletePhoto: builder.mutation<
       { success: boolean; message: string },
       string
@@ -186,7 +154,6 @@ export const photoApi = createApi({
       ],
     }),
 
-    // Get photos by category (Public)
     getPhotosByCategory: builder.query<
       PhotosResponse,
       { category: string; limit?: number }
@@ -202,7 +169,6 @@ export const photoApi = createApi({
       ],
     }),
 
-    // Search photos (Public)
     searchPhotos: builder.query<
       PhotosResponse,
       { search: string; limit?: number }

@@ -12,69 +12,52 @@ import {
 } from "redux-persist";
 import createIdbStorage from "redux-persist-indexeddb-storage";
 
-//State Slices
 import authReducer from "./slices/authSlice";
+import { apiSlice } from "./services/apiSlice";
 
-//API Slices
-import { adminAuthApi } from "./services/adminApi";
-import { cloudinaryApi } from "./services/cloudinaryApi";
-import { contactApi } from "./services/contactApi";
-import { photoApi } from "./services/photoApi";
-import { videoApi } from "./services/videoApi";
-import { pressApi } from "./services/pressApi";
-import { visitorApi } from "./services/visitorApi";
-import { categoryApi } from "./services/categoryApi";
+// Side-effect imports: each injectEndpoints call runs at module import time.
+// Required so endpoints are registered before any hook is called.
+import "./services/adminApi";
+import "./services/categoryApi";
+import "./services/cloudinaryApi";
+import "./services/contactApi";
+import "./services/photoApi";
+import "./services/pressApi";
+import "./services/videoApi";
+import "./services/visitorApi";
+import "./services/editorApi";
 
-// Create IndexedDB storage for redux-persist
-const idbStorage = createIdbStorage("politician-site-db");
+const idbStorage = createIdbStorage("biswajit-db");
 
-// Configure persist options for our root reducer
 const persistConfig = {
   key: "root",
   version: 1,
   storage: idbStorage,
-  whitelist: ["auth"], // Only persist auth state to avoid persisting API cache
+  whitelist: ["auth"],
+  blacklist: [apiSlice.reducerPath],
 };
 
 const rootReducer = combineReducers({
   auth: authReducer,
-  [adminAuthApi.reducerPath]: adminAuthApi.reducer,
-  [cloudinaryApi.reducerPath]: cloudinaryApi.reducer,
-  [contactApi.reducerPath]: contactApi.reducer,
-  [photoApi.reducerPath]: photoApi.reducer,
-  [videoApi.reducerPath]: videoApi.reducer,
-  [pressApi.reducerPath]: pressApi.reducer,
-  [visitorApi.reducerPath]: visitorApi.reducer,
-  [categoryApi.reducerPath]: categoryApi.reducer,
+  [apiSlice.reducerPath]: apiSlice.reducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store = configureStore({
   reducer: persistedReducer,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      // Redux Persist middleware needs these actions to be ignored
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat(
-      adminAuthApi.middleware,
-      cloudinaryApi.middleware,
-      contactApi.middleware,
-      photoApi.middleware,
-      videoApi.middleware,
-      pressApi.middleware,
-      visitorApi.middleware,
-      categoryApi.middleware
-    ),
+    }).concat(apiSlice.middleware as any),
 });
 
-// Create persistor for use with PersistGate
 export const persistor = persistStore(store);
 
-// Setup listeners for automatic refetching
 setupListeners(store.dispatch);
 
-export type RootState = ReturnType<typeof store.getState>;
+export type RootState = ReturnType<typeof rootReducer>;
 export type AppDispatch = typeof store.dispatch;

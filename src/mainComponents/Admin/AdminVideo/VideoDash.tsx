@@ -214,7 +214,7 @@ const VideoDash: React.FC = () => {
 
   const handleSortChange = (sortValue: string) => {
     const sortOption = VIDEO_SORT_OPTIONS.find(
-      (opt) => opt.value === sortValue
+      (opt) => opt.value === sortValue,
     );
     if (sortOption) {
       setQueryParams((prev) => ({
@@ -287,7 +287,7 @@ const VideoDash: React.FC = () => {
     <>
       <BackNavigation />
       <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white'>
-        <div className='container py-3 px-4 sm:px-6 max-w-7xl mx-auto'>
+        <div className='container mx-auto space-y-3 py-3'>
           {/* Header */}
           <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-3'>
             <div>
@@ -324,7 +324,7 @@ const VideoDash: React.FC = () => {
               </div>
             </CardContent>
           </Card>
-
+          <br />
           {/* Filters and Controls - Improved layout following PhotoDash */}
           <Card>
             <CardContent className='pt-1'>
@@ -377,6 +377,7 @@ const VideoDash: React.FC = () => {
             </CardContent>
           </Card>
 
+          <br />
           {/* View Mode Toggle */}
           <div className='flex justify-between items-center mb-6'>
             <div className='text-sm text-slate-600'>
@@ -501,7 +502,7 @@ const VideoDash: React.FC = () => {
                         value={editingVideo.title}
                         onChange={(e) =>
                           setEditingVideo((prev) =>
-                            prev ? { ...prev, title: e.target.value } : null
+                            prev ? { ...prev, title: e.target.value } : null,
                           )
                         }
                       />
@@ -517,7 +518,7 @@ const VideoDash: React.FC = () => {
                           setEditingVideo((prev) =>
                             prev
                               ? { ...prev, description: e.target.value }
-                              : null
+                              : null,
                           )
                         }
                       />
@@ -534,7 +535,7 @@ const VideoDash: React.FC = () => {
                           }
                           onValueChange={(value) =>
                             setEditingVideo((prev) =>
-                              prev ? { ...prev, category: value } : null
+                              prev ? { ...prev, category: value } : null,
                             )
                           }
                         >
@@ -561,7 +562,7 @@ const VideoDash: React.FC = () => {
                             setEditingVideo((prev) =>
                               prev
                                 ? { ...prev, duration: e.target.value }
-                                : null
+                                : null,
                             )
                           }
                           placeholder='e.g., 5:30'
@@ -584,7 +585,7 @@ const VideoDash: React.FC = () => {
                           setEditingVideo((prev) =>
                             prev
                               ? { ...prev, date: new Date(e.target.value) }
-                              : null
+                              : null,
                           )
                         }
                       />

@@ -278,6 +278,64 @@ const AdminDash = () => {
           ))}
         </motion.div>
 
+        {/* Editor Manager Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, ease: "easeOut" }}
+          className='mb-8'
+        >
+          <Card
+            className='relative overflow-hidden border-2 shadow-none cursor-pointer group'
+            onClick={() => navigate("/admin/editors")}
+          >
+            {/* White background */}
+            <div className='absolute inset-0 bg-white' />
+
+            {/* Decorative blobs */}
+            <div className='absolute -top-6 -right-6 w-40 h-40 rounded-full bg-[#FF9933]/15 blur-2xl pointer-events-none' />
+            <div className='absolute bottom-0 left-10 w-32 h-32 rounded-full bg-indigo-400/10 blur-2xl pointer-events-none' />
+            <div className='absolute top-1/2 right-24 w-20 h-20 rounded-full bg-[#138808]/10 blur-xl pointer-events-none' />
+
+            <CardHeader className='relative z-10 pb-2'>
+              <div className='flex items-center justify-between'>
+                <div className='flex items-center gap-3'>
+                  <div className='p-2.5 rounded-xl bg-slate-100 ring-1 ring-slate-200'>
+                    <Users className='w-5 h-5 text-slate-700' />
+                  </div>
+                  <CardTitle className='text-slate-900 text-xl font-bold tracking-tight'>
+                    Editor Management
+                  </CardTitle>
+                </div>
+                <Badge className='bg-[#FF9933]/30 text-[#FF9933] border border-[#FF9933]/40 text-xs font-semibold'>
+                  Admin Only
+                </Badge>
+              </div>
+            </CardHeader>
+
+            <CardContent className='relative z-10 pt-1 pb-5'>
+              <p className='text-slate-600 text-sm leading-relaxed mb-5 max-w-lg'>
+                Control who can publish and manage content on this platform.
+                Create editor accounts, toggle access, reset credentials, and
+                remove editors — all from one place.
+              </p>
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate("/admin/editors");
+                }}
+                className='bg-slate-900 hover:bg-slate-700 text-white border border-slate-200 transition-all duration-200 flex items-center gap-2'
+              >
+                <Users className='w-4 h-4' />
+                Manage Editors
+                <span className='ml-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
+                  →
+                </span>
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+
         {/* Visitor Analytics Section */}
         {visitorStatsData?.data && (
           <motion.div

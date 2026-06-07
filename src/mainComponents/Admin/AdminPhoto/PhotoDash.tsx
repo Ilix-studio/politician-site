@@ -211,7 +211,7 @@ const PhotoDash: React.FC = () => {
   const handleEditPhoto = (photo: PhotoCardData) => {
     // Find the original Photo object to edit
     const originalPhoto = photosData?.data.photos.find(
-      (p) => p._id === photo._id
+      (p) => p._id === photo._id,
     );
     if (originalPhoto) {
       setEditingPhoto(originalPhoto);
@@ -253,8 +253,8 @@ const PhotoDash: React.FC = () => {
   return (
     <>
       <BackNavigation />
-      <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white p-4'>
-        <div className='max-w-7xl mx-auto space-y-6'>
+      <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white'>
+        <div className='container mx-auto space-y-3 py-3'>
           <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
             <h1 className='text-2xl font-bold text-slate-800'>
               Photo Dashboard
@@ -401,7 +401,7 @@ const PhotoDash: React.FC = () => {
                         {page}
                       </Button>
                     );
-                  }
+                  },
                 )}
 
                 <Button
@@ -434,7 +434,7 @@ const PhotoDash: React.FC = () => {
                           value={editingPhoto.title}
                           onChange={(e) =>
                             setEditingPhoto((prev) =>
-                              prev ? { ...prev, title: e.target.value } : null
+                              prev ? { ...prev, title: e.target.value } : null,
                             )
                           }
                           required
@@ -451,10 +451,10 @@ const PhotoDash: React.FC = () => {
                                     ...prev,
                                     category:
                                       categories.find(
-                                        (cat) => cat._id === value
+                                        (cat) => cat._id === value,
                                       ) || value,
                                   }
-                                : null
+                                : null,
                             )
                           }
                         >
@@ -479,7 +479,7 @@ const PhotoDash: React.FC = () => {
                             setEditingPhoto((prev) =>
                               prev
                                 ? { ...prev, date: new Date(e.target.value) }
-                                : null
+                                : null,
                             )
                           }
                         />
@@ -492,7 +492,7 @@ const PhotoDash: React.FC = () => {
                             setEditingPhoto((prev) =>
                               prev
                                 ? { ...prev, location: e.target.value }
-                                : null
+                                : null,
                             )
                           }
                         />
@@ -509,7 +509,7 @@ const PhotoDash: React.FC = () => {
                           setEditingPhoto((prev) =>
                             prev
                               ? { ...prev, description: e.target.value }
-                              : null
+                              : null,
                           )
                         }
                       />

@@ -180,24 +180,18 @@ const About = () => {
             {/* Description */}
             <motion.div variants={itemVariants} className='space-y-4'>
               <p className='text-slate-600 leading-relaxed text-lg'>
-                As a dedicated member of the Bharatiya Janata Party from Assam,
-                I have committed my life to public service. I was elected to the
-                Assam Legislative Assembly in 2021 from the Sarupathar
-                constituency, winning with{" "}
+                A dedicated member of the Bharatiya Janata Party from Assam, I
+                was first elected to the Assam Legislative Assembly in 2021 from
+                the Sarupathar constituency with{" "}
                 <span className='font-semibold text-orange-600'>
                   1,07,090 votes
                 </span>
-                .
-              </p>
-              <p className='text-slate-600 leading-relaxed text-lg'>
-                Before my current role, I served as the vice-chairman of Assam
-                State Cooperative Bank, where I worked to strengthen financial
-                inclusion and support for local communities. I continue to
-                uphold the values of{" "}
+                , and{" "}
                 <span className='font-semibold text-green-600'>
-                  integrity, transparency, and inclusive development
-                </span>
-                .
+                  re-elected in 2026
+                </span>{" "}
+                on a record of integrity, transparency, and inclusive
+                development.
               </p>
             </motion.div>
 

@@ -6,6 +6,7 @@ import ExtendAbout from "../mainComponents/AboutMe/ExtendAbout";
 import ContactUs from "../mainComponents/Contact";
 import LoginUser from "../mainComponents/Admin/LoginUser";
 import NotFound from "../mainComponents/NotFound";
+import EditorManager from "@/mainComponents/EditorX/EditorManager";
 // import ProjectFeatures from "@/mainComponents/ProjectFeatures";
 
 // Lazy load components (loaded only when needed)
@@ -97,6 +98,8 @@ export const adminRoutes = [
   { path: "/admin/messages", component: ViewAllMessage },
   { path: "/admin/messages/:id", component: ViewMessage },
   { path: "/admin/categories", component: CategoryManager },
+  //
+  { path: "/admin/editors", component: EditorManager },
 ];
 
 // NEW: Admin specific routes with dashboard mapping

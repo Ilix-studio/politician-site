@@ -38,7 +38,7 @@ const Contact = () => {
   const navigate = useNavigate();
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -157,7 +157,7 @@ const Contact = () => {
                 <Instagram className='h-5 w-5 text-[#138808]' />
               </Link>
               <Link
-                to='https://biswajitphukan.in/admin/login'
+                to='/admin/login'
                 className='h-12 w-12 rounded-full bg-[#FFFFFF]/10 flex items-center justify-center hover:bg-[#FFFFFF]/20 transition-colors'
                 onClick={navigatetoAdminRoute}
               >
