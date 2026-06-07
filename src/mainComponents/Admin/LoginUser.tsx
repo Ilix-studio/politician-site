@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,8 @@ import {
   Shield,
   AlertCircle,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 
 import BJP_LOGO from "../../assets/bjp.png";
@@ -27,21 +28,24 @@ const LoginUser = () => {
   const [errorMessage, setErrorMessage] = useState("");
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, error } = useSelector(selectAuth);
 
-  // Use the RTK Query mutation hook
   const [loginAdmin, { isLoading }] = useLoginAdminMutation();
 
-  // Redirect if already authenticated
+  // Where to send the user after login (honor ProtectedRoute's `from`).
+  const redirectTo =
+    (location.state as { from?: string } | null)?.from ?? "/admin/dashboard";
+
+  // Safety net: if already authenticated (e.g. visiting /admin/login while
+  // logged in, or rehydration completes), redirect.
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/admin/dashboard");
+      navigate(redirectTo, { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, redirectTo]);
 
-  const toggleShowPassword = () => {
-    setShowPassword(!showPassword);
-  };
+  const toggleShowPassword = () => setShowPassword((prev) => !prev);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,21 +58,25 @@ const LoginUser = () => {
 
     try {
       const result = await loginAdmin({ email, password }).unwrap();
-      if (!result.success) {
+      if (result.success) {
+        // Imperative redirect: do not depend solely on the effect.
+        navigate(redirectTo, { replace: true });
+      } else {
         setErrorMessage(result.message || "Login failed");
       }
     } catch (err: any) {
-      setErrorMessage(err.data?.message || "Login failed. Please try again.");
+      setErrorMessage(err?.data?.message || "Login failed. Please try again.");
     }
   };
+
   return (
     <div className='min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 relative overflow-hidden'>
       {/* Background decorative elements */}
-      <div className='absolute inset-0'>
-        <div className='absolute top-20 left-20 w-32 h-32 bg-[#FF9933]/10 rounded-full animate-pulse'></div>
-        <div className='absolute bottom-20 right-20 w-24 h-24 bg-[#138808]/10 rounded-full animate-pulse'></div>
-        <div className='absolute top-1/2 left-1/4 w-16 h-16 bg-blue-100 rounded-full animate-bounce'></div>
-        <div className='absolute bottom-1/3 right-1/3 w-20 h-20 bg-orange-100 rounded-full animate-pulse'></div>
+      <div className='absolute inset-0' aria-hidden='true'>
+        <div className='absolute top-20 left-20 w-32 h-32 bg-[#FF9933]/10 rounded-full animate-pulse' />
+        <div className='absolute bottom-20 right-20 w-24 h-24 bg-[#138808]/10 rounded-full animate-pulse' />
+        <div className='absolute top-1/2 left-1/4 w-16 h-16 bg-blue-100 rounded-full animate-bounce' />
+        <div className='absolute bottom-1/3 right-1/3 w-20 h-20 bg-orange-100 rounded-full animate-pulse' />
       </div>
 
       {/* Header */}
@@ -83,15 +91,6 @@ const LoginUser = () => {
             </div>
             <span className='text-lg font-bold'>Biswajit Phukan</span>
           </Link>
-
-          <Button
-            onClick={() => (window.location.href = "/")}
-            variant='ghost'
-            className='flex items-center gap-2'
-          >
-            <ArrowLeft className='w-4 h-4' />
-            Back to Home
-          </Button>
         </div>
       </header>
 
@@ -133,7 +132,7 @@ const LoginUser = () => {
                     Email Address
                   </Label>
                   <div className='relative'>
-                    <Mail className='absolute left-3 top-1/2 transform -translate-y-1/2 text-black w-5 h-5 ' />
+                    <Mail className='absolute left-3 top-1/2 transform -translate-y-1/2 text-black w-5 h-5' />
                     <Input
                       id='email'
                       name='email'
@@ -141,6 +140,7 @@ const LoginUser = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
+                      autoComplete='email'
                       className='w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#FF9933] focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm'
                       placeholder='Enter your email'
                     />
@@ -165,11 +165,15 @@ const LoginUser = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
+                      autoComplete='current-password'
                       className='w-full pl-10 pr-12 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#FF9933] focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm'
                     />
                     <button
                       type='button'
                       onClick={toggleShowPassword}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                       className='absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors'
                     >
                       {showPassword ? (
@@ -181,26 +185,15 @@ const LoginUser = () => {
                   </div>
                 </div>
 
-                {/* Error Message */}
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className='p-3 bg-red-50 border border-red-200 rounded-lg'
-                  >
-                    <p className='text-sm text-red-600'>{error}</p>
-                  </motion.div>
-                )}
-
-                {/* Submit Button */}
+                {/* Submit Button: type="submit", no duplicate onClick */}
                 <Button
-                  onClick={handleSubmit}
+                  type='submit'
                   disabled={isLoading}
                   className='w-full py-3 bg-gradient-to-r from-[#FF9933] to-[#FF9933]/90 hover:from-[#FF9933]/90 hover:to-[#FF9933]/80 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none'
                 >
                   {isLoading ? (
                     <div className='flex items-center gap-2'>
-                      <div className='w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin'></div>
+                      <div className='w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin' />
                       Signing In...
                     </div>
                   ) : (
@@ -208,6 +201,7 @@ const LoginUser = () => {
                   )}
                 </Button>
               </form>
+
               {(errorMessage || error) && (
                 <div className='p-3 rounded-md bg-red-50 border border-red-200 text-red-600 flex items-center gap-2'>
                   <AlertCircle className='h-5 w-5' />
@@ -224,49 +218,17 @@ const LoginUser = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8, duration: 0.6 }}
           >
-            <p className='text-xs text-slate-500'>
-              This is a secure administrative area. All access is logged and
-              monitored.
-            </p>
+            <Button
+              onClick={() => navigate("/")}
+              variant='ghost'
+              className='flex items-center gap-2'
+            >
+              <ArrowLeft className='w-4 h-4' />
+              Back to Home
+            </Button>
           </motion.div>
         </motion.div>
       </main>
-
-      {/* Footer */}
-      <footer className='border-t bg-slate-50'>
-        <div className='container py-6 px-4 sm:px-6'>
-          <div className='flex flex-col md:flex-row justify-between items-center gap-4'>
-            <div className='flex items-center gap-3'>
-              <div className='relative h-8 w-8'>
-                <img
-                  src='https://i.postimg.cc/0Qrhpj56/BJPico.png'
-                  alt='Logo'
-                  className='object-contain'
-                />
-              </div>
-              <div className='text-sm text-muted-foreground'>
-                © {new Date().getFullYear()} Biswajit Phukan. All rights
-                reserved.
-              </div>
-            </div>
-
-            <div className='flex items-center gap-4'>
-              <a
-                href='/#contact'
-                className='text-sm text-muted-foreground hover:text-[#FF9933] transition-colors'
-              >
-                Support
-              </a>
-              <a
-                href='/about'
-                className='text-sm text-muted-foreground hover:text-[#138808] transition-colors'
-              >
-                About
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };

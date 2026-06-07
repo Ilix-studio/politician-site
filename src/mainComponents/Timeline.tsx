@@ -66,6 +66,14 @@ const timelineEvents: readonly TimelineEventData[] = [
     details:
       "Secured re-election in the 2026 Assam Legislative Assembly elections, winning the Sarupathar (Golaghat) constituency once again on a BJP ticket, continuing the mandate of service to constituents.",
   },
+  {
+    year: 2026,
+    title: "Oath of Office",
+    description:
+      "Took the oath as MLA to faithfully serve the people of Sarupathar",
+    details:
+      "Sworn in as a Member of the Legislative Assembly, taking a solemn oath to uphold the Constitution and to dedicate himself to the service and welfare of the people of Sarupathar.",
+  },
 ];
 
 const Timeline = () => {
@@ -144,7 +152,7 @@ const Timeline = () => {
 
             {timelineEvents.map((event, index) => (
               <TimelineEvent
-                key={event.year}
+                key={`${event.year}-${index}`}
                 event={event}
                 index={index}
                 progress={smoothProgress}

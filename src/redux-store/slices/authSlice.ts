@@ -1,11 +1,12 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../store";
-
+import { USER_ROLES, UserRole } from "@/types/editor.types";
 // Define user types
 export interface User {
   id: string;
   name: string;
   email: string;
+  role?: UserRole;
 }
 
 // Define the authentication state
@@ -31,7 +32,7 @@ const authSlice = createSlice({
   reducers: {
     loginSuccess: (
       state,
-      action: PayloadAction<{ user: User; token: string }>
+      action: PayloadAction<{ user: User; token: string }>,
     ) => {
       state.isAuthenticated = true;
       state.user = action.payload.user;
@@ -59,7 +60,17 @@ export const { loginSuccess, logout, setLoading, setError } = authSlice.actions;
 
 // Selectors
 export const selectAuth = (state: RootState) => state.auth;
-export const selectIsAdmin = (state: RootState) =>
+
+export const selectIsAuthenticated = (state: RootState) =>
   state.auth.isAuthenticated && state.auth.user !== null;
 
+export const selectIsAdmin = (state: RootState) =>
+  state.auth.isAuthenticated &&
+  state.auth.user?.role === USER_ROLES.SUPER_ADMIN;
+
+export const selectIsEditor = (state: RootState) =>
+  state.auth.isAuthenticated && state.auth.user?.role === USER_ROLES.EDITOR;
+
 export default authSlice.reducer;
+
+export type { UserRole };

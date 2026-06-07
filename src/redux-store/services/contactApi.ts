@@ -1,7 +1,6 @@
-import { createApi } from "@reduxjs/toolkit/query/react";
-import { baseQuery, handleApiError } from "../../lib/apiConfig";
+import { apiSlice } from "./apiSlice";
+import { handleApiError } from "../../lib/apiConfig";
 
-// Define types for contact messages
 export interface ContactMessage {
   _id: string;
   name: string;
@@ -60,13 +59,9 @@ export interface GetMessagesParams {
   read?: boolean;
 }
 
-// Create the contact API service
-export const contactApi = createApi({
-  reducerPath: "contactApi",
-  baseQuery,
-  tagTypes: ["ContactMessages", "ContactMessage"],
+export const contactApi = apiSlice.injectEndpoints({
+  overrideExisting: false,
   endpoints: (builder) => ({
-    // Send contact message (Public)
     sendContactMessage: builder.mutation<SendMessageResponse, ContactFormData>({
       query: (data) => ({
         url: "/messages/send",
@@ -77,14 +72,12 @@ export const contactApi = createApi({
       transformErrorResponse: (response) => handleApiError(response),
     }),
 
-    // Get all contact messages (Admin only)
     getContactMessages: builder.query<
       ContactMessagesResponse,
       GetMessagesParams | void
     >({
       query: (params) => {
         const searchParams = new URLSearchParams();
-
         if (params?.page) searchParams.append("page", params.page.toString());
         if (params?.limit)
           searchParams.append("limit", params.limit.toString());
@@ -106,14 +99,13 @@ export const contactApi = createApi({
           : [{ type: "ContactMessages", id: "LIST" }],
       transformErrorResponse: (response) => handleApiError(response),
     }),
-    // Get contact message by ID (Admin only)
+
     getContactMessageById: builder.query<ContactMessageResponse, string>({
       query: (id) => `/messages/${id}`,
       providesTags: (_, __, id) => [{ type: "ContactMessage", id }],
       transformErrorResponse: (response) => handleApiError(response),
     }),
 
-    // Mark message as read/unread (Admin only)
     markMessageAsRead: builder.mutation<
       ContactMessageResponse,
       MarkAsReadRequest
@@ -130,7 +122,6 @@ export const contactApi = createApi({
       transformErrorResponse: (response) => handleApiError(response),
     }),
 
-    // Delete contact message (Admin only)
     deleteContactMessage: builder.mutation<
       { success: boolean; message: string },
       string
@@ -145,7 +136,6 @@ export const contactApi = createApi({
   }),
 });
 
-// Export hooks for using the API endpoints
 export const {
   useSendContactMessageMutation,
   useGetContactMessagesQuery,

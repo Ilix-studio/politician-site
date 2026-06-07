@@ -145,7 +145,7 @@ const PressDash = () => {
       <BackNavigation />
 
       <div className='min-h-screen bg-gradient-to-br from-slate-50 to-white p-4'>
-        <div className='max-w-7xl mx-auto space-y-6'>
+        <div className='container mx-auto space-y-3 py-3'>
           {/* Page Header */}
           <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
             <div>
@@ -178,7 +178,7 @@ const PressDash = () => {
                   <h3 className='text-2xl font-bold text-purple-600'>
                     {pressData?.data.press.filter(
                       (p) =>
-                        new Date(p.date).getMonth() === new Date().getMonth()
+                        new Date(p.date).getMonth() === new Date().getMonth(),
                     ).length || 0}
                   </h3>
                   <p className='text-sm text-gray-600'>This Month</p>
@@ -266,7 +266,7 @@ const PressDash = () => {
                           </h3>
                           <Badge
                             className={getCategoryColor(
-                              getCategoryName(press.category)
+                              getCategoryName(press.category),
                             )}
                           >
                             {getCategoryName(press.category)}
@@ -350,7 +350,7 @@ const PressDash = () => {
                         {page}
                       </Button>
                     );
-                  }
+                  },
                 )}
 
                 <Button

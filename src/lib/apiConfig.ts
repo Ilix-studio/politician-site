@@ -1,9 +1,12 @@
 import { fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
+const API_BASE_URLS = {
+  development: "http://localhost:8080/api",
+  production: "https://biswajit-be-34098913955.europe-west1.run.app/api",
+} as const;
+
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.DEV
-    ? "https://biswajit-be-34098913955.europe-west1.run.app/api"
-    : "https://biswajit-be-34098913955.europe-west1.run.app/api",
+  BASE_URL: API_BASE_URLS[import.meta.env.DEV ? "development" : "production"],
 
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 3000,

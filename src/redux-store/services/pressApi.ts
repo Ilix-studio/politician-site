@@ -1,5 +1,5 @@
-import { createApi } from "@reduxjs/toolkit/query/react";
-import { baseQuery, handleApiError } from "../../lib/apiConfig";
+import { apiSlice } from "./apiSlice";
+import { handleApiError } from "../../lib/apiConfig";
 import {
   PressCreateData,
   PressDeleteResponse,
@@ -12,24 +12,17 @@ import {
   PressUploadResponse,
 } from "@/types/press.types";
 
-export const pressApi = createApi({
-  reducerPath: "pressApi",
-  baseQuery,
-  tagTypes: ["Press"],
+export const pressApi = apiSlice.injectEndpoints({
+  overrideExisting: false,
   endpoints: (builder) => ({
-    // PUBLIC ENDPOINTS
-
-    // Get all press articles with pagination and filtering
     getPress: builder.query<PressListResponse, PressQueryParams>({
       query: (params = {}) => {
         const searchParams = new URLSearchParams();
-
         Object.entries(params).forEach(([key, value]) => {
           if (value !== undefined && value !== null && value !== "") {
             searchParams.append(key, value.toString());
           }
         });
-
         return `/press${
           searchParams.toString() ? `?${searchParams.toString()}` : ""
         }`;
@@ -44,14 +37,12 @@ export const pressApi = createApi({
       transformErrorResponse: (response) => handleApiError(response),
     }),
 
-    // Get single press article by ID
     getPressById: builder.query<PressResponse, string>({
       query: (id) => `/press/${id}`,
       providesTags: (_result, _error, id) => [{ type: "Press", id }],
       transformErrorResponse: (response) => handleApiError(response),
     }),
 
-    // Get press articles by category
     getPressByCategory: builder.query<
       PressListResponse,
       { category: string; limit?: number }
@@ -59,7 +50,6 @@ export const pressApi = createApi({
       query: ({ category, limit = 10 }) => {
         const searchParams = new URLSearchParams();
         if (limit) searchParams.append("limit", limit.toString());
-
         return `/press/category/${category}${
           searchParams.toString() ? `?${searchParams.toString()}` : ""
         }`;
@@ -71,7 +61,6 @@ export const pressApi = createApi({
       transformErrorResponse: (response) => handleApiError(response),
     }),
 
-    // Search press articles
     searchPress: builder.query<
       PressListResponse,
       { search: string; limit?: number }
@@ -80,16 +69,12 @@ export const pressApi = createApi({
         const searchParams = new URLSearchParams();
         searchParams.append("search", search);
         if (limit) searchParams.append("limit", limit.toString());
-
         return `/press/search?${searchParams.toString()}`;
       },
       providesTags: ["Press"],
       transformErrorResponse: (response) => handleApiError(response),
     }),
 
-    // PROTECTED ENDPOINTS (Admin only)
-
-    // Create press article with existing image URLs
     createPress: builder.mutation<PressResponse, PressCreateData>({
       query: (data) => ({
         url: "/press",
@@ -100,7 +85,6 @@ export const pressApi = createApi({
       transformErrorResponse: (response) => handleApiError(response),
     }),
 
-    // Upload single press article with image file
     uploadPress: builder.mutation<
       PressUploadResponse,
       { file: File; data: PressUploadData }
@@ -108,13 +92,11 @@ export const pressApi = createApi({
       query: ({ file, data }) => {
         const formData = new FormData();
         formData.append("image", file);
-
         Object.entries(data).forEach(([key, value]) => {
           if (value !== undefined && value !== null) {
             formData.append(key, value.toString());
           }
         });
-
         return {
           url: "/press/upload",
           method: "POST",
@@ -125,18 +107,13 @@ export const pressApi = createApi({
       transformErrorResponse: (response) => handleApiError(response),
     }),
 
-    // Upload press article with multiple images
     uploadMultiplePress: builder.mutation<
       PressUploadResponse,
       { files: File[]; data: PressMultipleUploadData }
     >({
       query: ({ files, data }) => {
         const formData = new FormData();
-
-        files.forEach((file) => {
-          formData.append("images", file);
-        });
-
+        files.forEach((file) => formData.append("images", file));
         Object.entries(data).forEach(([key, value]) => {
           if (value !== undefined && value !== null) {
             if (key === "altTexts" && Array.isArray(value)) {
@@ -146,7 +123,6 @@ export const pressApi = createApi({
             }
           }
         });
-
         return {
           url: "/press/upload-multiple",
           method: "POST",
@@ -157,7 +133,6 @@ export const pressApi = createApi({
       transformErrorResponse: (response) => handleApiError(response),
     }),
 
-    // Update press article
     updatePress: builder.mutation<
       PressResponse,
       { id: string; data: PressUpdateData }
@@ -174,7 +149,6 @@ export const pressApi = createApi({
       transformErrorResponse: (response) => handleApiError(response),
     }),
 
-    // Delete press article
     deletePress: builder.mutation<PressDeleteResponse, string>({
       query: (id) => ({
         url: `/press/${id}`,
@@ -189,15 +163,11 @@ export const pressApi = createApi({
   }),
 });
 
-// Export hooks for using the API endpoints
 export const {
-  // Public endpoints
   useGetPressQuery,
   useGetPressByIdQuery,
   useGetPressByCategoryQuery,
   useSearchPressQuery,
-
-  // Admin endpoints
   useCreatePressMutation,
   useUploadPressMutation,
   useUploadMultiplePressMutation,
