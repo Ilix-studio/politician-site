@@ -5,17 +5,7 @@ import { Mail, Code, PhoneCall, Globe2 } from "lucide-react";
 import { CardSpotlight } from "@/components/ui/card-spotlight";
 
 const Footer = () => {
-  const legalLinks = [
-    "Privacy Policy",
-    "Terms of Service",
-    "Cookie Policy",
-
-    "Sitemap",
-  ];
-
-  const cardClick = () => {
-    console.log("Its Click");
-  };
+  const legalLinks = ["Privacy Policy", "Terms of Service", "Cookie Policy"];
 
   return (
     <footer className='border-t bg-slate-50'>
@@ -65,6 +55,12 @@ const Footer = () => {
               >
                 Initiatives
               </Link>
+              <Link
+                to='/editor/login'
+                className='text-sm text-muted-foreground hover:text-primary'
+              >
+                ..
+              </Link>
             </nav>
           </div>
 
@@ -107,11 +103,19 @@ const Footer = () => {
           {/* Developer Card */}
           <div className='space-y-4 px-2'>
             <CardSpotlight
-              className='bg-white/200 backdrop-blur-sm border shadow-lg p-4 h-auto'
+              className='relative overflow-hidden bg-white/20 backdrop-blur-sm border shadow-lg p-4 h-auto'
               radius={300}
               color='rgba(255, 153, 51, 0.3)'
             >
-              <div className='relative z-10' onClick={cardClick}>
+              {/* Background watermark */}
+              <span
+                aria-hidden='true'
+                className=' absolute pointer-events-none select-none underline decoration-dotted decoration-[#0f0a1c]/20 lg:absolute bottom-1 right-2 z-0 text-2xl font-bold tracking-tight text-[#0f0a1c]/20'
+              >
+                ilix-studio
+              </span>
+
+              <div className='relative z-10'>
                 <div className='flex items-center gap-3 mb-3'>
                   <Code className='h-5 w-5 text-[#FF9933]' />
                   <div>
